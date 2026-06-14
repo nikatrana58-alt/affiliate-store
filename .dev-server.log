@@ -1,0 +1,18 @@
+
+> affiliate-store@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.2:3000
+- Environments: .env.local
+✓ Ready in 479ms
+Creating turbopack project { dir: 'C:\\Users\\HP\\affiliate-store', testMode: true }
+
+○ Compiling /admin/login ...
+✓ Finished writing to filesystem cache in 59s
+✓ Finished writing to filesystem cache in 31.0s
+✓ Finished writing to filesystem cache in 2.2min
+ GET / 500 in 11.7min (next.js: 11.7min, application-code: 179ms)
+ GET /admin 500 in 11.7min (next.js: 11.7min, application-code: 8ms)
+ GET /admin/login 500 in 11.7min (next.js: 11.7min, application-code: 6ms)

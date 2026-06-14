@@ -1,0 +1,13 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /products/{imageId} {
+      // Replace YOUR_FIREBASE_ADMIN_UID with the UID of the one Firebase Auth
+      // account allowed to manage products, then deploy these Storage rules.
+      allow read: if true;
+      allow create, update, delete: if request.auth != null
+        && request.auth.uid == "YOUR_FIREBASE_ADMIN_UID";
+    }
+  }
+}

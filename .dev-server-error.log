@@ -1,0 +1,439 @@
+
+
+#
+# Fatal process out of memory: Re-embedded builtins: set permissions
+#
+----- Native stack trace -----
+
+ 1: 00007FF70CB50ECD node::MultiIsolatePlatform::DisposeIsolate+5341
+ 2: 00007FF70DFB36B6 v8::base::FatalOOM+54
+ 3: 00007FF70D8461F6 v8::Function::NewInstance+390
+ 4: 00007FF70D6AD52E v8::CppHeap::CollectGarbageInYoungGenerationForTesting+111438
+ 5: 00007FF70D6E0B5F SSL_CTX_set_default_read_buffer_len+41247
+ 6: 00007FF70D6E1612 SSL_CTX_set_default_read_buffer_len+43986
+ 7: 00007FF70D6E1FF2 SSL_CTX_set_default_read_buffer_len+46514
+ 8: 00007FF70D1DDE33 v8::internal::Version::GetSONAME+122307
+ 9: 00007FF70D8710B6 v8::Isolate::Initialize+662
+10: 00007FF70CD0A22D node::SetIsolateUpForNode+749
+11: 00007FF70CA65B73 RSA_meth_get_flags+222691
+12: 00007FF70CA64F09 RSA_meth_get_flags+219513
+13: 00007FF70CA6EA90 RSA_meth_get_flags+259328
+14: 00007FF70D89B1A6 uv_thread_detach+150
+15: 00007FF70EAFB0B3 v8::base::UnsignedDivisionByConstant<unsigned __int64>+2907267
+16: 00007FFD59D1E957 BaseThreadInitThunk+23
+17: 00007FFD5B88427C RtlUserThreadStart+44
+
+
+#
+# Fatal process out of memory: Re-embedded builtins: set permissions
+#
+----- Native stack trace -----
+
+ 1: 00007FF70CB50ECD 
+ 2: 00007FF70DFB36B6 
+ 3: 00007FF70D8461F6 
+ 4: 00007FF70D6AD52E 
+ 5: 00007FF70D6E0B5F 
+ 6: 00007FF70D6E1612 
+ 7: 00007FF70D6E1FF2 
+ 8: 00007FF70D1DDE33 
+ 9: 00007FF70D8710B6 
+10: 00007FF70CD0A22D 
+11: 00007FF70CA65B73 
+12: 00007FF70CA64F09 
+13: 00007FF70CA6EA90 
+14: 00007FF70D89B1A6 
+15: 00007FF70EAFB0B3 
+16: 00007FFD59D1E957 BaseThreadInitThunk+23
+17: 00007FFD5B88427C RtlUserThreadStart+44
+
+
+#
+# Fatal process out of memory: Re-embedded builtins: set permissions
+#
+----- Native stack trace -----
+
+ 1: 00007FF70CB50ECD node::MultiIsolatePlatform::DisposeIsolate+5341
+ 2: 00007FF70DFB36B6 v8::base::FatalOOM+54
+ 3: 00007FF70D8461F6 v8::Function::NewInstance+390
+ 4: 00007FF70D6AD52E v8::CppHeap::CollectGarbageInYoungGenerationForTesting+111438
+ 5: 00007FF70D6E0B5F SSL_CTX_set_default_read_buffer_len+41247
+ 6: 00007FF70D6E1612 SSL_CTX_set_default_read_buffer_len+43986
+ 7: 00007FF70D6E1FF2 SSL_CTX_set_default_read_buffer_len+46514
+ 8: 00007FF70D1DDE33 v8::internal::Version::GetSONAME+122307
+ 9: 00007FF70D8710B6 v8::Isolate::Initialize+662
+10: 00007FF70CD0A22D node::SetIsolateUpForNode+749
+11: 00007FF70CA65B73 RSA_meth_get_flags+222691
+12: 00007FF70CA64F09 RSA_meth_get_flags+219513
+13: 00007FF70CA6EA90 RSA_meth_get_flags+259328
+14: 00007FF70D89B1A6 uv_thread_detach+150
+15: 00007FF70EAFB0B3 v8::base::UnsignedDivisionByConstant<unsigned __int64>+2907267
+16: 00007FFD59D1E957 BaseThreadInitThunk+23
+17: 00007FFD5B88427C RtlUserThreadStart+44
+
+
+#
+# Fatal process out of memory: Re-embedded builtins: set permissions
+#
+----- Native stack trace -----
+
+ 1: 00007FF70CB50ECD node::MultiIsolatePlatform::DisposeIsolate+5341
+ 2: 00007FF70DFB36B6 v8::base::FatalOOM+54
+ 3: 00007FF70D8461F6 v8::Function::NewInstance+390
+ 4: 00007FF70D6AD52E v8::CppHeap::CollectGarbageInYoungGenerationForTesting+111438
+ 5: 00007FF70D6E0B5F SSL_CTX_set_default_read_buffer_len+41247
+ 6: 00007FF70D6E1612 SSL_CTX_set_default_read_buffer_len+43986
+ 7: 00007FF70D6E1FF2 SSL_CTX_set_default_read_buffer_len+46514
+ 8: 00007FF70D1DDE33 v8::internal::Version::GetSONAME+122307
+ 9: 00007FF70D8710B6 v8::Isolate::Initialize+662
+10: 00007FF70CD0A22D node::SetIsolateUpForNode+749
+11: 00007FF70CA65B73 RSA_meth_get_flags+222691
+12: 00007FF70CA64F09 RSA_meth_get_flags+219513
+13: 00007FF70CA6EA90 RSA_meth_get_flags+259328
+14: 00007FF70D89B1A6 uv_thread_detach+150
+15: 00007FF70EAFB0B3 v8::base::UnsignedDivisionByConstant<unsigned __int64>+2907267
+16: 00007FFD59D1E957 BaseThreadInitThunk+23
+17: 00007FFD5B88427C RtlUserThreadStart+44
+
+thread '<unnamed>' (64460) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rayon-core-1.12.1\src\registry.rs:168:10:
+The global thread pool has not been initialized.: ThreadPoolBuildError { kind: IOError(Os { code: 1455, kind: Uncategorized, message: "The paging file is too small for this operation to complete." }) }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+#
+# Fatal process out of memory: Re-embedded builtins: set permissions
+#
+----- Native stack trace -----
+
+
+
+#
+# Fatal process out of memory: Re-embedded builtins: set permissions
+#
+----- Native stack trace -----
+
+ 1: 00007FF70CB50ECD 
+ 2: 00007FF70DFB36B6 
+ 3: 00007FF70D8461F6 
+ 4: 00007FF70D6AD52E 
+ 5: 00007FF70D6E0B5F 
+ 6: 00007FF70D6E1612 
+ 7: 00007FF70D6E1FF2 
+ 8: 00007FF70D1DDE33 
+ 9: 00007FF70D8710B6 
+10: 00007FF70CD0A22D 
+11: 00007FF70CA65B73 
+12: 00007FF70CA64F09 
+13: 00007FF70CA6EA90 
+14: 00007FF70D89B1A6 
+15: 00007FF70EAFB0B3 
+16: 00007FFD59D1E957 BaseThreadInitThunk+23
+17: 00007FFD5B88427C 
+ 1: 00007FF70CB50ECD node::MultiIsolatePlatform::DisposeIsolate+5341
+ 2: 00007FF70DFB36B6 v8::base::FatalOOM+54
+ 3: 00007FF70D8461F6 v8::Function::NewInstance+390
+ 4: 00007FF70D6AD52E v8::CppHeap::CollectGarbageInYoungGenerationForTesting+111438
+ 5: 00007FF70D6E0B5F SSL_CTX_set_default_read_buffer_len+41247
+ 6: 00007FF70D6E1612 SSL_CTX_set_default_read_buffer_len+43986
+ 7: 00007FF70D6E1FF2 SSL_CTX_set_default_read_buffer_len+46514
+ 8: 00007FF70D1DDE33 v8::internal::Version::GetSONAME+122307
+ 9: 00007FF70D8710B6 v8::Isolate::Initialize+662
+10: 00007FF70CD0A22D node::SetIsolateUpForNode+749
+11: 00007FF70CA65B73 RSA_meth_get_flags+222691
+12: 00007FF70CA64F09 RSA_meth_get_flags+219513
+13: 00007FF70CA6EA90 RSA_meth_get_flags+259328
+14: 00007FF70D89B1A6 uv_thread_detach+150
+15: 00007FF70EAFB0B3 v8::base::UnsignedDivisionByConstant<unsigned __int64>+2907267
+16: 00007FFD59D1E957 BaseThreadInitThunk+23
+17: 00007FFD5B88427C RtlUserThreadStart+44
+
+<--- Last few GCs --->
+
+[67852:0000025FCF044000]     4135 ms: Scavenge (interleaved) 5.4 (7.7) -> 5.2 (7.7) MB, pooled: 0 MB, 1.00 / 0.00 ms  (average mu = 0.993, current mu = 0.993) allocation failure; 
+[67852:0000025FCF044000]     4146 ms: Scavenge (interleaved) 6.9 (8.8) -> 5.9 (8.2) MB, pooled: 0 MB, 0.96 / 0.00 ms  (average mu = 0.993, current mu = 0.993) allocation failure; 
+
+FATAL ERROR: AlignedAlloc Allocation failed - process out of memory
+----- Native stack trace -----
+
+ 1: 00007FF70CBFC44F node::OnFatalError+1343
+ 2: 00007FF70D846217 v8::Function::NewInstance+423
+ 3: 00007FF70D1C2B8E v8::internal::Version::GetSONAME+11038
+ 4: 00007FF70D33CD7B v8::MemorySpan<unsigned __int64>::operator[]+82491
+ 5: 00007FF70D33AD6C v8::MemorySpan<unsigned __int64>::operator[]+74284
+ 6: 00007FF70D6818F7 uv_timer_set_repeat+112151
+ 7: 00007FF70D83C7C1 X509_STORE_set_get_issuer+735329
+ 8: 00007FF70D83D46B X509_STORE_set_get_issuer+738571
+ 9: 00007FF70D2ECB3E EC_KEY_METHOD_set_verify+219102
+10: 00007FF70D2EC27A EC_KEY_METHOD_set_verify+216858
+11: 00007FF70D2E78A9 EC_KEY_METHOD_set_verify+197961
+12: 00007FF70D7C3C4F X509_STORE_set_get_issuer+240879
+13: 00007FF70D7C6A51 X509_STORE_set_get_issuer+252657
+14: 00007FF70D84F6D3 v8::ScriptCompiler::CompileFunction+1011
+15: 00007FF70CC19063 node::GetCurrentEnvironment+20883
+16: 00007FF70CC1780E node::GetCurrentEnvironment+14654
+17: 0000025F9FDCF64D 
+
+<--- Last few GCs --->
+
+FATAL ERROR: Committing semi space failed. Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 00007FF70CBFC44F 
+ 2: 00007FF70D846217 
+ 3: 00007FF70D646C07 
+ 4: 00007FF70D5DF62B 
+ 5: 00007FF70D5B707E 
+ 6: 00007FF70D6496A2 
+ 7: 00007FF70D648657 
+ 8: 00007FF70D659582 
+ 9: 00007FF70D6590AB 
+10: 00007FF70EADF8ED 
+11: 00007FF70D6446D0 
+12: 00007FF70D65EF1A 
+13: 00007FF70D66B3B6 
+14: 00007FF70D23D0F7 
+15: 000002A1D96775FA 
+
+<--- Last few GCs --->
+[70468:000001C622A04000]     1119 ms: Scavenge 6.0 (7.2) -> 5.3 (10.0) MB, pooled: 0 MB, 1015.93 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+ 1: 00007FF70CBFC44F node::OnFatalError+1343
+ 2: 00007FF70D846217 v8::Function::NewInstance+423
+ 3: 00007FF70D1BFC46 v8::SnapshotCreator::GetIsolate+56566
+ 4: 00007FF70D82D236 X509_STORE_set_get_issuer+672470
+ 5: 00007FF70D3005D6 EC_KEY_METHOD_set_verify+299638
+ 6: 00007FF70D301D9B EC_KEY_METHOD_set_verify+305723
+ 7: 00007FF70D300F6E EC_KEY_METHOD_set_verify+302094
+ 8: 00007FF70D306934 EC_KEY_METHOD_set_verify+325076
+ 9: 00007FF70D304DBE EC_KEY_METHOD_set_verify+318046
+10: 00007FF70D301D9B EC_KEY_METHOD_set_verify+305723
+11: 00007FF70D300F6E EC_KEY_METHOD_set_verify+302094
+12: 00007FF70D300C29 EC_KEY_METHOD_set_verify+301257
+13: 00007FF70D3093F0 EC_KEY_METHOD_set_verify+336016
+14: 00007FF70D300696 EC_KEY_METHOD_set_verify+299830
+15: 00007FF70D301D9B EC_KEY_METHOD_set_verify+305723
+16: 00007FF70D300F6E EC_KEY_METHOD_set_verify+302094
+17: 00007FF70D312E42 EC_KEY_METHOD_set_verify+375522
+18: 00007FF70D2F2915 EC_KEY_METHOD_set_verify+243125
+19: 00007FF70D2FB51B EC_KEY_METHOD_set_verify+278971
+20: 00007FF70D2FAA1A EC_KEY_METHOD_set_verify+276154
+21: 00007FF70D2EE117 EC_KEY_METHOD_set_verify+224695
+22: 00007FF70D2ED2E4 EC_KEY_METHOD_set_verify+221060
+23: 00007FF70D2EC5D2 EC_KEY_METHOD_set_verify+217714
+24: 00007FF70D2EC27A EC_KEY_METHOD_set_verify+216858
+25: 00007FF70D2E78A9 EC_KEY_METHOD_set_verify+197961
+26: 00007FF70D7C3C4F X509_STORE_set_get_issuer+240879
+27: 00007FF70D7C6A51 X509_STORE_set_get_issuer+252657
+28: 00007FF70D84F6D3 v8::ScriptCompiler::CompileFunction+1011
+29: 00007FF70CC19063 node::GetCurrentEnvironment+20883
+30: 00007FF70CC1780E node::GetCurrentEnvironment+14654
+31: 000001C65AD0F64D 
+
+<--- Last few GCs --->
+
+[70052:00000226D0B7C000]     1200 ms: Scavenge 8.8 (11.4) -> 7.5 (11.3) MB, pooled: 0 MB, 2.28 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[70052:00000226D0B7C000]     3252 ms: Scavenge 9.6 (12.6) -> 8.9 (17.6) MB, pooled: 0 MB, 1024.92 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+ 1: 00007FF70CBFC44F node::OnFatalError+1343
+ 2: 00007FF70D846217 v8::Function::NewInstance+423
+ 3: 00007FF70D1BFC46 v8::SnapshotCreator::GetIsolate+56566
+ 4: 00007FF70D843A2A X509_STORE_set_get_issuer+764618
+ 5: 00007FF70D8437D0 X509_STORE_set_get_issuer+764016
+ 6: 00007FF70D2CAA7F EC_KEY_METHOD_set_verify+79647
+ 7: 00007FF70D2DC151 EC_KEY_METHOD_set_verify+151025
+ 8: 00007FF70D2DB483 EC_KEY_METHOD_set_verify+147747
+ 9: 00007FF70D2D6931 EC_KEY_METHOD_set_verify+128465
+10: 00007FF70D2DCB8A EC_KEY_METHOD_set_verify+153642
+11: 00007FF70D2DECF5 EC_KEY_METHOD_set_verify+162197
+12: 00007FF70D2D1876 EC_KEY_METHOD_set_verify+107798
+13: 00007FF70D2D01DB EC_KEY_METHOD_set_verify+102011
+14: 00007FF70D2CF516 EC_KEY_METHOD_set_verify+98742
+15: 00007FF70D2FA078 EC_KEY_METHOD_set_verify+273688
+16: 00007FF70D2EE090 EC_KEY_METHOD_set_verify+224560
+17: 00007FF70D312613 EC_KEY_METHOD_set_verify+373427
+18: 00007FF70D2F2A84 EC_KEY_METHOD_set_verify+243492
+19: 00007FF70D2FB51B EC_KEY_METHOD_set_verify+278971
+20: 00007FF70D2FAA1A EC_KEY_METHOD_set_verify+276154
+21: 00007FF70D2EE117 EC_KEY_METHOD_set_verify+224695
+22: 00007FF70D306213 EC_KEY_METHOD_set_verify+323251
+23: 00007FF70D301D9B EC_KEY_METHOD_set_verify+305723
+24: 00007FF70D300F6E EC_KEY_METHOD_set_verify+302094
+25: 00007FF70D306934 EC_KEY_METHOD_set_verify+325076
+26: 00007FF70D304DBE EC_KEY_METHOD_set_verify+318046
+27: 00007FF70D301D9B EC_KEY_METHOD_set_verify+305723
+28: 00007FF70D300F6E EC_KEY_METHOD_set_verify+302094
+29: 00007FF70D3077D2 EC_KEY_METHOD_set_verify+328818
+30: 00007FF70D3041F3 EC_KEY_METHOD_set_verify+315027
+31: 00007FF70D301DE8 EC_KEY_METHOD_set_verify+305800
+32: 00007FF70D300F6E EC_KEY_METHOD_set_verify+302094
+33: 00007FF70D306934 EC_KEY_METHOD_set_verify+325076
+34: 00007FF70D311D4F EC_KEY_METHOD_set_verify+371183
+35: 00007FF70D2FB51B EC_KEY_METHOD_set_verify+278971
+36: 00007FF70D2FAA1A EC_KEY_METHOD_set_verify+276154
+37: 00007FF70D2EE117 EC_KEY_METHOD_set_verify+224695
+38: 00007FF70D2ED2E4 EC_KEY_METHOD_set_verify+221060
+39: 00007FF70D2EC5D2 EC_KEY_METHOD_set_verify+217714
+40: 00007FF70D2EC27A EC_KEY_METHOD_set_verify+216858
+41: 00007FF70D2E78A9 EC_KEY_METHOD_set_verify+197961
+42: 00007FF70D7C3C4F X509_STORE_set_get_issuer+240879
+43: 00007FF70D7C6A51 X509_STORE_set_get_issuer+252657
+44: 00007FF70D84F6D3 v8::ScriptCompiler::CompileFunction+1011
+45: 00007FF70CC19063 node::GetCurrentEnvironment+20883
+46: 00007FF70CC1780E node::GetCurrentEnvironment+14654
+47: 000002269FDCF64D 
+
+
+#
+# Fatal process out of memory: Re-embedded builtins: set permissions
+#
+----- Native stack trace -----
+
+ 1: 00007FF70CB50ECD 
+ 2: 00007FF70DFB36B6 
+ 3: 00007FF70D8461F6 
+ 4: 00007FF70D6AD52E 
+ 5: 00007FF70D6E0B5F 
+ 6: 00007FF70D6E1612 
+ 7: 00007FF70D6E1FF2 
+ 8: 00007FF70D1DDE33 
+ 9: 00007FF70D8710B6 
+10: 00007FF70CD0A22D 
+11: 00007FF70CA65B73 
+12: 00007FF70CA64F09 
+13: 00007FF70CA6EA90 
+14: 00007FF70D89B1A6 
+15: 00007FF70EAFB0B3 
+16: 00007FFD59D1E957 BaseThreadInitThunk+23
+17: 00007FFD5B88427C RtlUserThreadStart+44
+
+
+#
+# Fatal error in , line 0
+# Out of memory: HashMap::Initialize
+#
+#
+#
+#FailureMessage Object: 000000AA0B7F8D70
+----- Native stack trace -----
+
+ 1: 00007FF70CB50ECD 
+ 2: 00007FF70DFB3C4F 
+ 3: 00007FF70D8442B6 
+ 4: 00007FF70D8439A2 
+ 5: 00007FF70D8437D0 
+ 6: 00007FF70D2CAA7F 
+ 7: 00007FF70D30A277 
+ 8: 00007FF70D3090A6 
+ 9: 00007FF70D300696 
+10: 00007FF70D301D9B 
+11: 00007FF70D300F6E 
+12: 00007FF70D3017D6 
+13: 00007FF70D300FB4 
+14: 00007FF70D306934 
+15: 00007FF70D311D4F 
+16: 00007FF70D2FB51B 
+17: 00007FF70D2F0F5A 
+18: 00007FF70D301C90 
+19: 00007FF70D300FB4 
+20: 00007FF70D306934 
+21: 00007FF70D304DBE 
+22: 00007FF70D301D9B 
+23: 00007FF70D300F6E 
+24: 00007FF70D306934 
+25: 00007FF70D311D4F 
+26: 00007FF70D2FB51B 
+27: 00007FF70D2F0F5A 
+28: 00007FF70D301C90 
+29: 00007FF70D300FB4 
+30: 00007FF70D306934 
+31: 00007FF70D304DBE 
+32: 00007FF70D301D9B 
+33: 00007FF70D300F6E 
+34: 00007FF70D306934 
+35: 00007FF70D311D4F 
+36: 00007FF70D2FB51B 
+37: 00007FF70D2FAA1A 
+38: 00007FF70D2EE117 
+39: 00007FF70D2ED2E4 
+40: 00007FF70D2EC5D2 
+41: 00007FF70D2EC27A 
+42: 00007FF70D2E78A9 
+43: 00007FF70D7C3C4F 
+44: 00007FF70D7C6A51 
+45: 00007FF70D84F6D3 
+46: 00007FF70CC19063 
+47: 00007FF70CC1780E 
+48: 0000022F1FDCF64D 
+
+<--- Last few GCs --->
+
+[72624:0000025D39856000]     9166 ms: Scavenge 8.8 (11.9) -> 7.5 (9.8) MB, pooled: 2 MB, 0.96 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[72624:0000025D39856000]    10190 ms: Scavenge 9.6 (10.8) -> 9.0 (17.6) MB, pooled: 0 MB, 1.71 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+ 1: 00007FF70CBFC44F 
+ 2: 00007FF70D846217 
+ 3: 00007FF70D1BFC46 
+ 4: 00007FF70CDB8201 
+ 5: 00007FF70D556DE5 
+ 6: 00007FF70D5655C7 
+ 7: 00007FF70D54D69D 
+ 8: 00007FF70D53AB55 
+ 9: 00007FF70D538DCB 
+10: 00007FF70D539150 
+11: 00007FF70D53AD3A 
+12: 00007FF70D53836B 
+13: 00007FF70D5377DF 
+14: 00007FF70D535E73 
+15: 00007FF70D52D296 
+16: 00007FF70D7CAF9F 
+17: 00007FF70D7C18B8 
+18: 00007FF70D7C10DD 
+19: 00007FF70D7C1B7C 
+20: 00007FF70D24417B 
+21: 0000025D71FB75FA 
+
+<--- Last few GCs --->
+
+[72928:0000027298F58000]     3101 ms: Scavenge 8.8 (11.4) -> 7.5 (11.3) MB, pooled: 0 MB, 1.70 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[72928:0000027298F58000]     7156 ms: Scavenge 9.6 (12.6) -> 8.9 (17.3) MB, pooled: 0 MB, 2030.00 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+
+<--- Last few GCs --->
+FATAL ERROR: Zone Allocation failed - process out of memory
+[70988:000002236D827000]     5078 ms: Scavenge 6.0 (7.2) -> 5.4 (10.0) MB, pooled: 0 MB, 0.71 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+----- Native stack trace -----
+
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+ 1: 00007FF70CBFC44F node::OnFatalError+1343
+ 2: 00007FF70D846217 v8::Function::NewInstance+423
+ 3: 00007FF70D1BFC46 v8::SnapshotCreator::GetIsolate+56566
+ 4: 00007FF70D2857A3 v8::base::CPU::has_bmi2+18291
+ 5: 00007FF70D281427 v8::base::CPU::has_bmi2+1015
+ 6: 00007FF70D28A27C v8::base::CPU::has_bmi2+37452
+ 7: 00007FF70D26C4FB v8::base::CPU::family+39883
+ 8: 00007FF70D24F930 v8::String::Utf8Value::~Utf8Value+220032
+ 9: 00007FF70D24F052 v8::String::Utf8Value::~Utf8Value+217762
+10: 00007FF70D24D949 v8::String::Utf8Value::~Utf8Value+211865
+11: 00007FF70D24DBDC v8::String::Utf8Value::~Utf8Value+212524
+12: 00007FF70D24DABB v8::String::Utf8Value::~Utf8Value+212235
+13: 00007FF70D2249C2 v8::String::Utf8Value::~Utf8Value+44050
+14: 0000022327E775FA 
+
+-----
+[1m[31mFATAL[39m[0m: An unexpected Turbopack error occurred. A panic log has been written to C:\Users\HP\AppData\Local\Temp\next-panic-49e3e6013e67887199602150d29d3017.log.
+
+To help make Turbopack better, report this error by clicking here: https://bugs.nextjs.org/search?category=turbopack-error-report&title=Turbopack%20Error%3A%20Failed%20to%20write%20app%20endpoint%20%2Fadmin%2Fpage&body=Turbopack%20version%3A%20%60ee6e79b1%60%0ANext.js%20version%3A%20%600.0.0%60%0A%0AError%20message%3A%0A%60%60%60%0AFailed%20to%20write%20app%20endpoint%20%2Fadmin%2Fpage%0A%0ACaused%20by%3A%0A-%20%5Bproject%5D%2Fapp%2Fglobals.css%20%5Bapp-client%5D%20%28css%29%0A-%20failed%20to%20write%20to%20%22C%3A%5C%5CUsers%5C%5CHP%5C%5Caffiliate-store%5C%5C.next%5C%5Cdev%5C%5Cbuild%5C%5Cpostcss.js%22%0A-%20Insufficient%20system%20resources%20exist%20to%20complete%20the%20requested%20service.%20%28os%20error%201450%29%0A%0ADebug%20info%3A%0A-%20Execution%20of%20get_written_endpoint_with_issues_operation%20failed%0A-%20Execution%20of%20endpoint_write_to_disk%20failed%0A-%20Execution%20of%20%3CAppEndpoint%20as%20Endpoint%3E%3A%3Aoutput%20failed%0A-%20Failed%20to%20write%20app%20endpoint%20%2Fadmin%2Fpage%0A-%20Execution%20of%20%2Aall_asset_paths%20failed%0A-%20Execution%20of%20%2AAppEndpointOutput%3A%3Aoutput_assets%20failed%0A-%20Execution%20of%20AppEndpoint%3A%3Aoutput%20failed%0A-%20Execution%20of%20AppProject%3A%3Aapp_module_graphs%20failed%0A-%20Execution%20of%20%2A%3CAppEndpoint%20as%20Endpoint%3E%3A%3Aadditional_entries%20failed%0A-%20Execution%20of%20ModuleGraph%3A%3Afrom_graphs%20failed%0A-%20Execution%20of%20ModuleGraph%3A%3Acreate%20failed%0A-%20Execution%20of%20SingleModuleGraph%3A%3Anew_with_entries_visited_intern%20failed%0A-%20%5Bproject%5D%2Fapp%2Fglobals.css%20%5Bapp-client%5D%20%28css%29%0A-%20Execution%20of%20primary_chunkable_referenced_modules%20failed%0A-%20Execution%20of%20%3CCssModule%20as%20Module%3E%3A%3Areferences%20failed%0A-%20Execution%20of%20parse_css%20failed%0A-%20Execution%20of%20%3CPostCssTransformedAsset%20as%20Asset%3E%3A%3Acontent%20failed%0A-%20Execution%20of%20PostCssTransformedAsset%3A%3Aprocess%20failed%0A-%20Execution%20of%20evaluate_webpack_loader%20failed%0A-%20Execution%20of%20get_evaluate_pool%20failed%0A-%20failed%20to%20write%20to%20%22C%3A%5C%5CUsers%5C%5CHP%5C%5Caffiliate-store%5C%5C.next%5C%5Cdev%5C%5Cbuild%5C%5Cpostcss.js%22%0A-%20Insufficient%20system%20resources%20exist%20to%20complete%20the%20requested%20service.%20%28os%20error%201450%29%0A%60%60%60&labels=Turbopack,Turbopack%20Panic%20Backtrace
+-----
+
