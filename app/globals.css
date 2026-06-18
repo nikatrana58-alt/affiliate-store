@@ -146,24 +146,18 @@
   padding: 10px 20px;
 }
 
-.trust-elements {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.trust-item {
-  align-items: center;
+.trust-text {
   color: var(--muted);
-  display: flex;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  gap: 6px;
+  margin-top: 12px;
+  text-align: center;
 }
 
-.trust-item .check {
-  color: var(--success);
-  font-weight: 900;
+@media (min-width: 768px) {
+  .trust-text {
+    text-align: left;
+  }
 }
 
 .affiliate-disclosure {

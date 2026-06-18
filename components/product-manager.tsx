@@ -10,6 +10,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { AnalyticsDashboard } from "@/components/analytics-dashboard";
 import {
   getFirebaseClientAuth,
 } from "@/lib/firebase/client";
@@ -77,6 +78,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
   const [status, setStatus] = useState("");
   const [notification, setNotification] = useState<Notification>(null);
   const [isWorking, setIsWorking] = useState(false);
+  const [activeTab, setActiveTab] = useState<"inventory" | "analytics">("inventory");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getFirebaseClientAuth(), (user) => {
@@ -312,7 +314,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
       await navigator.clipboard.writeText(productUrl);
       setNotification({
         kind: "success",
-        message: "Product link copied successfully.",
+        message: "Product link copied",
       });
       setTimeout(() => setNotification(null), 3000);
     } catch (error) {
@@ -340,6 +342,20 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
           <p className="muted">Publish products without changing application code.</p>
         </div>
         <div className="admin-header-actions">
+          <button 
+            className={`button ${activeTab === "inventory" ? "primary" : "secondary"}`}
+            onClick={() => setActiveTab("inventory")}
+            type="button"
+          >
+            Inventory
+          </button>
+          <button 
+            className={`button ${activeTab === "analytics" ? "primary" : "secondary"}`}
+            onClick={() => setActiveTab("analytics")}
+            type="button"
+          >
+            Analytics
+          </button>
           <Link className="button secondary" href="/">
             View store
           </Link>
@@ -349,8 +365,9 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
         </div>
       </header>
 
-      <section className="admin-grid">
-        <form className="product-form panel" onSubmit={handleSubmit}>
+      {activeTab === "inventory" ? (
+        <section className="admin-grid">
+          <form className="product-form panel" onSubmit={handleSubmit}>
           <div className="section-heading">
             <div>
               <p className="eyebrow">{editingProduct ? "Editing" : "New listing"}</p>
@@ -474,9 +491,13 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                       <button
                         className="text-button"
                         onClick={() => handleCopyLink(product)}
+                        style={{ alignItems: "center", display: "inline-flex", gap: "4px" }}
                         type="button"
                       >
-                        Copy Link
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                        Get Link
                       </button>
                       <button
                         className="text-button"
@@ -503,6 +524,9 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
           )}
         </section>
       </section>
-    </main>
-  );
+    ) : (
+      <AnalyticsDashboard />
+    )}
+  </main>
+);
 }

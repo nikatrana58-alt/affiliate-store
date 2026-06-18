@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { AffiliateLink } from "@/components/affiliate-link";
 import { ProductBadge } from "@/components/product-badge";
 import { ProductCard } from "@/components/product-card";
 import { StoreHeader } from "@/components/store-header";
@@ -64,14 +65,20 @@ export default async function ProductPage({
     product = await getProductBySlug(slug);
     const products = await getProducts();
 
-    relatedProducts = products
-      .filter(
-        (candidate) =>
-          candidate.id !== product?.id &&
-          product?.category &&
-          candidate.category?.toLowerCase() === product.category.toLowerCase(),
-      )
-      .slice(0, 4);
+    const sameCategoryProducts = products.filter(
+      (candidate) =>
+        candidate.id !== product?.id &&
+        product?.category &&
+        candidate.category?.toLowerCase() === product.category.toLowerCase(),
+    );
+
+    if (sameCategoryProducts.length > 0) {
+      relatedProducts = sameCategoryProducts.slice(0, 4);
+    } else {
+      relatedProducts = products
+        .filter((candidate) => candidate.id !== product?.id)
+        .slice(0, 4);
+    }
   } catch (error) {
     console.error("[products] Unable to load product detail.", { error, slug });
     throw error;
@@ -112,23 +119,18 @@ export default async function ProductPage({
               </p>
 
               <div className="purchase-actions">
-                <a
+                <AffiliateLink
                   className="buy-amazon-button"
                   href={product.affiliate_link}
-                  rel="noopener noreferrer sponsored"
-                  target="_blank"
+                  productId={product.id}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
                     <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
                   </svg>
                   Buy on Amazon
-                </a>
+                </AffiliateLink>
                 
-                <div className="trust-elements">
-                  <span className="trust-item"><span className="check">✓</span> Popular Choice</span>
-                  <span className="trust-item"><span className="check">✓</span> Fast Shipping</span>
-                  <span className="trust-item"><span className="check">✓</span> Amazon Secure Checkout</span>
-                </div>
+                <p className="trust-text">Secure checkout on Amazon</p>
               </div>
 
               <div className="affiliate-disclosure">
@@ -192,14 +194,13 @@ export default async function ProductPage({
             <span className="sticky-price">{formatPrice(product.price)}</span>
             <span className="sticky-title">{product.title}</span>
           </div>
-          <a
+          <AffiliateLink
             className="buy-amazon-button small"
             href={product.affiliate_link}
-            rel="noopener noreferrer sponsored"
-            target="_blank"
+            productId={product.id}
           >
             Buy on Amazon
-          </a>
+          </AffiliateLink>
         </div>
       </div>
     </>
