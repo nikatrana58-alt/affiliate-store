@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { ProductBadge } from "@/components/product-badge";
 import type { Product } from "@/lib/products";
 
 type ProductCardProps = {
   product: Product;
+  variant?: "default" | "featured";
 };
 
 function formatPrice(price: number | null) {
@@ -14,9 +16,15 @@ function formatPrice(price: number | null) {
   }).format(price);
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, variant = "default" }: ProductCardProps) {
   return (
-    <article className="store-product-card">
+    <article
+      className={
+        variant === "featured"
+          ? "store-product-card featured-product-card"
+          : "store-product-card"
+      }
+    >
       <Link className="store-product-image" href={`/products/${product.slug}`}>
         {product.image ? (
           // Dynamic Firebase URLs are intentionally rendered without optimization.
@@ -29,15 +37,15 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="store-product-body">
         <div className="product-meta">
           {product.category ? <span>{product.category}</span> : null}
-          {product.badge ? <strong>{product.badge}</strong> : null}
+          <ProductBadge badge={product.badge} />
         </div>
         <h2>
           <Link href={`/products/${product.slug}`}>{product.title}</Link>
         </h2>
         <p>{product.description || "Explore this recommended product."}</p>
         <div className="product-card-footer">
-          <span>{formatPrice(product.price)}</span>
-          <Link className="text-link" href={`/products/${product.slug}`}>
+          <span className="product-price">{formatPrice(product.price)}</span>
+          <Link className="product-detail-link" href={`/products/${product.slug}`}>
             View details
           </Link>
         </div>

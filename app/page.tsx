@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ProductCard } from "@/components/product-card";
+import { ProductBrowser } from "@/components/product-browser";
+import { StoreHeader } from "@/components/store-header";
 import { getProducts, type Product } from "@/lib/products";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -20,22 +21,17 @@ export default async function Home() {
 
   return (
     <>
-      <header className="store-header">
-        <Link className="store-logo" href="/">
-          Curated Finds
-        </Link>
-        <Link className="text-link" href="/admin">
-          Admin
-        </Link>
-      </header>
+      <StoreHeader />
       <main className="store-shell">
         <section className="hero">
-          <p className="eyebrow">Thoughtfully selected</p>
-          <h1>Useful products, chosen with care.</h1>
+          <p className="eyebrow">Handpicked affiliate finds</p>
+          <h1>Discover Viral Products Worth Buying</h1>
           <p>
-            Browse a focused collection of affiliate recommendations. Each link
-            takes you directly to the retailer.
+            Handpicked Amazon finds for your home, beauty, gadgets and lifestyle.
           </p>
+          <Link className="hero-cta" href="#products">
+            Browse Products
+          </Link>
         </section>
 
         {loadError ? <p className="notification error">{loadError}</p> : null}
@@ -48,17 +44,8 @@ export default async function Home() {
               then use the admin panel to publish your first listing.
             </p>
           </section>
-        ) : products.length ? (
-          <section className="store-products" aria-label="Products">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </section>
         ) : (
-          <section className="empty-store">
-            <h2>New recommendations are on the way</h2>
-            <p>The store is connected and ready for its first product.</p>
-          </section>
+          <ProductBrowser products={products} />
         )}
       </main>
     </>
