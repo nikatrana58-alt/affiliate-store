@@ -1,5 +1,6 @@
 import { requireCurrentAdmin } from "@/lib/auth/admin";
 import {
+  getUniqueSlug,
   normalizeProductInput,
   PRODUCT_COLUMNS,
   type ProductInput,
@@ -23,6 +24,11 @@ export async function PUT(request: Request, { params }: ProductRouteContext) {
     }
 
     const normalizedInput = normalizeProductInput(input);
+    const supabase = createAdminSupabaseClient();
+
+    // Automatically generate a unique slug if there's a collision
+    const uniqueSlug = await getUniqueSlug(supabase, normalizedInput.slug, id);
+    normalizedInput.slug = uniqueSlug;
 
     console.info("[products] Updating product.", {
       adminUid: admin.uid,
@@ -30,7 +36,7 @@ export async function PUT(request: Request, { params }: ProductRouteContext) {
       slug: normalizedInput.slug,
     });
 
-    const { data, error } = await createAdminSupabaseClient()
+    const { data, error } = await supabase
       .from("products")
       .update(normalizedInput)
       .eq("id", id)

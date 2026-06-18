@@ -304,6 +304,26 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
     }
   }
 
+  async function handleCopyLink(product: Product) {
+    const baseUrl = "https://wealth-store.vercel.app";
+    const productUrl = `${baseUrl}/products/${product.slug}`;
+
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      setNotification({
+        kind: "success",
+        message: "Product link copied successfully.",
+      });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error("[admin] Failed to copy link.", error);
+      setNotification({
+        kind: "error",
+        message: "Failed to copy product link.",
+      });
+    }
+  }
+
   async function handleLogout() {
     await fetch("/api/admin/session", { method: "DELETE" });
     await signOut(getFirebaseClientAuth());
@@ -451,6 +471,13 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                     <strong>{product.title}</strong>
                     <span>/{product.slug}</span>
                     <div className="product-actions">
+                      <button
+                        className="text-button"
+                        onClick={() => handleCopyLink(product)}
+                        type="button"
+                      >
+                        Copy Link
+                      </button>
                       <button
                         className="text-button"
                         onClick={() => beginEdit(product)}

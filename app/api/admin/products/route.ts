@@ -1,5 +1,6 @@
 import { requireCurrentAdmin } from "@/lib/auth/admin";
 import {
+  getUniqueSlug,
   normalizeProductInput,
   PRODUCT_COLUMNS,
   type ProductInput,
@@ -39,23 +40,11 @@ export async function POST(request: Request) {
     }
 
     const normalizedInput = normalizeProductInput(input);
-    const slug = normalizedInput.slug;
-
-    console.info("[products] Checking if slug already exists.", {
-      slug,
-    });
-
-    const { data: existingProduct, error: slugLookupError } = await createAdminSupabaseClient()
-      .from("products")
-      .select("id")
-      .eq("slug", slug)
-      .maybeSingle();
-
-    if (slugLookupError) throw slugLookupError;
-
-    if (existingProduct) {
-      throw new Error("Slug already exists");
-    }
+    const supabase = createAdminSupabaseClient();
+    
+    // Automatically generate a unique slug if there's a collision
+    const uniqueSlug = await getUniqueSlug(supabase, normalizedInput.slug);
+    normalizedInput.slug = uniqueSlug;
 
     console.info("[products] Saving product.", {
       adminUid: admin.uid,
@@ -63,7 +52,7 @@ export async function POST(request: Request) {
       title: normalizedInput.title,
     });
 
-    const { data, error } = await createAdminSupabaseClient()
+    const { data, error } = await supabase
       .from("products")
       .insert(normalizedInput)
       .select(PRODUCT_COLUMNS)

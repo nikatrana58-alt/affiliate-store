@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductBadge } from "@/components/product-badge";
 import { ProductCard } from "@/components/product-card";
@@ -7,12 +8,47 @@ import { getProductBySlug, getProducts, type Product } from "@/lib/products";
 export const dynamic = "force-dynamic";
 
 function formatPrice(price: number | null) {
-  if (price === null) return "Check current retailer price";
+  if (price === null) return "Check current price";
 
   return new Intl.NumberFormat("en-US", {
     currency: "USD",
     style: "currency",
   }).format(price);
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    return {
+      title: "Product Not Found",
+    };
+  }
+
+  const title = `${product.title} | Affiliate Store`;
+  const description = product.description || `Buy ${product.title} at the best price.`;
+
+  return {
+    description,
+    openGraph: {
+      description,
+      images: product.image ? [{ url: product.image }] : [],
+      title,
+      type: "website",
+    },
+    title,
+    twitter: {
+      card: "summary_large_image",
+      description,
+      images: product.image ? [product.image] : [],
+      title,
+    },
+  };
 }
 
 export default async function ProductPage({
@@ -46,58 +82,126 @@ export default async function ProductPage({
   return (
     <>
       <StoreHeader />
-      <main className="product-detail-shell">
-        <section className="product-detail">
-          <section className="product-detail-image">
-            {product.image ? (
-              // Dynamic Firebase URLs are intentionally rendered without optimization.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img alt={product.title} src={product.image} />
-            ) : (
-              <span className="image-placeholder">Image coming soon</span>
-            )}
-          </section>
-          <section className="product-detail-body">
-            <div className="product-meta">
-              {product.category ? <span>{product.category}</span> : null}
-              <ProductBadge badge={product.badge} />
-            </div>
-            <h1>{product.title}</h1>
-            <p className="detail-price">{formatPrice(product.price)}</p>
-            <p className="detail-description">
-              {product.description || "Explore this recommended product at the retailer."}
-            </p>
-            <a
-              className="button primary"
-              href={product.affiliate_link}
-              rel="noopener noreferrer sponsored"
-              target="_blank"
-            >
-              View at retailer
-            </a>
-            <p className="affiliate-note">
-              This is an affiliate link. The store may earn a commission from qualifying
-              purchases at no extra cost to you.
-            </p>
-          </section>
-        </section>
+      <main className="product-landing-page">
+        <div className="product-hero-section">
+          <div className="product-hero-container">
+            <section className="product-hero-image">
+              {product.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img alt={product.title} src={product.image} />
+              ) : (
+                <div className="image-placeholder">Image coming soon</div>
+              )}
+            </section>
 
-        {relatedProducts.length ? (
-          <section className="related-products" aria-label="You may also like">
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">More finds</p>
-                <h2>You may also like</h2>
+            <section className="product-hero-content">
+              <div className="product-hero-meta">
+                {product.category && <span className="category-tag">{product.category}</span>}
+                <ProductBadge badge={product.badge} />
+              </div>
+
+              <h1>{product.title}</h1>
+              
+              <div className="price-container">
+                <span className="current-price">{formatPrice(product.price)}</span>
+                <span className="price-badge">Prime Delivery</span>
+              </div>
+
+              <p className="product-description">
+                {product.description || "High-quality product recommended by our experts. Perfect for your home or as a thoughtful gift."}
+              </p>
+
+              <div className="purchase-actions">
+                <a
+                  className="buy-amazon-button"
+                  href={product.affiliate_link}
+                  rel="noopener noreferrer sponsored"
+                  target="_blank"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                  </svg>
+                  Buy on Amazon
+                </a>
+                
+                <div className="trust-elements">
+                  <span className="trust-item"><span className="check">✓</span> Popular Choice</span>
+                  <span className="trust-item"><span className="check">✓</span> Fast Shipping</span>
+                  <span className="trust-item"><span className="check">✓</span> Amazon Secure Checkout</span>
+                </div>
+              </div>
+
+              <div className="affiliate-disclosure">
+                As an Amazon Associate I earn from qualifying purchases.
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <section className="benefits-section">
+          <div className="section-container">
+            <p className="eyebrow">Why you&apos;ll love it</p>
+            <h2>Product Benefits</h2>
+            <div className="benefits-grid">
+              <div className="benefit-card">
+                <div className="benefit-icon">✨</div>
+                <h3>Premium Quality</h3>
+                <p>Selected for its durability and exceptional performance in everyday use.</p>
+              </div>
+              <div className="benefit-card">
+                <div className="benefit-icon">🎁</div>
+                <h3>Perfect Gift</h3>
+                <p>Elegant design makes it an ideal choice for friends, family, or yourself.</p>
+              </div>
+              <div className="benefit-card">
+                <div className="benefit-icon">🛡️</div>
+                <h3>Verified Choice</h3>
+                <p>Highly rated by thousands of satisfied customers across the globe.</p>
+              </div>
+              <div className="benefit-card">
+                <div className="benefit-icon">🚀</div>
+                <h3>Quick Setup</h3>
+                <p>Ready to use right out of the box with minimal effort required.</p>
               </div>
             </div>
-            <div className="store-products">
-              {relatedProducts.map((relatedProduct) => (
-                <ProductCard key={relatedProduct.id} product={relatedProduct} />
-              ))}
+          </div>
+        </section>
+
+        {relatedProducts.length > 0 && (
+          <section className="related-products-section" aria-label="You may also like">
+            <div className="section-container">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Discover more</p>
+                  <h2>Related Products</h2>
+                </div>
+              </div>
+              <div className="related-products-grid">
+                {relatedProducts.map((relatedProduct) => (
+                  <ProductCard key={relatedProduct.id} product={relatedProduct} />
+                ))}
+              </div>
             </div>
           </section>
-        ) : null}
+        )}
       </main>
+
+      <div className="sticky-mobile-buy">
+        <div className="sticky-container">
+          <div className="sticky-info">
+            <span className="sticky-price">{formatPrice(product.price)}</span>
+            <span className="sticky-title">{product.title}</span>
+          </div>
+          <a
+            className="buy-amazon-button small"
+            href={product.affiliate_link}
+            rel="noopener noreferrer sponsored"
+            target="_blank"
+          >
+            Buy on Amazon
+          </a>
+        </div>
+      </div>
     </>
   );
 }

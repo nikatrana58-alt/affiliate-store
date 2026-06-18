@@ -49,6 +49,40 @@ export function normalizeProductInput(input: ProductInput): ProductInput {
   };
 }
 
+export async function getUniqueSlug(
+  supabase: any,
+  baseSlug: string,
+  excludeId?: string
+): Promise<string> {
+  const normalizedBase = baseSlug.trim().toLowerCase();
+  
+  // 1. Fetch all potentially conflicting slugs
+  const { data, error } = await supabase
+    .from("products")
+    .select("slug, id")
+    .or(`slug.eq.${normalizedBase},slug.ilike.${normalizedBase}-%`);
+
+  if (error) throw error;
+
+  const existingSlugs = new Set((data as { slug: string, id: string }[])
+    .filter(p => p.id !== excludeId)
+    .map(p => p.slug.toLowerCase()));
+
+  if (!existingSlugs.has(normalizedBase)) {
+    return normalizedBase;
+  }
+
+  // 2. Find the next available suffix
+  let counter = 2;
+  while (true) {
+    const candidate = `${normalizedBase}-${counter}`;
+    if (!existingSlugs.has(candidate)) {
+      return candidate;
+    }
+    counter++;
+  }
+}
+
 export async function getProducts() {
   const { data, error } = await createPublicSupabaseClient()
     .from("products")
