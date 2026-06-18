@@ -1,0 +1,12 @@
+
+> affiliate-store@0.1.0 dev
+> next dev --webpack --port 3001
+
+▲ Next.js 16.2.6 (webpack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.1.6:3001
+- Environments: .env.local
+✓ Ready in 383ms
+
+ GET / 200 in 2.0s (next.js: 1270ms, application-code: 752ms)
+[?25h

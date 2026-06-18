@@ -1,9 +1,26 @@
 "use client";
 
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { getFirebaseClientAuth } from "@/lib/firebase/client";
+
+function getSignInErrorMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "auth/invalid-credential"
+  ) {
+    return "Invalid email or password.";
+  }
+
+  return error instanceof Error ? error.message : "Unable to sign in.";
+}
 
 export function AdminLogin() {
   const router = useRouter();
@@ -11,6 +28,19 @@ export function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
+
+  async function createAdminSession(idToken: string) {
+    const response = await fetch("/api/admin/session", {
+      body: JSON.stringify({ idToken }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+    const result = (await response.json()) as { error?: string };
+
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to sign in.");
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -21,25 +51,49 @@ export function AdminLogin() {
       const auth = getFirebaseClientAuth();
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await credential.user.getIdToken();
-      const response = await fetch("/api/admin/session", {
-        body: JSON.stringify({ idToken }),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      const result = (await response.json()) as { error?: string };
-
-      if (!response.ok) {
+      try {
+        await createAdminSession(idToken);
+      } catch (sessionError) {
         await auth.signOut();
-        throw new Error(result.error || "Unable to sign in.");
+        throw sessionError;
       }
 
       router.replace("/admin");
       router.refresh();
     } catch (signInError) {
-      console.error("[admin-auth] Sign in failed.", signInError);
-      setError(
-        signInError instanceof Error ? signInError.message : "Unable to sign in.",
-      );
+      const message = getSignInErrorMessage(signInError);
+
+      console.warn("[admin-auth] Sign in failed.", message);
+      setError(message);
+    } finally {
+      setIsSigningIn(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError("");
+    setIsSigningIn(true);
+
+    try {
+      const auth = getFirebaseClientAuth();
+      const provider = new GoogleAuthProvider();
+      const credential = await signInWithPopup(auth, provider);
+      const idToken = await credential.user.getIdToken();
+
+      try {
+        await createAdminSession(idToken);
+      } catch (sessionError) {
+        await auth.signOut();
+        throw sessionError;
+      }
+
+      router.replace("/admin");
+      router.refresh();
+    } catch (signInError) {
+      const message = getSignInErrorMessage(signInError);
+
+      console.warn("[admin-auth] Sign in failed.", message);
+      setError(message);
     } finally {
       setIsSigningIn(false);
     }
@@ -77,6 +131,14 @@ export function AdminLogin() {
           {error ? <p className="notification error">{error}</p> : null}
           <button className="button primary" disabled={isSigningIn} type="submit">
             {isSigningIn ? "Signing in..." : "Sign in"}
+          </button>
+          <button
+            className="button secondary"
+            disabled={isSigningIn}
+            onClick={handleGoogleSignIn}
+            type="button"
+          >
+            Sign in with Google
           </button>
         </form>
       </section>

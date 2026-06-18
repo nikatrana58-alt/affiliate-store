@@ -39,6 +39,23 @@ export async function POST(request: Request) {
     }
 
     const normalizedInput = normalizeProductInput(input);
+    const slug = normalizedInput.slug;
+
+    console.info("[products] Checking if slug already exists.", {
+      slug,
+    });
+
+    const { data: existingProduct, error: slugLookupError } = await createAdminSupabaseClient()
+      .from("products")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (slugLookupError) throw slugLookupError;
+
+    if (existingProduct) {
+      throw new Error("Slug already exists");
+    }
 
     console.info("[products] Saving product.", {
       adminUid: admin.uid,
@@ -59,6 +76,10 @@ export async function POST(request: Request) {
     return Response.json({ product: data }, { status: 201 });
   } catch (error) {
     console.error("[products] Product save failed.", error);
+    console.error("FULL SUPABASE ERROR:", error);
+    console.error("typeof error:", typeof error);
+    console.error("JSON.stringify(error):", JSON.stringify(error, null, 2));
+
     return Response.json(
       { error: error instanceof Error ? error.message : "Unable to save product." },
       { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 },

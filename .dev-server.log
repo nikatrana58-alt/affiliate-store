@@ -1,18 +1,26 @@
 
 > affiliate-store@0.1.0 dev
-> next dev
+> next dev --webpack
 
-▲ Next.js 16.2.6 (Turbopack)
+▲ Next.js 16.2.6 (webpack)
 - Local:         http://localhost:3000
-- Network:       http://192.168.1.2:3000
+- Network:       http://192.168.1.6:3000
 - Environments: .env.local
-✓ Ready in 479ms
-Creating turbopack project { dir: 'C:\\Users\\HP\\affiliate-store', testMode: true }
+✓ Ready in 364ms
 
 ○ Compiling /admin/login ...
-✓ Finished writing to filesystem cache in 59s
-✓ Finished writing to filesystem cache in 31.0s
-✓ Finished writing to filesystem cache in 2.2min
- GET / 500 in 11.7min (next.js: 11.7min, application-code: 179ms)
- GET /admin 500 in 11.7min (next.js: 11.7min, application-code: 8ms)
- GET /admin/login 500 in 11.7min (next.js: 11.7min, application-code: 6ms)
+ GET /admin/login 200 in 3.8s (next.js: 3.5s, application-code: 307ms)
+ GET / 200 in 1645ms (next.js: 3ms, application-code: 1642ms)
+ GET / 200 in 3.1s (next.js: 1263ms, application-code: 1840ms)
+ GET /admin 200 in 701ms (next.js: 587ms, application-code: 114ms)
+ GET /admin/login 200 in 77ms (next.js: 13ms, application-code: 64ms)
+ GET /admin/login 200 in 37ms (next.js: 3ms, application-code: 34ms)
+ GET / 200 in 1547ms (next.js: 86ms, application-code: 1461ms)
+ GET /admin/login 200 in 129ms (next.js: 9ms, application-code: 121ms)
+ GET /admin/login 200 in 56ms (next.js: 5ms, application-code: 51ms)
+ GET / 200 in 308ms (next.js: 3ms, application-code: 306ms)
+ GET /admin/login 200 in 38ms (next.js: 3ms, application-code: 36ms)
+ GET / 200 in 1368ms (next.js: 118ms, application-code: 1250ms)
+ GET / 200 in 962ms (next.js: 3ms, application-code: 959ms)
+ GET / 200 in 840ms (next.js: 3ms, application-code: 836ms)
+ GET / 200 in 615ms (next.js: 2ms, application-code: 612ms)
