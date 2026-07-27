@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
 import { CheckoutForm } from "@/components/checkout-form";
 import { Footer } from "@/components/footer";
-import "../checkout.css";
+import "./checkout.css";
 
 export const metadata: Metadata = {
   title: "Checkout",

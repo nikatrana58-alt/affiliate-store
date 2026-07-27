@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CustomerOrderLookup } from "@/components/customer-order-lookup";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import "../checkout.css";
+import "@/app/checkout.css";
 
 export const metadata: Metadata = {
   title: "Track Your Order | Curated Finds",

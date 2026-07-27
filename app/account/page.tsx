@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CustomerDashboard } from "@/components/customer-dashboard";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import "../checkout.css";
+import "@/app/checkout.css";
 
 export const metadata: Metadata = {
   title: "Customer Account Dashboard | Curated Finds",

@@ -4,7 +4,7 @@ import { CustomerOrderDetails } from "@/components/customer-order-details";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { getOrderById, getOrderStatusHistory } from "@/lib/orders";
-import "../../checkout.css";
+import "@/app/checkout.css";
 
 export const metadata: Metadata = {
   title: "Order Details & Tracking | Curated Finds",

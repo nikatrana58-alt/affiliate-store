@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import "./checkout.css";
+import "@/app/checkout.css";
 
 export default function NotFoundPage() {
   return (
