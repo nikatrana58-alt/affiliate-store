@@ -6,10 +6,20 @@
  */
 
 import { type NextRequest } from "next/server";
-import { createCheckoutSession } from "@/lib/stripe";
+import { createCheckoutSession, isStripeConfigured } from "@/lib/stripe";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isStripeConfigured()) {
+      return Response.json(
+        {
+          error:
+            "Online card payment is currently in preview mode. Stripe API keys are not yet configured on this environment.",
+        },
+        { status: 503 }
+      );
+    }
+
     const body = (await request.json()) as { orderId?: string };
 
     if (!body.orderId || typeof body.orderId !== "string") {

@@ -33,11 +33,10 @@ export async function POST(request: NextRequest) {
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  if (!webhookSecret) {
-    console.error("[stripe-webhook] STRIPE_WEBHOOK_SECRET is not configured.");
+  if (!webhookSecret || webhookSecret.includes("placeholder")) {
     return Response.json(
-      { error: "Webhook secret not configured on server." },
-      { status: 500 }
+      { message: "Stripe webhook endpoint is inactive (STRIPE_WEBHOOK_SECRET not configured)." },
+      { status: 200 }
     );
   }
 

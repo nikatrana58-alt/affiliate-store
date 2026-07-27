@@ -1,28 +1,69 @@
 /**
  * lib/stripe.ts
  *
- * Stripe SDK client & helper functions for customer management
+ * Lazy-initialized Stripe SDK client & helper functions for customer management
  * and Stripe Hosted Checkout Session creation.
+ *
+ * Production Hardening:
+ * - Does not validate environment variables at module import time.
+ * - Instantiates Stripe lazily at runtime when payment operations occur.
+ * - Build static analysis succeeds even without production secrets present.
+ * - Gracefully disables operations if STRIPE_SECRET_KEY is not configured.
  */
 
 import Stripe from "stripe";
 import { createAdminSupabaseClient } from "@/lib/supabase";
 import { getOrderById, updateOrderStripeSession } from "@/lib/orders";
 
-function getStripeSecretKey(): string {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) {
-    throw new Error("Missing required environment variable: STRIPE_SECRET_KEY");
-  }
-  return key;
+let stripeInstance: Stripe | null = null;
+
+/**
+ * Checks whether Stripe environment variables are configured.
+ */
+export function isStripeConfigured(): boolean {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  return Boolean(secretKey && secretKey.trim().length > 0 && !secretKey.includes("placeholder"));
 }
 
-/** Singleton instance of Stripe Server SDK */
-export const stripe = new Stripe(getStripeSecretKey() || "sk_test_placeholder", {
-  apiVersion: "2025-02-24.acacia" as Stripe.LatestApiVersion,
-  appInfo: {
-    name: "Curated Finds Ecommerce",
-    version: "1.0.0",
+/**
+ * Returns the Stripe SDK instance lazily on demand.
+ * Returns null if STRIPE_SECRET_KEY is not configured.
+ */
+export function getStripe(): Stripe | null {
+  if (!isStripeConfigured()) {
+    return null;
+  }
+
+  if (!stripeInstance) {
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: "2025-02-24.acacia" as Stripe.LatestApiVersion,
+      appInfo: {
+        name: "Curated Finds Ecommerce",
+        version: "1.0.0",
+      },
+    });
+  }
+
+  return stripeInstance;
+}
+
+/**
+ * Proxy object wrapping getStripe() for backwards-compatible access (e.g. stripe.customers, stripe.webhooks).
+ * Defers initialization until a property or method is accessed at runtime.
+ */
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, prop: keyof Stripe) {
+    const client = getStripe();
+    if (!client) {
+      throw new Error(
+        "Stripe operation requested but STRIPE_SECRET_KEY is not configured on this environment."
+      );
+    }
+    const value = client[prop];
+    if (typeof value === "function") {
+      return value.bind(client);
+    }
+    return value;
   },
 });
 
@@ -34,6 +75,11 @@ export async function getOrCreateStripeCustomer(
   email: string,
   name?: string
 ): Promise<string> {
+  const client = getStripe();
+  if (!client) {
+    throw new Error("Stripe payments are not configured on this server.");
+  }
+
   const normalizedEmail = email.toLowerCase().trim();
   const supabase = createAdminSupabaseClient();
 
@@ -49,7 +95,7 @@ export async function getOrCreateStripeCustomer(
   }
 
   // 2. Create customer in Stripe
-  const customer = await stripe.customers.create({
+  const customer = await client.customers.create({
     email: normalizedEmail,
     name: name?.trim() || undefined,
     metadata: {
@@ -77,6 +123,13 @@ export async function createCheckoutSession(
   orderId: string,
   origin: string
 ): Promise<Stripe.Checkout.Session> {
+  const client = getStripe();
+  if (!client) {
+    throw new Error(
+      "Online payment processing is currently unavailable (Stripe environment variables are not configured)."
+    );
+  }
+
   const order = await getOrderById(orderId);
 
   if (!order) {
@@ -152,22 +205,20 @@ export async function createCheckoutSession(
 
   // Handle discount if coupon applied
   const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
-  let couponIdForStripe: string | undefined;
 
   if (order.discount_amount > 0) {
     // Create temporary ephemeral coupon for the discount amount
-    const coupon = await stripe.coupons.create({
+    const coupon = await client.coupons.create({
       amount_off: Math.round(order.discount_amount * 100),
       currency: "usd",
       duration: "once",
       name: order.coupon_code ? `Coupon (${order.coupon_code})` : "Discount",
     });
-    couponIdForStripe = coupon.id;
     discounts.push({ coupon: coupon.id });
   }
 
   // Create Checkout Session
-  const session = await stripe.checkout.sessions.create({
+  const session = await client.checkout.sessions.create({
     customer: stripeCustomerId,
     customer_email: undefined, // using customer parameter
     mode: "payment",
