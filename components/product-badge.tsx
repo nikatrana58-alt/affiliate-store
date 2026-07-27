@@ -1,22 +1,22 @@
 const badgeMap = [
   {
     className: "badge-trending",
-    label: "🔥 Trending",
+    label: "Trending",
     match: "trending",
   },
   {
     className: "badge-bestseller",
-    label: "⭐ Bestseller",
+    label: "Bestseller",
     match: "bestseller",
   },
   {
     className: "badge-premium",
-    label: "💎 Premium Pick",
+    label: "Premium Pick",
     match: "premium",
   },
   {
     className: "badge-top-rated",
-    label: "🏆 Top Rated",
+    label: "Top Rated",
     match: "top rated",
   },
 ];

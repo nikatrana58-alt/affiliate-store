@@ -1,9 +1,13 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AffiliateLink } from "@/components/affiliate-link";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductBadge } from "@/components/product-badge";
 import { ProductCard } from "@/components/product-card";
 import { StoreHeader } from "@/components/store-header";
+import { Footer } from "@/components/footer";
+import { MagneticButton } from "@/components/magnetic-button";
+import { ProductReviewsSection } from "@/components/product-reviews-section";
+import { SmartRecommendations } from "@/components/smart-recommendations";
 import { getProductBySlug, getProducts, type Product } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
@@ -90,15 +94,19 @@ export default async function ProductPage({
     <>
       <StoreHeader />
       <main className="product-landing-page">
-        <div className="product-hero-section">
+        <div className="product-hero-section animate-fade-slide-up">
           <div className="product-hero-container">
             <section className="product-hero-image">
               {product.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img alt={product.title} src={product.image} />
+                <div className="product-image-reflection">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img alt={product.title} src={product.image} />
+                  <div className="product-image-reflection-fallback" aria-hidden="true" />
+                </div>
               ) : (
                 <div className="image-placeholder">Image coming soon</div>
               )}
+              <div className="product-image-shadow" aria-hidden="true" />
             </section>
 
             <section className="product-hero-content">
@@ -118,33 +126,42 @@ export default async function ProductPage({
                 {product.description || "High-quality product recommended by our experts. Perfect for your home or as a thoughtful gift."}
               </p>
 
-              <div className="purchase-actions">
-                <AffiliateLink
-                  className="buy-amazon-button"
-                  href={product.affiliate_link}
-                  productId={product.id}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
-                  </svg>
-                  Buy on Amazon
-                </AffiliateLink>
-                
-                <p className="trust-text">Secure checkout on Amazon</p>
+              {/* Trust indicators */}
+              <div className="trust-indicators">
+                <span className="trust-indicator">
+                  <span className="trust-indicator-icon">🔒</span>
+                  Secure checkout
+                </span>
+                <span className="trust-indicator">
+                  <span className="trust-indicator-icon">⚡</span>
+                  Fast delivery
+                </span>
+                <span className="trust-indicator">
+                  <span className="trust-indicator-icon">✓</span>
+                  Amazon verified
+                </span>
+                <span className="trust-indicator">
+                  <span className="trust-indicator-icon">↩</span>
+                  Easy returns
+                </span>
               </div>
 
-              <div className="affiliate-disclosure">
-                As an Amazon Associate I earn from qualifying purchases.
+              <div className="purchase-actions">
+                <MagneticButton className="buy-amazon-button-wrapper">
+                  <AddToCartButton product={product} />
+                </MagneticButton>
+
+                <p className="trust-text">Secure checkout · Free returns</p>
               </div>
             </section>
           </div>
         </div>
 
         <section className="benefits-section">
-          <div className="section-container">
+          <div className="section-container animate-fade-slide-up" style={{animationDelay: "0.15s"}}>
             <p className="eyebrow">Why you&apos;ll love it</p>
             <h2>Product Benefits</h2>
-            <div className="benefits-grid">
+            <div className="benefits-grid stagger-children">
               <div className="benefit-card">
                 <div className="benefit-icon">✨</div>
                 <h3>Premium Quality</h3>
@@ -171,14 +188,14 @@ export default async function ProductPage({
 
         {relatedProducts.length > 0 && (
           <section className="related-products-section" aria-label="You may also like">
-            <div className="section-container">
+            <div className="section-container animate-fade-slide-up" style={{animationDelay: "0.2s"}}>
               <div className="section-heading">
                 <div>
                   <p className="eyebrow">Discover more</p>
                   <h2>Related Products</h2>
                 </div>
               </div>
-              <div className="related-products-grid">
+              <div className="related-products-grid stagger-children">
                 {relatedProducts.map((relatedProduct) => (
                   <ProductCard key={relatedProduct.id} product={relatedProduct} />
                 ))}
@@ -186,6 +203,12 @@ export default async function ProductPage({
             </div>
           </section>
         )}
+
+        {/* Customer Reviews & Star Ratings Section */}
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
+          <ProductReviewsSection productId={product.id} />
+          <SmartRecommendations currentProduct={product} allProducts={relatedProducts} />
+        </div>
       </main>
 
       <div className="sticky-mobile-buy">
@@ -194,15 +217,13 @@ export default async function ProductPage({
             <span className="sticky-price">{formatPrice(product.price)}</span>
             <span className="sticky-title">{product.title}</span>
           </div>
-          <AffiliateLink
-            className="buy-amazon-button small"
-            href={product.affiliate_link}
-            productId={product.id}
-          >
-            Buy on Amazon
-          </AffiliateLink>
+          <MagneticButton className="buy-amazon-button-wrapper">
+            <AddToCartButton product={product} size="small" />
+          </MagneticButton>
         </div>
       </div>
+
+      <Footer />
     </>
   );
 }

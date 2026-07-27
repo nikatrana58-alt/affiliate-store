@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/product-card";
+import { SectionReveal } from "@/components/section-reveal";
 import type { Product } from "@/lib/products";
 
 const categories = [
@@ -64,22 +65,25 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
   return (
     <section className="product-browser" id="products" aria-label="Products">
       {featuredProducts.length ? (
-        <section className="featured-products" aria-label="Featured Products">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Editor selection</p>
-              <h2>Featured Products</h2>
+        <SectionReveal>
+          <section className="featured-products" aria-label="Featured Products">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Editor selection</p>
+                <h2>Featured Products</h2>
+              </div>
             </div>
-          </div>
-          <div className="featured-grid">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} variant="featured" />
-            ))}
-          </div>
-        </section>
+            <div className="featured-grid stagger-children">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} variant="featured" />
+              ))}
+            </div>
+          </section>
+        </SectionReveal>
       ) : null}
 
-      <div className="store-controls">
+      <SectionReveal>
+        <div className="store-controls">
         <input
           aria-label="Search products"
           className="product-search"
@@ -105,20 +109,21 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
           ))}
         </div>
       </div>
+      </SectionReveal>
 
       {!products.length ? (
-        <section className="empty-store">
+        <section className="empty-store animate-fade-slide-up">
           <h2>New recommendations are on the way</h2>
           <p>The store is connected and ready for its first product.</p>
         </section>
       ) : filteredProducts.length ? (
-        <div className="store-products">
+        <div className="store-products stagger-children" key={`${selectedCategory}-${searchTerm}`}>
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <section className="empty-store">
+        <section className="empty-store animate-fade-in">
           <h2>No matching products found.</h2>
         </section>
       )}

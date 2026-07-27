@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ProductManager } from "@/components/product-manager";
+import ProductManager from "@/components/product-manager";
 import { getCurrentAdmin } from "@/lib/auth/admin";
 import { getProducts, type Product } from "@/lib/products";
 

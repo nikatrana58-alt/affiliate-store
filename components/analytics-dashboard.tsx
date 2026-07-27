@@ -53,8 +53,8 @@ export function AnalyticsDashboard() {
             {topProducts.map((item, index) => (
               <div key={item.id} className="leaderboard-item">
                 <span className="rank">{index + 1}</span>
-                <span className="title">{item.title}</span>
-                <span className="clicks">{item.clicks} clicks</span>
+                <span className="leaderboard-title">{item.title}</span>
+                <span className="leaderboard-clicks">{item.clicks} clicks</span>
               </div>
             ))}
           </div>
@@ -84,40 +84,6 @@ export function AnalyticsDashboard() {
           ))}
         </div>
       </section>
-
-      <style jsx>{`
-        .analytics-dashboard {
-          display: grid;
-          gap: 22px;
-          margin-top: 22px;
-        }
-        .leaderboard-list {
-          display: grid;
-          gap: 12px;
-          margin-top: 12px;
-        }
-        .leaderboard-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 8px 0;
-          border-bottom: 1px solid var(--border);
-        }
-        .rank {
-          font-weight: 900;
-          color: var(--accent);
-          font-size: 18px;
-          width: 24px;
-        }
-        .title {
-          flex: 1;
-          font-weight: 600;
-        }
-        .clicks {
-          font-weight: 800;
-          color: var(--muted);
-        }
-      `}</style>
     </div>
   );
 }

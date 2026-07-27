@@ -145,3 +145,6 @@ export function AdminLogin() {
     </main>
   );
 }
+
+export default AdminLogin;
+

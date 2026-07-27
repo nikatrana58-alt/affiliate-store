@@ -1,0 +1,198 @@
+/**
+ * lib/fulfillment.ts
+ *
+ * High-level fulfillment orchestrator linking Supabase ecommerce orders
+ * with CJ Dropshipping (and future suppliers).
+ */
+
+import { cjDropshipping } from "@/lib/cj-dropshipping";
+import { getOrderById, updateOrderStatus } from "@/lib/orders";
+import { createAdminSupabaseClient } from "@/lib/supabase";
+import { notifyAdmin } from "@/lib/notifications/admin";
+import type { OrderWithItems } from "@/lib/db/types";
+
+export type FulfillmentResult =
+  | { success: true; cjOrderId: string; order: OrderWithItems }
+  | { success: false; error: string; details?: unknown };
+
+/**
+ * Validates and submits an order to CJ Dropshipping for fulfillment.
+ */
+export async function fulfillOrderWithCJ(orderId: string): Promise<FulfillmentResult> {
+  const order = await getOrderById(orderId);
+
+  if (!order) {
+    return { success: false, error: `Order not found: ${orderId}` };
+  }
+
+  if (order.cj_order_id) {
+    return {
+      success: false,
+      error: `Order ${orderId} has already been submitted to CJ Dropshipping (CJ Order ID: ${order.cj_order_id})`,
+    };
+  }
+
+  // 1. Fetch product records to get cj_product_id for each item
+  const supabase = createAdminSupabaseClient();
+  const productIds = order.order_items.map((i) => i.product_id);
+
+  const { data: productsData } = await supabase
+    .from("products")
+    .select("id, cj_product_id, title")
+    .in("id", productIds);
+
+  const productMap = new Map((productsData || []).map((p) => [p.id, p]));
+
+  const supplierItems = order.order_items.map((item) => {
+    const p = productMap.get(item.product_id);
+    return {
+      supplierProductId: p?.cj_product_id || item.product_id,
+      supplierVariantId: item.variant_id || undefined,
+      quantity: item.quantity,
+      title: item.product_title,
+    };
+  });
+
+  // 2. Validate Stock & Product Availability with CJ
+  console.info(`[fulfillment] Validating CJ stock for order ${orderId}...`);
+  const stockResult = await cjDropshipping.validateStock(supplierItems);
+
+  if (!stockResult.valid) {
+    const failedItem = stockResult.itemResults.find((i) => !i.available);
+    const reason = failedItem?.reason || "Product stock validation failed with CJ Dropshipping";
+    console.warn(`[fulfillment] CJ stock validation failed for order ${orderId}: ${reason}`);
+    return { success: false, error: reason, details: stockResult.itemResults };
+  }
+
+  // 3. Validate Shipping Destination
+  const destResult = await cjDropshipping.validateShippingDestination(
+    order.shipping_address.country,
+    order.shipping_address.postal_code
+  );
+
+  if (!destResult.valid) {
+    return {
+      success: false,
+      error: destResult.reason || `Shipping to ${order.shipping_address.country} not supported by CJ Dropshipping.`,
+    };
+  }
+
+  // 4. Submit Order to CJ Dropshipping API
+  const cjResult = await cjDropshipping.createOrder({
+    orderId: order.id,
+    customerName: `${order.customer_first_name} ${order.customer_last_name}`,
+    customerEmail: order.customer_email,
+    customerPhone: order.customer_phone || undefined,
+    shippingAddress: order.shipping_address,
+    items: supplierItems,
+  });
+
+  if (!cjResult.success || !cjResult.supplierOrderId) {
+    const errorMsg = cjResult.error || "Failed to create order on CJ Dropshipping API.";
+    await notifyAdmin({
+      type: "cj_failed",
+      title: "CJ Fulfillment Submission Failed",
+      message: `Order #${order.id.slice(0, 8)} failed during CJ submission: ${errorMsg}`,
+      metadata: { orderId: order.id, customerEmail: order.customer_email, error: errorMsg },
+    });
+    return {
+      success: false,
+      error: errorMsg,
+    };
+  }
+
+  const cjOrderId = cjResult.supplierOrderId;
+
+  // 5. Update Order in Supabase Database
+  const now = new Date().toISOString();
+  const { data: updatedOrder, error: updateError } = await supabase
+    .from("orders")
+    .update({
+      cj_order_id: cjOrderId,
+      fulfillment_ref: cjOrderId,
+      fulfillment_status: "processing",
+      synced_at: now,
+      status: "processing",
+    })
+    .eq("id", order.id)
+    .select()
+    .single();
+
+  if (updateError) {
+    console.error(`[fulfillment] DB update failed for order ${order.id}:`, updateError);
+  }
+
+  // Record Timeline Status Entry
+  await supabase.from("order_status_history").insert({
+    order_id: order.id,
+    old_status: order.status,
+    new_status: "processing",
+    note: `Submitted to CJ Dropshipping. CJ Order ID: ${cjOrderId}`,
+    changed_by: "cj_dropshipping_system",
+  });
+
+  const refreshedOrder = await getOrderById(order.id);
+
+  console.info(`[fulfillment] Successfully fulfilled order ${order.id} with CJ Order ID ${cjOrderId}`);
+  return {
+    success: true,
+    cjOrderId,
+    order: refreshedOrder!,
+  };
+}
+
+/**
+ * Synchronizes tracking number, carrier, and shipment status from CJ Dropshipping.
+ */
+export async function syncOrderTrackingFromCJ(orderId: string) {
+  const order = await getOrderById(orderId);
+
+  if (!order) {
+    throw new Error(`Order not found: ${orderId}`);
+  }
+
+  if (!order.cj_order_id) {
+    throw new Error(`Order ${orderId} has no CJ Order ID assigned.`);
+  }
+
+  console.info(`[fulfillment] Syncing CJ tracking info for order ${orderId} (CJ ID: ${order.cj_order_id})...`);
+  const trackingInfo = await cjDropshipping.getTrackingInfo(order.cj_order_id);
+
+  const supabase = createAdminSupabaseClient();
+  const updates: Record<string, unknown> = {
+    fulfillment_status: trackingInfo.status || "processing",
+    synced_at: new Date().toISOString(),
+  };
+
+  if (trackingInfo.trackingNumber) {
+    updates.tracking_number = trackingInfo.trackingNumber;
+  }
+  if (trackingInfo.carrier) {
+    updates.shipping_carrier = trackingInfo.carrier;
+  }
+
+  let targetOrderStatus = order.status;
+  if (trackingInfo.trackingNumber && order.status !== "delivered") {
+    updates.status = "shipped";
+    targetOrderStatus = "shipped";
+  }
+
+  await supabase.from("orders").update(updates).eq("id", order.id);
+
+  if (targetOrderStatus !== order.status) {
+    await supabase.from("order_status_history").insert({
+      order_id: order.id,
+      old_status: order.status,
+      new_status: targetOrderStatus,
+      note: `Tracking updated from CJ: ${trackingInfo.carrier} - ${trackingInfo.trackingNumber}`,
+      changed_by: "cj_tracking_sync",
+    });
+  }
+
+  const refreshed = await getOrderById(order.id);
+  return {
+    success: true,
+    trackingInfo,
+    order: refreshed!,
+  };
+}

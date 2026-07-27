@@ -11,6 +11,7 @@ import {
   type FormEvent,
 } from "react";
 import { AnalyticsDashboard } from "@/components/analytics-dashboard";
+import { OrdersDashboard } from "@/components/orders-dashboard";
 import {
   getFirebaseClientAuth,
 } from "@/lib/firebase/client";
@@ -78,7 +79,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
   const [status, setStatus] = useState("");
   const [notification, setNotification] = useState<Notification>(null);
   const [isWorking, setIsWorking] = useState(false);
-  const [activeTab, setActiveTab] = useState<"inventory" | "analytics">("inventory");
+  const [activeTab, setActiveTab] = useState<"inventory" | "orders" | "analytics">("inventory");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getFirebaseClientAuth(), (user) => {
@@ -350,6 +351,13 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
             Inventory
           </button>
           <button 
+            className={`button ${activeTab === "orders" ? "primary" : "secondary"}`}
+            onClick={() => setActiveTab("orders")}
+            type="button"
+          >
+            Orders
+          </button>
+          <button 
             className={`button ${activeTab === "analytics" ? "primary" : "secondary"}`}
             onClick={() => setActiveTab("analytics")}
             type="button"
@@ -524,9 +532,14 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
           )}
         </section>
       </section>
+    ) : activeTab === "orders" ? (
+      <OrdersDashboard />
     ) : (
       <AnalyticsDashboard />
     )}
   </main>
 );
 }
+
+export default ProductManager;
+
