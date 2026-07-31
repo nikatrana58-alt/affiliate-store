@@ -53,8 +53,7 @@ export type Product = {
 
 export type ProductInput = Omit<Product, "id" | "created_at">;
 
-export const PRODUCT_COLUMNS =
-  "id,title,slug,description,category,badge,price,image,affiliate_link,cj_product_id,created_at";
+export const PRODUCT_COLUMNS = "*";
 
 export const FALLBACK_PRODUCTS: Product[] = [
   {
@@ -229,10 +228,10 @@ export function normalizeProductInput(input: ProductInput): ProductInput {
   const price = input.price != null ? Number(input.price) : null;
   const costPrice = input.cost_price != null ? Number(input.cost_price) : null;
 
-  let profit: number | null = input.profit ?? null;
-  let marginPercent: number | null = input.margin_percent ?? null;
+  let profit: number | null = input.profit != null ? Number(input.profit) : null;
+  let marginPercent: number | null = input.margin_percent != null ? Number(input.margin_percent) : null;
 
-  if (price != null && costPrice != null) {
+  if ((profit == null || marginPercent == null) && price != null && costPrice != null) {
     const metrics = calculateProfitMetrics(costPrice, price);
     profit = metrics.profit;
     marginPercent = metrics.marginPercent;

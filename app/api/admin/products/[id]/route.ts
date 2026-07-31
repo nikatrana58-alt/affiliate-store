@@ -70,18 +70,24 @@ export async function PUT(request: Request, { params }: ProductRouteContext) {
     const input = (await request.json()) as ProductInput;
     const validationErrors = validateProductInput(input);
 
+    console.info(`[product-save] Payload Received by API for ID "${id}":`, input);
+
     if (validationErrors.length) {
+      console.warn(`[product-save] Validation failed for ID "${id}":`, validationErrors);
       return Response.json({ error: validationErrors.join(" ") }, { status: 400 });
     }
 
     const normalizedInput = normalizeProductInput(input);
     const supabase = createAdminSupabaseClient();
 
+    console.info(`[product-save] Normalized Input for DB Update:`, normalizedInput);
+
     let updatedProduct: Product | null = null;
     try {
       const uniqueSlug = await getUniqueSlug(supabase, normalizedInput.slug, id);
       normalizedInput.slug = uniqueSlug;
 
+      console.info(`[product-save] Executing DB update query for ID "${id}"...`);
       const { data, error } = await supabase
         .from("products")
         .update(normalizedInput)
@@ -91,6 +97,9 @@ export async function PUT(request: Request, { params }: ProductRouteContext) {
 
       if (!error && data) {
         updatedProduct = data as Product;
+        console.info(`[product-save] Supabase Update Success:`, updatedProduct);
+      } else if (error) {
+        console.warn(`[product-save] Supabase Update Error notice: ${error.message}`);
       }
     } catch (dbError) {
       console.warn("[products] Supabase update notice, saving locally:", dbError);
@@ -103,10 +112,12 @@ export async function PUT(request: Request, { params }: ProductRouteContext) {
         created_at: new Date().toISOString(),
       };
       updatedProduct = saveLocalProduct(fallbackObj);
+      console.info(`[product-save] Saved to Local Store:`, updatedProduct);
     } else {
       saveLocalProduct(updatedProduct);
     }
 
+    console.info(`[product-save] Returning API response for ID "${id}"`);
     return Response.json({ product: updatedProduct });
   } catch (error) {
     const isAuthError =

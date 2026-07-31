@@ -490,6 +490,10 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
         ? [uploadedImageUrl, ...form.images.filter((img) => img !== uploadedImageUrl)]
         : form.images;
 
+      const liveCost = parseFloat(form.cost_price) || 0;
+      const liveSell = parseFloat(form.price) || 0;
+      const liveMetrics = calculateProfitMetrics(liveCost, liveSell);
+
       const productInput: ProductInput = {
         title: form.title,
         slug: generatedSlug,
@@ -503,6 +507,8 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
         price: form.price ? Number(form.price) : null,
         compare_at_price: form.compare_at_price ? Number(form.compare_at_price) : null,
         cost_price: form.cost_price ? Number(form.cost_price) : null,
+        profit: liveMetrics.profit,
+        margin_percent: liveMetrics.marginPercent,
         price_manually_overridden: form.price_manually_overridden,
         image: finalMainImage,
         images: finalGalleryImages,
@@ -517,6 +523,16 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
         affiliate_link: form.affiliate_link,
         cj_product_id: form.cj_product_id || null,
       };
+
+      console.info("[product-save] Values Before Save:", {
+        cost_price: form.cost_price,
+        price: form.price,
+        compare_at_price: form.compare_at_price,
+        profit: liveMetrics.profit,
+        margin_percent: liveMetrics.marginPercent,
+        price_manually_overridden: form.price_manually_overridden,
+      });
+      console.info("[product-save] Payload Sent from Frontend:", productInput);
 
       const endpoint = editingProduct
         ? `/api/admin/products/${editingProduct.id}`
