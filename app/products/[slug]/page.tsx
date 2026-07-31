@@ -8,6 +8,7 @@ import { Footer } from "@/components/footer";
 import { MagneticButton } from "@/components/magnetic-button";
 import { ProductReviewsSection } from "@/components/product-reviews-section";
 import { SmartRecommendations } from "@/components/smart-recommendations";
+import { StorefrontVariantSelector } from "@/components/storefront-variant-selector";
 import { getProductBySlug, getProducts, type Product } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
@@ -95,66 +96,7 @@ export default async function ProductPage({
       <StoreHeader />
       <main className="product-landing-page">
         <div className="product-hero-section animate-fade-slide-up">
-          <div className="product-hero-container">
-            <section className="product-hero-image">
-              {product.image ? (
-                <div className="product-image-reflection">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img alt={product.title} src={product.image} />
-                  <div className="product-image-reflection-fallback" aria-hidden="true" />
-                </div>
-              ) : (
-                <div className="image-placeholder">Image coming soon</div>
-              )}
-              <div className="product-image-shadow" aria-hidden="true" />
-            </section>
-
-            <section className="product-hero-content">
-              <div className="product-hero-meta">
-                {product.category && <span className="category-tag">{product.category}</span>}
-                <ProductBadge badge={product.badge} />
-              </div>
-
-              <h1>{product.title}</h1>
-              
-              <div className="price-container">
-                <span className="current-price">{formatPrice(product.price)}</span>
-                <span className="price-badge">Prime Delivery</span>
-              </div>
-
-              <p className="product-description">
-                {product.description || "High-quality product recommended by our experts. Perfect for your home or as a thoughtful gift."}
-              </p>
-
-              {/* Trust indicators */}
-              <div className="trust-indicators">
-                <span className="trust-indicator">
-                  <span className="trust-indicator-icon">🔒</span>
-                  Secure checkout
-                </span>
-                <span className="trust-indicator">
-                  <span className="trust-indicator-icon">⚡</span>
-                  Fast delivery
-                </span>
-                <span className="trust-indicator">
-                  <span className="trust-indicator-icon">✓</span>
-                  Amazon verified
-                </span>
-                <span className="trust-indicator">
-                  <span className="trust-indicator-icon">↩</span>
-                  Easy returns
-                </span>
-              </div>
-
-              <div className="purchase-actions">
-                <MagneticButton className="buy-amazon-button-wrapper">
-                  <AddToCartButton product={product} />
-                </MagneticButton>
-
-                <p className="trust-text">Secure checkout · Free returns</p>
-              </div>
-            </section>
-          </div>
+          <StorefrontVariantSelector product={product} />
         </div>
 
         <section className="benefits-section">
@@ -164,23 +106,23 @@ export default async function ProductPage({
             <div className="benefits-grid stagger-children">
               <div className="benefit-card">
                 <div className="benefit-icon">✨</div>
-                <h3>Premium Quality</h3>
-                <p>Selected for its durability and exceptional performance in everyday use.</p>
+                <h3>High-Grade Materials</h3>
+                <p>Selected for durability and exceptional performance in everyday use.</p>
               </div>
               <div className="benefit-card">
                 <div className="benefit-icon">🎁</div>
-                <h3>Perfect Gift</h3>
-                <p>Elegant design makes it an ideal choice for friends, family, or yourself.</p>
+                <h3>Thoughtful Design</h3>
+                <p>Elegant craftsmanship makes it an ideal choice for your home or as a gift.</p>
+              </div>
+              <div className="benefit-card">
+                <div className="benefit-icon">📦</div>
+                <h3>Order Tracking</h3>
+                <p>Real-time tracking link emailed as soon as your package dispatches.</p>
               </div>
               <div className="benefit-card">
                 <div className="benefit-icon">🛡️</div>
-                <h3>Verified Choice</h3>
-                <p>Highly rated by thousands of satisfied customers across the globe.</p>
-              </div>
-              <div className="benefit-card">
-                <div className="benefit-icon">🚀</div>
-                <h3>Quick Setup</h3>
-                <p>Ready to use right out of the box with minimal effort required.</p>
+                <h3>Quality Inspected</h3>
+                <p>Inspected for quality prior to final packaging and fulfillment.</p>
               </div>
             </div>
           </div>

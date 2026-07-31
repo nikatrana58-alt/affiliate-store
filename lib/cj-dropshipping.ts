@@ -5,6 +5,12 @@
  * Handles authentication, product/stock validation, destination verification,
  * order submission to CJ, and tracking info retrieval.
  * Includes rate-limit backoff, token caching, and automated retries.
+ *
+ * Authentication (CJ Open API 2.0):
+ *   - CJ_API_KEY  → exchanged for a short-lived accessToken via
+ *                   POST /authentication/getAccessToken { apiKey }
+ *   - CJ_MCP_TOKEN → stored for MCP / AI-agent integrations (not used in REST calls)
+ *   - accessToken is passed as the `CJ-Access-Token` header on every subsequent request.
  */
 
 import type {
@@ -18,55 +24,182 @@ import type {
 
 const CJ_BASE_URL = "https://developers.cjdropshipping.com/api2.0/v1";
 
-type CJAuthTokenResponse = {
+export type CJAuthTokenResponse = {
   code: number;
-  result?: {
-    accessToken: string;
-    accessTokenExpiryDate?: string;
-  };
+  result?: boolean;
   message?: string;
+  data?: {
+    openId?: number;
+    accessToken: string;
+    refreshToken?: string;
+    accessTokenExpiryDate?: string;
+    refreshTokenExpiryDate?: string;
+  };
 };
 
-type CJApiResponse<T = unknown> = {
+export type CJApiResponse<T = unknown> = {
   code: number;
-  result?: T;
+  result?: boolean | T;
+  data?: T;
   message?: string;
+  requestId?: string;
 };
+
+export type CJSearchType = "PRODUCT_ID" | "SKU" | "KEYWORD";
+
+export function detectCJSearchType(input?: string): {
+  type: CJSearchType;
+  cleanInput: string;
+} {
+  if (!input || !input.trim()) {
+    return { type: "KEYWORD", cleanInput: "" };
+  }
+
+  // Trim only leading/trailing whitespace (Requirement 5)
+  const trimmed = input.trim();
+
+  // Requirement 1: Numeric only -> Treat as CJ Product ID
+  if (/^\d+$/.test(trimmed)) {
+    return { type: "PRODUCT_ID", cleanInput: trimmed };
+  }
+
+  // Requirement 1: Starts with "CJ" or resembles a SKU -> Treat as SKU
+  // Requirement 4: Preserves ALL special characters in SKUs ("-", "_", ".", "/")
+  if (/^CJ/i.test(trimmed) || /^[A-Z0-9]{2,}[-_.\/][A-Z0-9-_.\/]+$/i.test(trimmed)) {
+    return { type: "SKU", cleanInput: trimmed };
+  }
+
+  // Requirement 1: Otherwise -> Treat as Keyword
+  return { type: "KEYWORD", cleanInput: trimmed };
+}
+
+export type CJVariant = {
+  vid: string;
+  pid: string;
+  variantName?: string | null;
+  variantNameEn?: string;
+  variantImage?: string;
+  variantSku?: string;
+  variantKey?: string;
+  variantWeight?: number;
+  variantSellPrice?: number;
+  variantSugSellPrice?: number;
+  inventoryNum?: number | null;
+};
+
+export type CJProductDetail = {
+  pid: string;
+  productName?: string;
+  productNameEn?: string;
+  productSku?: string;
+  productImage?: string;
+  productWeight?: string;
+  categoryName?: string;
+  sellPrice?: string;
+  description?: string;
+  variants?: CJVariant[];
+  [key: string]: unknown;
+};
+
+export type CJInventoryItem = {
+  vid: string;
+  areaEn?: string;
+  countryCode?: string;
+  storageNum?: number;
+  totalInventoryNum?: number;
+  factoryInventoryNum?: number;
+  [key: string]: unknown;
+};
+
+export type CJShippingOption = {
+  logisticName?: string;
+  logisticPrice?: number;
+  logisticAging?: string;
+  [key: string]: unknown;
+};
+
+/**
+ * Runtime credential validation.
+ * Call this once at startup (e.g. in lib/env.ts) to surface missing env vars early.
+ */
+export function validateCJCredentials(): { valid: boolean; missing: string[] } {
+  const missing: string[] = [];
+  if (!process.env.CJ_API_KEY) missing.push("CJ_API_KEY");
+  if (!process.env.CJ_MCP_TOKEN) missing.push("CJ_MCP_TOKEN");
+  return { valid: missing.length === 0, missing };
+}
 
 class CJDropshippingService {
   private cachedToken: string | null = null;
   private tokenExpiresAt: number = 0;
+  private responseCache = new Map<string, { data: any; expiresAt: number }>();
+  private cacheTTL = 10 * 60 * 1000; // 10 minutes TTL
 
-  private getCredentials() {
-    const apiKey = process.env.CJ_API_KEY;
-    const email = process.env.CJ_EMAIL;
-    const password = process.env.CJ_PASSWORD;
-
-    return { apiKey, email, password };
+  private getCached<T>(key: string): T | null {
+    const cached = this.responseCache.get(key);
+    if (!cached) return null;
+    if (Date.now() > cached.expiresAt) {
+      this.responseCache.delete(key);
+      return null;
+    }
+    return cached.data as T;
   }
 
+  private setCache<T>(key: string, data: T): void {
+    this.responseCache.set(key, {
+      data,
+      expiresAt: Date.now() + this.cacheTTL,
+    });
+  }
+
+  /** Clears the in-memory CJ API response cache on demand. */
+  clearCache(): void {
+    this.responseCache.clear();
+  }
+
+  /** Returns true when a real CJ_API_KEY is present so the service can make live API calls. */
+  private isConfigured(): boolean {
+    const apiKey = process.env.CJ_API_KEY;
+    return Boolean(apiKey && apiKey.trim().length > 0 && !apiKey.includes("placeholder"));
+  }
+
+  private getApiKey(): string {
+    return process.env.CJ_API_KEY ?? "";
+  }
+
+  // ---------------------------------------------------------------------------
+  // Authentication
+  // ---------------------------------------------------------------------------
+
   /**
-   * Fetches an access token from CJ Dropshipping API.
-   * Caches token in memory until expiration.
+   * Fetches an access token from CJ Dropshipping API using the CJ_API_KEY.
+   * Caches the token in memory until it is within 60 s of expiration.
+   *
+   * Latest CJ Open API 2.0 authentication:
+   *   POST /authentication/getAccessToken
+   *   Body: { apiKey: string }
+   *   Response: { code, message, data: { accessToken, accessTokenExpiryDate, ... } }
    */
   async getAccessToken(): Promise<string> {
     const now = Date.now();
-    if (this.cachedToken && this.tokenExpiresAt > now + 60000) {
+    if (this.cachedToken && this.tokenExpiresAt > now + 60_000) {
       return this.cachedToken;
     }
 
-    const { apiKey, email, password } = this.getCredentials();
-
-    if (!email || !password || email.includes("placeholder")) {
-      console.warn("[cj-dropshipping] API credentials not configured or using placeholders. Operating in mock/dry-run mode.");
+    if (!this.isConfigured()) {
+      console.warn(
+        "[cj-dropshipping] CJ_API_KEY is not configured. Operating in mock/dry-run mode."
+      );
       return "mock_cj_access_token";
     }
+
+    const apiKey = this.getApiKey();
 
     try {
       const res = await fetch(`${CJ_BASE_URL}/authentication/getAccessToken`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, apiKey }),
+        body: JSON.stringify({ apiKey }),
       });
 
       if (!res.ok) {
@@ -74,15 +207,19 @@ class CJDropshippingService {
       }
 
       const data = (await res.json()) as CJAuthTokenResponse;
+      const token = data.data?.accessToken;
 
-      if (data.code !== 200 || !data.result?.accessToken) {
-        throw new Error(`CJ Auth Failed: ${data.message || "Invalid credentials"}`);
+      if (data.code !== 200 || !token) {
+        throw new Error(
+          `CJ Auth Failed (code ${data.code}): ${data.message ?? "Invalid API key"}`
+        );
       }
 
-      this.cachedToken = data.result.accessToken;
-      // Set expiration to 23 hours from now if date not provided
-      this.tokenExpiresAt = data.result.accessTokenExpiryDate
-        ? new Date(data.result.accessTokenExpiryDate).getTime()
+      this.cachedToken = token;
+
+      const expiryStr = data.data?.accessTokenExpiryDate;
+      this.tokenExpiresAt = expiryStr
+        ? new Date(expiryStr).getTime()
         : now + 23 * 60 * 60 * 1000;
 
       console.info("[cj-dropshipping] Access token successfully acquired.");
@@ -93,13 +230,90 @@ class CJDropshippingService {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Connection test
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Verifies that the configured CJ_API_KEY can successfully authenticate
+   * and that the CJ Open API is reachable.
+   * Returns a structured result for use in admin health / diagnostic endpoints.
+   */
+  async testConnection(): Promise<{
+    success: boolean;
+    latencyMs: number;
+    message: string;
+    tokenAcquired?: boolean;
+    apiKeyConfigured: boolean;
+    mcpTokenConfigured: boolean;
+  }> {
+    const apiKeyConfigured = this.isConfigured();
+    const mcpTokenConfigured = Boolean(
+      process.env.CJ_MCP_TOKEN && process.env.CJ_MCP_TOKEN.trim().length > 0
+    );
+
+    if (!apiKeyConfigured) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message:
+          "CJ_API_KEY is not configured. Set a valid API key to enable live API access.",
+        tokenAcquired: false,
+        apiKeyConfigured: false,
+        mcpTokenConfigured,
+      };
+    }
+
+    const start = Date.now();
+
+    // Force a fresh token fetch by clearing cache for the duration of this test.
+    const savedToken = this.cachedToken;
+    const savedExpiry = this.tokenExpiresAt;
+    this.cachedToken = null;
+    this.tokenExpiresAt = 0;
+
+    try {
+      const token = await this.getAccessToken();
+      const latencyMs = Date.now() - start;
+      const acquired = token !== "mock_cj_access_token" && token.length > 0;
+
+      return {
+        success: acquired,
+        latencyMs,
+        message: acquired
+          ? "CJ Open API authenticated successfully."
+          : "Token request returned an unexpected value.",
+        tokenAcquired: acquired,
+        apiKeyConfigured: true,
+        mcpTokenConfigured,
+      };
+    } catch (err) {
+      // Restore cache so normal operations aren't disrupted after a failed test.
+      this.cachedToken = savedToken;
+      this.tokenExpiresAt = savedExpiry;
+
+      return {
+        success: false,
+        latencyMs: Date.now() - start,
+        message: err instanceof Error ? err.message : "Unknown authentication error.",
+        tokenAcquired: false,
+        apiKeyConfigured: true,
+        mcpTokenConfigured,
+      };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Low-level request helper
+  // ---------------------------------------------------------------------------
+
   /**
    * Low-level API request wrapper with automated retries and rate limit protection.
    */
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
-    retries = 3
+    retries = 5
   ): Promise<CJApiResponse<T>> {
     const token = await this.getAccessToken();
 
@@ -111,7 +325,7 @@ class CJDropshippingService {
     };
 
     let attempt = 0;
-    let delay = 500;
+    let delay = 1000;
 
     while (attempt < retries) {
       attempt++;
@@ -119,8 +333,9 @@ class CJDropshippingService {
         const res = await fetch(url, { ...options, headers });
 
         if (res.status === 429) {
-          // Rate limited — exponential backoff
-          console.warn(`[cj-dropshipping] Rate limited (429). Retrying attempt ${attempt}/${retries} in ${delay}ms...`);
+          console.warn(
+            `[cj-dropshipping] Rate limited (HTTP 429). Retrying attempt ${attempt}/${retries} in ${delay}ms...`
+          );
           await new Promise((resolve) => setTimeout(resolve, delay));
           delay *= 2;
           continue;
@@ -131,16 +346,294 @@ class CJDropshippingService {
         }
 
         const data = (await res.json()) as CJApiResponse<T>;
+
+        // Check if CJ returned a rate-limit or frequency error inside JSON body
+        if (
+          data &&
+          typeof data.message === "string" &&
+          (data.message.toLowerCase().includes("too many requests") ||
+           data.message.toLowerCase().includes("frequency") ||
+           data.message.toLowerCase().includes("rate limit"))
+        ) {
+          if (attempt < retries) {
+            console.warn(
+              `[cj-dropshipping] CJ API rate limit notice inside payload: "${data.message}". Retrying attempt ${attempt}/${retries} in ${delay}ms...`
+            );
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            delay *= 2;
+            continue;
+          }
+        }
+
         return data;
       } catch (err) {
-        if (attempt >= retries) throw err;
-        console.warn(`[cj-dropshipping] Request failed (attempt ${attempt}/${retries}). Retrying in ${delay}ms...`, err);
+        if (attempt >= retries) {
+          console.error(`[cj-dropshipping] Request failed after ${attempt} attempts:`, err);
+          throw err;
+        }
+        console.warn(
+          `[cj-dropshipping] Request failed (attempt ${attempt}/${retries}). Retrying in ${delay}ms...`,
+          err
+        );
         await new Promise((resolve) => setTimeout(resolve, delay));
         delay *= 2;
       }
     }
 
-    throw new Error("CJ API Request failed after maximum retries.");
+    throw new Error("CJ API rate limit reached. Please wait a few seconds and click Retry.");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Product & Inventory API Methods
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Fetches product list from CJ Dropshipping API v2.0 with optional search parameters.
+   */
+  async getProductList(
+    options: {
+      pageNum?: number;
+      pageSize?: number;
+      keyWord?: string;
+      keyword?: string;
+      productName?: string;
+      productSku?: string;
+      categoryId?: string;
+      pid?: string;
+    } | number = 1,
+    pageSizeArg = 10
+  ): Promise<{ list: CJProductDetail[]; total: number; searchTypeDetected?: CJSearchType }> {
+    if (!this.isConfigured()) {
+      return { list: [], total: 0 };
+    }
+
+    let pageNum = 1;
+    let pageSize = 10;
+    let rawInput: string | undefined;
+    let categoryId: string | undefined;
+    let pid: string | undefined;
+    let productSku: string | undefined;
+    let productName: string | undefined;
+
+    if (typeof options === "number") {
+      pageNum = options;
+      pageSize = pageSizeArg;
+    } else if (typeof options === "object") {
+      pageNum = options.pageNum ?? 1;
+      pageSize = options.pageSize ?? 10;
+      rawInput = options.keyWord || options.keyword || options.productName || options.productSku || options.pid;
+      categoryId = options.categoryId;
+      pid = options.pid;
+      productSku = options.productSku;
+      productName = options.productName;
+    }
+
+    // 1. Classify Search Input Type
+    let detectedType: CJSearchType = "KEYWORD";
+
+    if (pid?.trim()) {
+      detectedType = "PRODUCT_ID";
+    } else if (productSku?.trim()) {
+      detectedType = "SKU";
+    } else if (rawInput?.trim()) {
+      const classification = detectCJSearchType(rawInput);
+      detectedType = classification.type;
+
+      if (detectedType === "PRODUCT_ID") {
+        pid = classification.cleanInput;
+      } else if (detectedType === "SKU") {
+        productSku = classification.cleanInput; // PRESERVES "-" AND SPECIAL CHARACTERS!
+      } else {
+        productName = classification.cleanInput;
+      }
+    }
+
+    // 2. Build Query Payload
+    const query = new URLSearchParams();
+    query.set("pageNum", pageNum.toString());
+    query.set("pageSize", pageSize.toString());
+
+    if (pid?.trim()) query.set("pid", pid.trim());
+    if (productSku?.trim()) query.set("productSku", productSku.trim());
+    if (productName?.trim()) {
+      query.set("productName", productName.trim());
+      query.set("productNameEn", productName.trim());
+    }
+    if (categoryId?.trim()) query.set("categoryId", categoryId.trim());
+
+    const queryPayload = Object.fromEntries(query.entries());
+
+    // 3. Log Outgoing CJ API Request Details (Requirement 6)
+    const tReqStart = performance.now();
+    console.info(`[cj-search] Detected Search Type : "${detectedType}" | Raw Search Input: "${rawInput || pid || productSku || productName || ""}"`);
+    console.info(`[cj-search] Outgoing CJ Request  : Method=GET, Endpoint="/product/list", Payload=`, queryPayload);
+
+    const endpointUrl = `/product/list?${query.toString()}`;
+    const cacheKey = `list:${query.toString()}`;
+    const cached = this.getCached<{ list: CJProductDetail[]; total: number }>(cacheKey);
+
+    if (cached) {
+      const cachedLatencyMs = performance.now() - tReqStart;
+      console.info(`[cj-search] CACHE HIT for query /product/list | Response Latency: ${cachedLatencyMs.toFixed(2)} ms | Returned: ${cached.list.length} products`);
+      return { ...cached, searchTypeDetected: detectedType };
+    }
+
+    try {
+      let res = await this.request<{ list: CJProductDetail[]; total: number }>(endpointUrl);
+      let dataPayload = res.data ?? (typeof res.result === "object" ? (res.result as { list: CJProductDetail[]; total: number }) : undefined);
+      let items = dataPayload?.list || [];
+
+      // 4. Fallback for SKU search if exact variant SKU query returned 0 items
+      // Requirement 7: Document fallback reason explicitly in debug logs
+      if (detectedType === "SKU" && items.length === 0 && productSku && productSku.includes("-")) {
+        const baseSku = productSku.split("-")[0].trim();
+        if (baseSku && baseSku !== productSku) {
+          console.info(`[cj-search] FALLBACK NOTICE: Official CJ API productSku search for variant SKU "${productSku}" returned 0 direct items. Attempting supported fallback to base SKU "${baseSku}"...`);
+          const fallbackQuery = new URLSearchParams(query);
+          fallbackQuery.set("productSku", baseSku);
+          const fallbackRes = await this.request<{ list: CJProductDetail[]; total: number }>(`/product/list?${fallbackQuery.toString()}`);
+          const fallbackPayload = fallbackRes.data ?? (typeof fallbackRes.result === "object" ? (fallbackRes.result as { list: CJProductDetail[]; total: number }) : undefined);
+          if (fallbackPayload?.list && fallbackPayload.list.length > 0) {
+            items = fallbackPayload.list;
+            console.info(`[cj-search] Base SKU "${baseSku}" fallback successful: ${items.length} products returned.`);
+          }
+        }
+      }
+
+      // If SKU search still returned 0 items, try keyWord fallback
+      if (detectedType === "SKU" && items.length === 0 && productSku) {
+        console.info(`[cj-search] FALLBACK NOTICE: productSku search for "${productSku}" returned 0 items. Attempting supported fallback via keyWord parameter...`);
+        const kwQuery = new URLSearchParams();
+        kwQuery.set("pageNum", pageNum.toString());
+        kwQuery.set("pageSize", pageSize.toString());
+        kwQuery.set("keyWord", productSku.trim());
+        if (categoryId?.trim()) kwQuery.set("categoryId", categoryId.trim());
+
+        const kwRes = await this.request<{ list: CJProductDetail[]; total: number }>(`/product/list?${kwQuery.toString()}`);
+        const kwPayload = kwRes.data ?? (typeof kwRes.result === "object" ? (kwRes.result as { list: CJProductDetail[]; total: number }) : undefined);
+        if (kwPayload?.list && kwPayload.list.length > 0) {
+          items = kwPayload.list;
+          console.info(`[cj-search] keyWord fallback for SKU "${productSku}" successful: ${items.length} products returned.`);
+        }
+      }
+
+      const totalCount = items.length > 0 ? (dataPayload?.total || items.length) : 0;
+      const latencyMs = performance.now() - tReqStart;
+      const result = { list: items, total: totalCount, searchTypeDetected: detectedType };
+
+      console.info(`[cj-search] Response Latency    : ${latencyMs.toFixed(2)} ms`);
+      console.info(`[cj-search] Returned Products   : ${items.length} items (Total in CJ: ${totalCount})`);
+
+      if (items.length > 0) {
+        this.setCache(cacheKey, { list: items, total: totalCount });
+      }
+
+      return result;
+    } catch (err) {
+      console.error("[cj-search] Failed to execute CJ product list search:", err);
+      throw err;
+    }
+  }
+
+  /**
+   * Queries full detail for a specific product including variants.
+   */
+  async getProductDetail(pid: string): Promise<CJProductDetail | null> {
+    if (!this.isConfigured()) {
+      return null;
+    }
+
+    const cacheKey = `detail:${pid}`;
+    const cached = this.getCached<CJProductDetail>(cacheKey);
+    if (cached) {
+      console.info(`[cj-dropshipping] CACHE HIT for product detail PID ${pid}`);
+      return cached;
+    }
+
+    try {
+      const res = await this.request<CJProductDetail>(`/product/query?pid=${encodeURIComponent(pid)}`);
+      const dataPayload = res.data ?? (typeof res.result === "object" ? (res.result as CJProductDetail) : undefined);
+
+      if (res.code === 200 && dataPayload) {
+        this.setCache(cacheKey, dataPayload);
+        return dataPayload;
+      }
+      return null;
+    } catch (err) {
+      console.error(`[cj-dropshipping] Failed to fetch detail for pid ${pid}:`, err);
+      throw err;
+    }
+  }
+
+  /**
+   * Queries inventory by variant ID (vid).
+   */
+  async getInventoryByVid(vid: string): Promise<CJInventoryItem[]> {
+    if (!this.isConfigured()) {
+      return [];
+    }
+
+    const cacheKey = `inventory:${vid}`;
+    const cached = this.getCached<CJInventoryItem[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const res = await this.request<CJInventoryItem[]>(`/product/stock/queryByVid?vid=${encodeURIComponent(vid)}`);
+      const dataPayload = res.data ?? (Array.isArray(res.result) ? (res.result as CJInventoryItem[]) : undefined);
+
+      if (res.code === 200 && Array.isArray(dataPayload)) {
+        this.setCache(cacheKey, dataPayload);
+        return dataPayload;
+      }
+      return [];
+    } catch (err) {
+      console.error(`[cj-dropshipping] Failed to query stock for vid ${vid}:`, err);
+      return [];
+    }
+  }
+
+  /**
+   * Calculates freight / shipping options for a given product variant and destination.
+   */
+  async getShippingInfo(params: {
+    startCountryCode?: string;
+    endCountryCode: string;
+    vid: string;
+    quantity?: number;
+  }): Promise<CJShippingOption[]> {
+    if (!this.isConfigured()) {
+      return [];
+    }
+
+    const cacheKey = `shipping:${params.vid}:${params.endCountryCode}:${params.startCountryCode || "CN"}`;
+    const cached = this.getCached<CJShippingOption[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const res = await this.request<CJShippingOption[]>("/logistic/freightCalculate", {
+        method: "POST",
+        body: JSON.stringify({
+          startCountryCode: params.startCountryCode || "CN",
+          endCountryCode: params.endCountryCode,
+          products: [{ vid: params.vid, quantity: params.quantity || 1 }],
+        }),
+      });
+
+      const dataPayload = res.data ?? (Array.isArray(res.result) ? (res.result as CJShippingOption[]) : undefined);
+
+      if (res.code === 200 && Array.isArray(dataPayload)) {
+        this.setCache(cacheKey, dataPayload);
+        return dataPayload;
+      }
+      return [];
+    } catch (err) {
+      console.error("[cj-dropshipping] Failed to calculate shipping info:", err);
+      return [];
+    }
   }
 
   /**
@@ -151,10 +644,7 @@ class CJDropshippingService {
       return { valid: true, itemResults: [] };
     }
 
-    const { email } = this.getCredentials();
-    const isMock = !email || email.includes("placeholder");
-
-    if (isMock) {
+    if (!this.isConfigured()) {
       // Mock validation mode when live API key is not configured
       return {
         valid: true,
@@ -178,7 +668,7 @@ class CJDropshippingService {
           productStatus?: string;
         }>(`/product/query?pid=${encodeURIComponent(item.supplierProductId)}`);
 
-        const product = queryRes.result;
+        const product = queryRes.data ?? (typeof queryRes.result === "object" ? queryRes.result : undefined);
         const available = queryRes.code === 200 && Boolean(product);
         const stockQty = product?.quantity ?? 100;
         const isSufficient = available && stockQty >= item.quantity;
@@ -197,7 +687,10 @@ class CJDropshippingService {
             : undefined,
         });
       } catch (err) {
-        console.error(`[cj-dropshipping] Stock check error for PID ${item.supplierProductId}:`, err);
+        console.error(
+          `[cj-dropshipping] Stock check error for PID ${item.supplierProductId}:`,
+          err
+        );
         allValid = false;
         itemResults.push({
           supplierProductId: item.supplierProductId,
@@ -219,10 +712,7 @@ class CJDropshippingService {
     country: string,
     zipCode?: string
   ): Promise<ShippingValidationResult> {
-    const { email } = this.getCredentials();
-    const isMock = !email || email.includes("placeholder");
-
-    if (isMock) {
+    if (!this.isConfigured()) {
       return {
         valid: true,
         supported: true,
@@ -232,11 +722,7 @@ class CJDropshippingService {
     }
 
     try {
-      const res = await this.request<{
-        logisticName?: string;
-        logisticPrice?: number;
-        logisticAging?: string;
-      }>("/logistic/freightCalculate", {
+      const res = await this.request<CJShippingOption[]>("/logistic/freightCalculate", {
         method: "POST",
         body: JSON.stringify({
           startCountryCode: "CN",
@@ -245,12 +731,14 @@ class CJDropshippingService {
         }),
       });
 
-      if (res.code === 200 && res.result) {
+      const options = res.data ?? (Array.isArray(res.result) ? res.result : []);
+      if (res.code === 200 && options.length > 0) {
+        const topOption = options[0];
         return {
           valid: true,
           supported: true,
-          estimatedFee: res.result.logisticPrice,
-          estimatedDays: res.result.logisticAging || "7-15 days",
+          estimatedFee: topOption.logisticPrice,
+          estimatedDays: topOption.logisticAging || "7-15 days",
         };
       }
 
@@ -261,7 +749,6 @@ class CJDropshippingService {
       };
     } catch (err) {
       console.warn("[cj-dropshipping] Destination validation failed:", err);
-      // Fallback: accept common countries
       return {
         valid: true,
         supported: true,
@@ -274,12 +761,9 @@ class CJDropshippingService {
    * Submits an order to CJ Dropshipping for fulfillment.
    */
   async createOrder(params: CreateSupplierOrderParams): Promise<SupplierOrderResult> {
-    const { email } = this.getCredentials();
-    const isMock = !email || email.includes("placeholder");
-
     console.info(`[cj-dropshipping] Creating CJ Order for store order ${params.orderId}...`);
 
-    if (isMock) {
+    if (!this.isConfigured()) {
       const mockCjOrderId = `CJ-${Date.now().toString(36).toUpperCase()}`;
       console.info(`[cj-dropshipping] Mock CJ Order Created: ${mockCjOrderId}`);
       return {
@@ -298,7 +782,8 @@ class CJDropshippingService {
         shippingCountry: params.shippingAddress.country,
         shippingProvince: params.shippingAddress.state,
         shippingCity: params.shippingAddress.city,
-        shippingAddress: `${params.shippingAddress.address_line1} ${params.shippingAddress.address_line2 || ""}`.trim(),
+        shippingAddress:
+          `${params.shippingAddress.address_line1} ${params.shippingAddress.address_line2 || ""}`.trim(),
         shippingZipCode: params.shippingAddress.postal_code,
         shippingPhone: params.customerPhone || "000-000-0000",
         products: params.items.map((item) => ({
@@ -316,14 +801,16 @@ class CJDropshippingService {
         body: JSON.stringify(payload),
       });
 
-      if (res.code === 200 && (res.result?.cjOrderId || res.result?.orderId)) {
-        const cjId = res.result.cjOrderId || res.result.orderId!;
+      const dataPayload = res.data ?? (typeof res.result === "object" ? res.result : undefined);
+
+      if (res.code === 200 && (dataPayload?.cjOrderId || dataPayload?.orderId)) {
+        const cjId = dataPayload.cjOrderId || dataPayload.orderId!;
         console.info(`[cj-dropshipping] CJ Order successfully created: ${cjId}`);
         return {
           success: true,
           supplierOrderId: cjId,
           status: "submitted",
-          rawResponse: res.result,
+          rawResponse: dataPayload,
         };
       }
 
@@ -342,10 +829,7 @@ class CJDropshippingService {
    * Retrieves tracking details (tracking number, carrier, shipment status) for a CJ Order.
    */
   async getTrackingInfo(cjOrderId: string): Promise<SupplierTrackingInfo> {
-    const { email } = this.getCredentials();
-    const isMock = !email || email.includes("placeholder");
-
-    if (isMock) {
+    if (!this.isConfigured()) {
       return {
         supplierOrderId: cjOrderId,
         trackingNumber: `CJTRK${Date.now().toString(36).toUpperCase()}`,
@@ -363,13 +847,15 @@ class CJDropshippingService {
         logisticStatus?: string;
       }>(`/logistic/getTrackingInfo?orderId=${encodeURIComponent(cjOrderId)}`);
 
-      if (res.code === 200 && res.result) {
+      const dataPayload = res.data ?? (typeof res.result === "object" ? res.result : undefined);
+
+      if (res.code === 200 && dataPayload) {
         return {
           supplierOrderId: cjOrderId,
-          trackingNumber: res.result.trackingNumber,
-          carrier: res.result.logisticName || "CJ Packet",
-          status: res.result.logisticStatus || "shipped",
-          rawResponse: res.result,
+          trackingNumber: dataPayload.trackingNumber,
+          carrier: dataPayload.logisticName || "CJ Packet",
+          status: dataPayload.logisticStatus || "shipped",
+          rawResponse: dataPayload,
         };
       }
 
@@ -378,7 +864,10 @@ class CJDropshippingService {
         status: "processing",
       };
     } catch (err) {
-      console.error(`[cj-dropshipping] Failed to fetch tracking info for ${cjOrderId}:`, err);
+      console.error(
+        `[cj-dropshipping] Failed to fetch tracking info for ${cjOrderId}:`,
+        err
+      );
       return {
         supplierOrderId: cjOrderId,
         status: "processing",
@@ -389,3 +878,4 @@ class CJDropshippingService {
 
 /** Singleton CJ Dropshipping Service Instance */
 export const cjDropshipping = new CJDropshippingService();
+

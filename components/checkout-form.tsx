@@ -46,7 +46,10 @@ type ShippingMethodId = (typeof SHIPPING_METHODS)[number]["id"];
 // ─── Order Summary Item ───────────────────────────────────────────────────────
 
 function OrderItem({ item }: { item: CartItem }) {
-  const { product, quantity } = item;
+  const { product, quantity, variant, unitPrice } = item;
+  const itemPrice = unitPrice ?? variant?.price ?? product.price ?? 0;
+  const variantSummary = [variant?.color, variant?.size].filter(Boolean).join(" / ");
+
   return (
     <div className="co-order-item">
       <div className="co-order-item-img">
@@ -66,10 +69,16 @@ function OrderItem({ item }: { item: CartItem }) {
       </div>
       <div className="co-order-item-info">
         <p className="co-order-item-title">{product.title}</p>
-        {product.category && <p className="co-order-item-cat">{product.category}</p>}
+        {variantSummary ? (
+          <p className="co-order-item-cat" style={{ color: "var(--gold)", fontWeight: 600 }}>
+            {variantSummary} {variant?.variant_sku ? `(${variant.variant_sku})` : ""}
+          </p>
+        ) : (
+          product.category && <p className="co-order-item-cat">{product.category}</p>
+        )}
       </div>
       <p className="co-order-item-price">
-        {product.price !== null ? formatPrice(product.price * quantity) : "—"}
+        {formatPrice(itemPrice * quantity)}
       </p>
     </div>
   );
@@ -267,8 +276,9 @@ export function CheckoutForm() {
           product_title: item.product.title,
           product_image: item.product.image ?? null,
           product_slug: item.product.slug,
+          variant_id: item.variant?.variant_id || item.variant?.variant_sku || null,
           quantity: item.quantity,
-          unit_price: item.product.price ?? 0,
+          unit_price: item.unitPrice ?? item.variant?.price ?? item.product.price ?? 0,
         })),
       };
 

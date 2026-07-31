@@ -17,9 +17,12 @@ function formatPrice(price: number) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function CartItemRow({ item }: { item: CartItem }) {
+function CartItemRow({ item, index }: { item: CartItem; index: number }) {
   const { removeFromCart, updateQuantity } = useCart();
-  const { product, quantity } = item;
+  const { product, quantity, variant, unitPrice } = item;
+
+  const itemPrice = unitPrice ?? variant?.price ?? product.price ?? 0;
+  const variantSummary = [variant?.color, variant?.size].filter(Boolean).join(" / ");
 
   return (
     <div className="cart-item">
@@ -47,13 +50,15 @@ function CartItemRow({ item }: { item: CartItem }) {
 
       <div className="cart-item-info">
         <p className="cart-item-title">{product.title}</p>
-        {product.category && (
-          <p className="cart-item-category">{product.category}</p>
+        {variantSummary ? (
+          <p className="cart-item-category" style={{ color: "var(--gold)", fontWeight: 600 }}>
+            {variantSummary} {variant?.variant_sku ? `(${variant.variant_sku})` : ""}
+          </p>
+        ) : (
+          product.category && <p className="cart-item-category">{product.category}</p>
         )}
         <p className="cart-item-price">
-          {product.price !== null
-            ? formatPrice(product.price * quantity)
-            : "—"}
+          {formatPrice(itemPrice * quantity)}
         </p>
       </div>
 
@@ -62,7 +67,7 @@ function CartItemRow({ item }: { item: CartItem }) {
           <button
             aria-label="Decrease quantity"
             className="cart-qty-btn"
-            onClick={() => updateQuantity(product.id, quantity - 1)}
+            onClick={() => updateQuantity(index, quantity - 1)}
           >
             −
           </button>
@@ -70,7 +75,7 @@ function CartItemRow({ item }: { item: CartItem }) {
           <button
             aria-label="Increase quantity"
             className="cart-qty-btn"
-            onClick={() => updateQuantity(product.id, quantity + 1)}
+            onClick={() => updateQuantity(index, quantity + 1)}
           >
             +
           </button>
@@ -79,7 +84,7 @@ function CartItemRow({ item }: { item: CartItem }) {
         <button
           aria-label={`Remove ${product.title} from cart`}
           className="cart-remove-btn"
-          onClick={() => removeFromCart(product.id)}
+          onClick={() => removeFromCart(index)}
         >
           <svg
             viewBox="0 0 24 24"
@@ -229,8 +234,8 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <EmptyCart />
               ) : (
                 <div className="cart-items-list">
-                  {items.map((item) => (
-                    <CartItemRow key={item.product.id} item={item} />
+                  {items.map((item, idx) => (
+                    <CartItemRow key={idx} item={item} index={idx} />
                   ))}
                 </div>
               )}

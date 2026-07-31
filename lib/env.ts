@@ -19,7 +19,22 @@ export function validateEnv() {
   }
 
   if (missing.length > 0) {
-    console.warn(`[validateEnv] WARNING: Missing required environment variables: ${missing.join(", ")}`);
+    console.warn(
+      `[validateEnv] WARNING: Missing required environment variables: ${missing.join(", ")}`
+    );
+  }
+
+  // Warn when CJ credentials are absent — service will operate in mock mode.
+  const cjApiKey = process.env.CJ_API_KEY || "";
+  const cjMcpToken = process.env.CJ_MCP_TOKEN || "";
+  const cjMissing: string[] = [];
+  if (!cjApiKey || cjApiKey.includes("placeholder")) cjMissing.push("CJ_API_KEY");
+  if (!cjMcpToken) cjMissing.push("CJ_MCP_TOKEN");
+  if (cjMissing.length > 0) {
+    console.warn(
+      `[validateEnv] CJ Dropshipping credentials not fully configured (${cjMissing.join(", ")}). ` +
+        "CJ service will run in mock/dry-run mode."
+    );
   }
 
   return {
@@ -29,7 +44,8 @@ export function validateEnv() {
     appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://curatedfinds.store",
     stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
-    cjApiKey: process.env.CJ_API_KEY || "",
+    cjApiKey,
+    cjMcpToken,
     emailProvider: process.env.EMAIL_PROVIDER || "mock",
     isProduction: process.env.NODE_ENV === "production",
   };

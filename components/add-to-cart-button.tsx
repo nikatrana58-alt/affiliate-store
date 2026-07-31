@@ -1,29 +1,36 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useCart } from "@/lib/cart";
+import { useCart, type CartVariantSelection } from "@/lib/cart";
 import type { Product } from "@/lib/products";
 
 type AddToCartButtonProps = {
   product: Product;
+  variant?: CartVariantSelection | null;
   className?: string;
   /** Compact variant used in sticky mobile bar */
   size?: "default" | "small";
+  disabled?: boolean;
+  disabledText?: string;
 };
 
 export function AddToCartButton({
   product,
+  variant,
   className,
   size = "default",
+  disabled = false,
+  disabledText,
 }: AddToCartButtonProps) {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
 
   const handleClick = useCallback(() => {
-    addToCart(product);
+    if (disabled) return;
+    addToCart(product, variant);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
-  }, [addToCart, product]);
+  }, [addToCart, product, variant, disabled]);
 
   const baseClass =
     size === "small" ? "buy-amazon-button small" : "buy-amazon-button";
@@ -33,12 +40,24 @@ export function AddToCartButton({
     <button
       id={`add-to-cart-${product.id}`}
       aria-label={
-        added ? `${product.title} added to cart` : `Add ${product.title} to cart`
+        disabled
+          ? disabledText || "Option selection required"
+          : added
+          ? `${product.title} added to cart`
+          : `Add ${product.title} to cart`
       }
-      className={`${resolvedClass} add-to-cart-btn ${added ? "add-to-cart-btn--added" : ""}`}
+      disabled={disabled}
+      className={`${resolvedClass} add-to-cart-btn ${added ? "add-to-cart-btn--added" : ""} ${disabled ? "add-to-cart-btn--disabled" : ""}`}
+      style={{
+        opacity: disabled ? 0.55 : undefined,
+        cursor: disabled ? "not-allowed" : undefined,
+        pointerEvents: disabled ? "auto" : undefined,
+      }}
       onClick={handleClick}
     >
-      {added ? (
+      {disabled ? (
+        <span>{disabledText || "Select Options to Add"}</span>
+      ) : added ? (
         <>
           <svg
             viewBox="0 0 24 24"

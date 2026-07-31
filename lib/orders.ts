@@ -40,14 +40,25 @@ export type {
 
 // ─── Column Selectors ────────────────────────────────────────────────────────
 
-const ORDER_COLS =
+/**
+ * Columns guaranteed to exist after migrations 001 + 002 + 003.
+ * Safe to query against any DB that has the base schema applied.
+ */
+const ORDER_COLS_BASE =
   "id,customer_email,customer_first_name,customer_last_name,customer_phone," +
   "shipping_address,billing_address,shipping_method,shipping_cost," +
   "subtotal,discount_amount,tax_amount,grand_total," +
   "coupon_id,coupon_code,status,stripe_session_id,fulfillment_ref," +
   "cj_order_id,tracking_number,shipping_carrier,fulfillment_status,synced_at," +
-  "estimated_delivery,shipped_at,delivered_at,last_tracking_sync,tracking_url," +
   "notes,created_at,updated_at";
+
+/**
+ * Full column set including shipping-tracking fields added in migration 004.
+ * Requires supabase/migrations/004_shipping_tracking.sql to have been applied.
+ */
+const ORDER_COLS =
+  ORDER_COLS_BASE +
+  ",estimated_delivery,shipped_at,delivered_at,last_tracking_sync,tracking_url";
 
 const ITEM_COLS =
   "id,order_id,product_id,product_title,product_image,product_slug," +
@@ -339,42 +350,68 @@ export async function getAllOrders(
   const offset = options?.offset ?? 0;
   const sortAscending = options?.sortOrder === "oldest";
 
-  let query = supabase
-    .from("orders")
-    .select(ORDER_COLS, { count: "exact" })
-    .order("created_at", { ascending: sortAscending })
-    .range(offset, offset + limit - 1);
+  function buildQuery(cols: string) {
+    let q = supabase
+      .from("orders")
+      .select(cols, { count: "exact" })
+      .order("created_at", { ascending: sortAscending })
+      .range(offset, offset + limit - 1);
 
-  if (options?.status && options.status !== "all") {
-    query = query.eq("status", options.status);
-  }
-
-  if (options?.search?.trim()) {
-    const s = options.search.trim();
-    query = query.or(
-      `customer_email.ilike.%${s}%,customer_first_name.ilike.%${s}%,customer_last_name.ilike.%${s}%,id.eq.${s}`
-    );
-  }
-
-  if (options?.dateFilter && options.dateFilter !== "all") {
-    const now = new Date();
-    let startDate: Date;
-
-    if (options.dateFilter === "today") {
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    } else if (options.dateFilter === "week") {
-      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    } else if (options.dateFilter === "month") {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    } else {
-      startDate = new Date(0);
+    if (options?.status && options.status !== "all") {
+      q = q.eq("status", options.status);
     }
 
-    query = query.gte("created_at", startDate.toISOString());
+    if (options?.search?.trim()) {
+      const s = options.search.trim();
+      q = q.or(
+        `customer_email.ilike.%${s}%,customer_first_name.ilike.%${s}%,customer_last_name.ilike.%${s}%,id.eq.${s}`
+      );
+    }
+
+    if (options?.dateFilter && options.dateFilter !== "all") {
+      const now = new Date();
+      let startDate: Date;
+      if (options.dateFilter === "today") {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (options.dateFilter === "week") {
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (options.dateFilter === "month") {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else {
+        startDate = new Date(0);
+      }
+      q = q.gte("created_at", startDate.toISOString());
+    }
+
+    return q;
   }
 
-  const { data, error, count } = await query;
-  if (error) throw error;
+  // Try full column set first (requires migration 004)
+  const { data, error, count } = await buildQuery(ORDER_COLS);
+
+  if (error) {
+    // If the error is a missing column (migration 004 not yet applied), fall back
+    // to the guaranteed base column set so the dashboard stays functional.
+    const isMissingColumn =
+      error.code === "42703" || // PostgreSQL: undefined_column
+      (error.message ?? "").toLowerCase().includes("column") ||
+      (error.message ?? "").toLowerCase().includes("does not exist");
+
+    if (isMissingColumn) {
+      console.warn(
+        "[orders] Full ORDER_COLS query failed — one or more columns are missing. " +
+        "Run supabase/migrations/004_shipping_tracking.sql in the Supabase SQL Editor to add the missing columns. " +
+        "Falling back to base column set. Error:",
+        error.message
+      );
+      const { data: fallbackData, error: fallbackError, count: fallbackCount } =
+        await buildQuery(ORDER_COLS_BASE);
+      if (fallbackError) throw fallbackError;
+      return { orders: (fallbackData ?? []) as unknown as Order[], count: fallbackCount ?? 0 };
+    }
+
+    throw error;
+  }
 
   return { orders: (data ?? []) as unknown as Order[], count: count ?? 0 };
 }

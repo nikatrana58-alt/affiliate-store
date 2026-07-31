@@ -1,14 +1,51 @@
+import fs from "fs";
+import path from "path";
 import { createPublicSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
+import { calculateProfitMetrics } from "@/lib/pricing-engine";
+
+export type ProductVariantItem = {
+  id?: string;
+  cj_variant_id?: string;
+  name: string;
+  sku?: string;
+  color?: string | null;
+  size?: string | null;
+  price?: number;
+  cost_price?: number;
+  price_delta: number;
+  stock: number;
+  weight?: string | null;
+  image?: string | null;
+  attributes?: Record<string, string>;
+};
 
 export type Product = {
   id: string;
   title: string;
   slug: string;
+  short_description?: string | null;
   description: string | null;
   category: string | null;
+  collections?: string[] | null;
+  tags?: string[] | null;
+  brand?: string | null;
   badge: string | null;
   price: number | null;
+  compare_at_price?: number | null;
+  cost_price?: number | null;
+  profit?: number | null;
+  margin_percent?: number | null;
+  price_manually_overridden?: boolean | null;
   image: string | null;
+  images?: string[] | null;
+  variants?: ProductVariantItem[] | null;
+  sku?: string | null;
+  inventory_quantity?: number | null;
+  weight?: string | null;
+  dimensions?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  status?: "draft" | "published" | "hidden";
   affiliate_link: string;
   cj_product_id?: string | null;
   created_at: string;
@@ -94,6 +131,82 @@ export const FALLBACK_PRODUCTS: Product[] = [
   },
 ];
 
+const LOCAL_PRODUCTS_FILE = path.join(process.cwd(), "data", "products.json");
+
+function ensureDataDirExists() {
+  const dir = path.join(process.cwd(), "data");
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+let cachedLocalProducts: Product[] | null = null;
+
+export function getLocalProducts(): Product[] {
+  if (cachedLocalProducts) {
+    return cachedLocalProducts;
+  }
+  try {
+    ensureDataDirExists();
+    if (fs.existsSync(LOCAL_PRODUCTS_FILE)) {
+      const content = fs.readFileSync(LOCAL_PRODUCTS_FILE, "utf-8");
+      const list = JSON.parse(content);
+      if (Array.isArray(list) && list.length > 0) {
+        cachedLocalProducts = list;
+        return list;
+      }
+    }
+  } catch (err) {
+    console.warn("[products] Failed to read local products file:", err);
+  }
+  cachedLocalProducts = FALLBACK_PRODUCTS;
+  return FALLBACK_PRODUCTS;
+}
+
+export function saveLocalProduct(product: Product): Product {
+  cachedLocalProducts = null;
+  try {
+    ensureDataDirExists();
+    const existing = getLocalProducts();
+    const index = existing.findIndex(
+      (p) => p.id === product.id || (p.cj_product_id && p.cj_product_id === product.cj_product_id)
+    );
+
+    let updated: Product[];
+    if (index >= 0) {
+      updated = [...existing];
+      updated[index] = { ...updated[index], ...product };
+    } else {
+      updated = [product, ...existing];
+    }
+
+    fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+    cachedLocalProducts = updated;
+    return product;
+  } catch (err) {
+    console.error("[products] Failed to save local product file:", err);
+    return product;
+  }
+}
+
+export function deleteLocalProduct(id: string): boolean {
+  cachedLocalProducts = null;
+  try {
+    ensureDataDirExists();
+    const existing = getLocalProducts();
+    const filtered = existing.filter(
+      (p) => p.id !== id && p.cj_product_id !== id && p.slug !== id
+    );
+    fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(filtered, null, 2), "utf-8");
+    cachedLocalProducts = filtered;
+    console.info(`[products] Permanent delete local product completed for ID/PID: ${id}`);
+    return true;
+  } catch (err) {
+    console.error("[products] Failed to delete local product file:", err);
+    return false;
+  }
+}
+
 export function validateProductInput(input: Partial<ProductInput>) {
   const errors: string[] = [];
 
@@ -113,15 +226,54 @@ export function validateProductInput(input: Partial<ProductInput>) {
 }
 
 export function normalizeProductInput(input: ProductInput): ProductInput {
+  const price = input.price != null ? Number(input.price) : null;
+  const costPrice = input.cost_price != null ? Number(input.cost_price) : null;
+
+  let profit: number | null = input.profit ?? null;
+  let marginPercent: number | null = input.margin_percent ?? null;
+
+  if (price != null && costPrice != null) {
+    const metrics = calculateProfitMetrics(costPrice, price);
+    profit = metrics.profit;
+    marginPercent = metrics.marginPercent;
+  }
+
   return {
     title: input.title.trim(),
     slug: input.slug.trim().toLowerCase(),
+    short_description: input.short_description?.trim() || null,
     description: input.description?.trim() || null,
     category: input.category?.trim() || null,
+    collections: Array.isArray(input.collections)
+      ? input.collections
+      : typeof input.collections === "string"
+      ? (input.collections as string).split(",").map((s) => s.trim()).filter(Boolean)
+      : null,
+    tags: Array.isArray(input.tags)
+      ? input.tags
+      : typeof input.tags === "string"
+      ? (input.tags as string).split(",").map((s) => s.trim()).filter(Boolean)
+      : null,
+    brand: input.brand?.trim() || null,
     badge: input.badge?.trim() || null,
-    price: input.price ?? null,
+    price,
+    compare_at_price: input.compare_at_price != null ? Number(input.compare_at_price) : null,
+    cost_price: costPrice,
+    profit,
+    margin_percent: marginPercent,
+    price_manually_overridden: Boolean(input.price_manually_overridden),
     image: input.image?.trim() || null,
+    images: Array.isArray(input.images) ? input.images.filter(Boolean) : null,
+    variants: Array.isArray(input.variants) ? input.variants : null,
+    sku: input.sku?.trim() || null,
+    inventory_quantity: input.inventory_quantity != null ? Number(input.inventory_quantity) : null,
+    weight: input.weight?.trim() || null,
+    dimensions: input.dimensions?.trim() || null,
+    seo_title: input.seo_title?.trim() || null,
+    seo_description: input.seo_description?.trim() || null,
+    status: input.status || "published",
     affiliate_link: input.affiliate_link.trim(),
+    cj_product_id: input.cj_product_id?.trim() || null,
   };
 }
 
@@ -131,21 +283,41 @@ export async function getUniqueSlug(
   excludeId?: string
 ): Promise<string> {
   const normalizedBase = baseSlug.trim().toLowerCase();
-  
-  const { data, error } = await supabase
-    .from("products")
-    .select("slug, id")
-    .or(`slug.eq.${normalizedBase},slug.ilike.${normalizedBase}-%`);
 
-  if (error) throw error;
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("slug, id")
+      .or(`slug.eq.${normalizedBase},slug.ilike.${normalizedBase}-%`);
 
-  const existingSlugs = new Set((data as { slug: string, id: string }[])
-    .filter(p => p.id !== excludeId)
-    .map(p => p.slug.toLowerCase()));
+    if (!error && data) {
+      const existingSlugs = new Set(
+        (data as { slug: string; id: string }[])
+          .filter((p) => p.id !== excludeId)
+          .map((p) => p.slug.toLowerCase())
+      );
 
-  if (!existingSlugs.has(normalizedBase)) {
-    return normalizedBase;
+      if (!existingSlugs.has(normalizedBase)) {
+        return normalizedBase;
+      }
+
+      let counter = 2;
+      while (true) {
+        const candidate = `${normalizedBase}-${counter}`;
+        if (!existingSlugs.has(candidate)) {
+          return candidate;
+        }
+        counter++;
+      }
+    }
+  } catch {
+    // Fall back to local slug resolution if Supabase query fails
   }
+
+  const localProducts = getLocalProducts();
+  const existingSlugs = new Set(
+    localProducts.filter((p) => p.id !== excludeId).map((p) => p.slug.toLowerCase())
+  );
 
   let counter = 2;
   while (true) {
@@ -157,57 +329,69 @@ export async function getUniqueSlug(
   }
 }
 
+async function queryWithTimeout<T>(promise: PromiseLike<T>, timeoutMs = 1500): Promise<T> {
+  let timeoutId: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Supabase query timed out")), timeoutMs);
+  });
+  return Promise.race([Promise.resolve(promise), timeoutPromise]).finally(() => clearTimeout(timeoutId));
+}
+
 export async function getProducts(): Promise<Product[]> {
   if (!isSupabaseConfigured()) {
-    return FALLBACK_PRODUCTS;
+    return getLocalProducts();
   }
 
   try {
-    const { data, error } = await createPublicSupabaseClient()
+    const query = createPublicSupabaseClient()
       .from("products")
       .select(PRODUCT_COLUMNS)
       .order("created_at", { ascending: false });
 
+    const { data, error } = await queryWithTimeout(query, 1500);
+
     if (error) {
       console.warn("[products] Supabase query returned error, using fallback catalog:", error.message);
-      return FALLBACK_PRODUCTS;
+      return getLocalProducts();
     }
 
     if (!data || data.length === 0) {
-      return FALLBACK_PRODUCTS;
+      return getLocalProducts();
     }
 
     return data as Product[];
   } catch (error: any) {
-    console.warn("[products] Unable to reach Supabase database. Serving fallback catalog.");
-    return FALLBACK_PRODUCTS;
+    console.warn("[products] Unable to reach Supabase database within 1.5s timeout. Serving fallback catalog.");
+    return getLocalProducts();
   }
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   if (!isSupabaseConfigured()) {
-    return FALLBACK_PRODUCTS.find((p) => p.slug === slug) ?? null;
+    return getLocalProducts().find((p) => p.slug === slug) ?? null;
   }
 
   try {
-    const { data, error } = await createPublicSupabaseClient()
+    const query = createPublicSupabaseClient()
       .from("products")
       .select(PRODUCT_COLUMNS)
       .eq("slug", slug)
       .maybeSingle();
 
+    const { data, error } = await queryWithTimeout(query, 1500);
+
     if (error) {
       console.warn("[products] Supabase query error for slug:", slug, error.message);
-      return FALLBACK_PRODUCTS.find((p) => p.slug === slug) ?? null;
+      return getLocalProducts().find((p) => p.slug === slug) ?? null;
     }
 
     if (!data) {
-      return FALLBACK_PRODUCTS.find((p) => p.slug === slug) ?? null;
+      return getLocalProducts().find((p) => p.slug === slug) ?? null;
     }
 
     return data as Product;
   } catch (error: any) {
-    console.warn("[products] Unable to reach Supabase database for product. Serving fallback match.");
-    return FALLBACK_PRODUCTS.find((p) => p.slug === slug) ?? null;
+    console.warn("[products] Unable to reach Supabase database within 1.5s timeout. Serving fallback match.");
+    return getLocalProducts().find((p) => p.slug === slug) ?? null;
   }
 }

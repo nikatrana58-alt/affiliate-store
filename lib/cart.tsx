@@ -12,9 +12,19 @@ import type { Product } from "@/lib/products";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export type CartVariantSelection = {
+  variant_id?: string | null;
+  variant_sku?: string | null;
+  color?: string | null;
+  size?: string | null;
+  price?: number | null;
+};
+
 export type CartItem = {
   product: Product;
   quantity: number;
+  variant?: CartVariantSelection | null;
+  unitPrice?: number;
 };
 
 type CartState = {
@@ -22,9 +32,9 @@ type CartState = {
 };
 
 type CartAction =
-  | { type: "ADD"; product: Product }
-  | { type: "REMOVE"; productId: string }
-  | { type: "UPDATE_QTY"; productId: string; quantity: number }
+  | { type: "ADD"; product: Product; variant?: CartVariantSelection | null; quantity?: number }
+  | { type: "REMOVE"; index: number }
+  | { type: "UPDATE_QTY"; index: number; quantity: number }
   | { type: "CLEAR" }
   | { type: "HYDRATE"; items: CartItem[] };
 
@@ -32,9 +42,9 @@ type CartContextValue = {
   items: CartItem[];
   itemCount: number;
   cartTotal: number;
-  addToCart: (product: Product) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addToCart: (product: Product, variant?: CartVariantSelection | null, quantity?: number) => void;
+  removeFromCart: (index: number | string) => void;
+  updateQuantity: (index: number | string, quantity: number) => void;
   clearCart: () => void;
 };
 
@@ -51,43 +61,51 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { items: action.items };
 
     case "ADD": {
-      const existing = state.items.find(
-        (item) => item.product.id === action.product.id,
-      );
-      if (existing) {
-        return {
-          items: state.items.map((item) =>
-            item.product.id === action.product.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item,
-          ),
+      const vKey = action.variant?.variant_id || action.variant?.variant_sku || `${action.variant?.color || ""}-${action.variant?.size || ""}`;
+      const existingIndex = state.items.findIndex((item) => {
+        const itemVKey = item.variant?.variant_id || item.variant?.variant_sku || `${item.variant?.color || ""}-${item.variant?.size || ""}`;
+        return item.product.id === action.product.id && itemVKey === vKey;
+      });
+
+      const effectivePrice = action.variant?.price ?? action.product.price ?? 0;
+
+      if (existingIndex >= 0) {
+        const updated = [...state.items];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: updated[existingIndex].quantity + (action.quantity || 1),
+          unitPrice: effectivePrice,
         };
+        return { items: updated };
       }
+
       return {
-        items: [...state.items, { product: action.product, quantity: 1 }],
+        items: [
+          ...state.items,
+          {
+            product: action.product,
+            quantity: action.quantity || 1,
+            variant: action.variant || null,
+            unitPrice: effectivePrice,
+          },
+        ],
       };
     }
 
     case "REMOVE":
       return {
-        items: state.items.filter(
-          (item) => item.product.id !== action.productId,
-        ),
+        items: state.items.filter((_, idx) => idx !== action.index),
       };
 
     case "UPDATE_QTY": {
       if (action.quantity <= 0) {
         return {
-          items: state.items.filter(
-            (item) => item.product.id !== action.productId,
-          ),
+          items: state.items.filter((_, idx) => idx !== action.index),
         };
       }
       return {
-        items: state.items.map((item) =>
-          item.product.id === action.productId
-            ? { ...item, quantity: action.quantity }
-            : item,
+        items: state.items.map((item, idx) =>
+          idx === action.index ? { ...item, quantity: action.quantity } : item
         ),
       };
     }
@@ -116,7 +134,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch {
-      // Silently ignore parse errors — start with empty cart
+      // Silently ignore parse errors
     }
   }, []);
 
@@ -125,20 +143,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
     } catch {
-      // Silently ignore write errors (e.g. private browsing quota)
+      // Silently ignore write errors
     }
   }, [state.items]);
 
-  const addToCart = useCallback((product: Product) => {
-    dispatch({ type: "ADD", product });
+  const addToCart = useCallback(
+    (product: Product, variant?: CartVariantSelection | null, quantity = 1) => {
+      dispatch({ type: "ADD", product, variant, quantity });
+    },
+    []
+  );
+
+  const removeFromCart = useCallback((target: number | string) => {
+    const index = typeof target === "number" ? target : parseInt(target, 10) || 0;
+    dispatch({ type: "REMOVE", index });
   }, []);
 
-  const removeFromCart = useCallback((productId: string) => {
-    dispatch({ type: "REMOVE", productId });
-  }, []);
-
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
-    dispatch({ type: "UPDATE_QTY", productId, quantity });
+  const updateQuantity = useCallback((target: number | string, quantity: number) => {
+    const index = typeof target === "number" ? target : parseInt(target, 10) || 0;
+    dispatch({ type: "UPDATE_QTY", index, quantity });
   }, []);
 
   const clearCart = useCallback(() => {
@@ -148,9 +171,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
 
   const cartTotal = state.items.reduce(
-    (sum, item) =>
-      sum + (item.product.price ?? 0) * item.quantity,
-    0,
+    (sum, item) => sum + (item.unitPrice ?? item.variant?.price ?? item.product.price ?? 0) * item.quantity,
+    0
   );
 
   return (

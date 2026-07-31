@@ -35,7 +35,11 @@ export async function GET(request: NextRequest) {
     const envStatus = {
       supabase: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
       stripe: Boolean(process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_SECRET_KEY.includes("placeholder")),
-      cj: Boolean(process.env.CJ_API_KEY && !process.env.CJ_API_KEY.includes("placeholder")),
+      cj: Boolean(
+        process.env.CJ_API_KEY &&
+          !process.env.CJ_API_KEY.includes("placeholder") &&
+          process.env.CJ_MCP_TOKEN
+      ),
       email: process.env.EMAIL_PROVIDER || "mock",
     };
 
@@ -56,7 +60,7 @@ export async function GET(request: NextRequest) {
           status: envStatus.stripe ? "configured" : "placeholder_mode",
         },
         cjDropshipping: {
-          status: envStatus.cj ? "configured" : "mock_mode",
+          status: envStatus.cj ? "live_mode" : "mock_mode",
         },
         emailService: {
           provider: envStatus.email,
