@@ -453,29 +453,41 @@ class CJDropshippingService {
     query.set("pageNum", pageNum.toString());
     query.set("pageSize", pageSize.toString());
 
-    if (pid?.trim()) query.set("pid", pid.trim());
-    if (productSku?.trim()) query.set("productSku", productSku.trim());
-    if (productName?.trim()) {
-      query.set("productName", productName.trim());
-      query.set("productNameEn", productName.trim());
+    let hasActiveSearchQuery = false;
+
+    if (pid?.trim()) {
+      query.set("pid", pid.trim());
+      hasActiveSearchQuery = true;
+    } else if (productSku?.trim()) {
+      query.set("productSku", productSku.trim());
+      hasActiveSearchQuery = true;
+    } else if (productName?.trim() || rawInput?.trim()) {
+      const kw = (productName || rawInput || "").trim();
+      query.set("keyWord", kw);
+      hasActiveSearchQuery = true;
     }
+
     if (categoryId?.trim()) query.set("categoryId", categoryId.trim());
 
     const queryPayload = Object.fromEntries(query.entries());
 
-    // 3. Log Outgoing CJ API Request Details (Requirement 6)
+    // 3. Log Outgoing CJ API Request Details (Requirement 2)
     const tReqStart = performance.now();
-    console.info(`[cj-search] Detected Search Type : "${detectedType}" | Raw Search Input: "${rawInput || pid || productSku || productName || ""}"`);
+    console.info(`[cj-search] User Search Input   : "${rawInput || pid || productSku || productName || ""}"`);
+    console.info(`[cj-search] Classified Type     : "${detectedType}"`);
     console.info(`[cj-search] Outgoing CJ Request  : Method=GET, Endpoint="/product/list", Payload=`, queryPayload);
 
     const endpointUrl = `/product/list?${query.toString()}`;
     const cacheKey = `list:${query.toString()}`;
-    const cached = this.getCached<{ list: CJProductDetail[]; total: number }>(cacheKey);
 
-    if (cached) {
-      const cachedLatencyMs = performance.now() - tReqStart;
-      console.info(`[cj-search] CACHE HIT for query /product/list | Response Latency: ${cachedLatencyMs.toFixed(2)} ms | Returned: ${cached.list.length} products`);
-      return { ...cached, searchTypeDetected: detectedType };
+    // Requirement 4: Do not return cached products when an active search query exists
+    if (!hasActiveSearchQuery) {
+      const cached = this.getCached<{ list: CJProductDetail[]; total: number }>(cacheKey);
+      if (cached) {
+        const cachedLatencyMs = performance.now() - tReqStart;
+        console.info(`[cj-search] CACHE HIT (Browsing default catalog) | Latency: ${cachedLatencyMs.toFixed(2)} ms | Returned: ${cached.list.length} products`);
+        return { ...cached, searchTypeDetected: detectedType };
+      }
     }
 
     try {
@@ -483,37 +495,25 @@ class CJDropshippingService {
       let dataPayload = res.data ?? (typeof res.result === "object" ? (res.result as { list: CJProductDetail[]; total: number }) : undefined);
       let items = dataPayload?.list || [];
 
-      // 4. Fallback for SKU search if exact variant SKU query returned 0 items
-      // Requirement 7: Document fallback reason explicitly in debug logs
+      console.info(`[cj-search] Incoming CJ Response : Status=${res.code ?? 200}, RawCount=${items.length}`);
+
+      // 4. SKU Fallback: if variant SKU (e.g. CJNSSYTZ05449-Black-L) returned 0 items, retry with base SKU (CJNSSYTZ05449)
       if (detectedType === "SKU" && items.length === 0 && productSku && productSku.includes("-")) {
         const baseSku = productSku.split("-")[0].trim();
         if (baseSku && baseSku !== productSku) {
-          console.info(`[cj-search] FALLBACK NOTICE: Official CJ API productSku search for variant SKU "${productSku}" returned 0 direct items. Attempting supported fallback to base SKU "${baseSku}"...`);
-          const fallbackQuery = new URLSearchParams(query);
+          console.info(`[cj-search] FALLBACK NOTICE: productSku search for variant SKU "${productSku}" returned 0 direct items. Retrying supported fallback to base SKU "${baseSku}"...`);
+          const fallbackQuery = new URLSearchParams();
+          fallbackQuery.set("pageNum", pageNum.toString());
+          fallbackQuery.set("pageSize", pageSize.toString());
           fallbackQuery.set("productSku", baseSku);
+          if (categoryId?.trim()) fallbackQuery.set("categoryId", categoryId.trim());
+
           const fallbackRes = await this.request<{ list: CJProductDetail[]; total: number }>(`/product/list?${fallbackQuery.toString()}`);
           const fallbackPayload = fallbackRes.data ?? (typeof fallbackRes.result === "object" ? (fallbackRes.result as { list: CJProductDetail[]; total: number }) : undefined);
           if (fallbackPayload?.list && fallbackPayload.list.length > 0) {
             items = fallbackPayload.list;
-            console.info(`[cj-search] Base SKU "${baseSku}" fallback successful: ${items.length} products returned.`);
+            console.info(`[cj-search] Base SKU "${baseSku}" fallback successful: ${items.length} product(s) returned.`);
           }
-        }
-      }
-
-      // If SKU search still returned 0 items, try keyWord fallback
-      if (detectedType === "SKU" && items.length === 0 && productSku) {
-        console.info(`[cj-search] FALLBACK NOTICE: productSku search for "${productSku}" returned 0 items. Attempting supported fallback via keyWord parameter...`);
-        const kwQuery = new URLSearchParams();
-        kwQuery.set("pageNum", pageNum.toString());
-        kwQuery.set("pageSize", pageSize.toString());
-        kwQuery.set("keyWord", productSku.trim());
-        if (categoryId?.trim()) kwQuery.set("categoryId", categoryId.trim());
-
-        const kwRes = await this.request<{ list: CJProductDetail[]; total: number }>(`/product/list?${kwQuery.toString()}`);
-        const kwPayload = kwRes.data ?? (typeof kwRes.result === "object" ? (kwRes.result as { list: CJProductDetail[]; total: number }) : undefined);
-        if (kwPayload?.list && kwPayload.list.length > 0) {
-          items = kwPayload.list;
-          console.info(`[cj-search] keyWord fallback for SKU "${productSku}" successful: ${items.length} products returned.`);
         }
       }
 
@@ -524,7 +524,8 @@ class CJDropshippingService {
       console.info(`[cj-search] Response Latency    : ${latencyMs.toFixed(2)} ms`);
       console.info(`[cj-search] Returned Products   : ${items.length} items (Total in CJ: ${totalCount})`);
 
-      if (items.length > 0) {
+      // Only cache default browsing catalog, never active search results (Requirement 4)
+      if (!hasActiveSearchQuery && items.length > 0) {
         this.setCache(cacheKey, { list: items, total: totalCount });
       }
 

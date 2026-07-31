@@ -34,32 +34,57 @@ export async function GET(request: NextRequest) {
 
     console.info(`[api/admin/cj/search] Input="${rawSearch || ""}" -> Classified Search Type="${detectedType}" (Clean: "${classification.cleanInput}")`);
 
-    if (detectedType === "PRODUCT_ID") {
-      try {
-        const detail = await cjDropshipping.getProductDetail(classification.cleanInput);
-        if (detail) {
-          list = [detail];
-          total = 1;
+    if (rawSearch && classification.cleanInput) {
+      if (detectedType === "PRODUCT_ID") {
+        try {
+          const detail = await cjDropshipping.getProductDetail(classification.cleanInput);
+          if (detail) {
+            list = [detail];
+            total = 1;
+          }
+        } catch (err) {
+          console.warn(`[api/admin/cj/search] Direct detail query for PID ${classification.cleanInput} failed, falling back to list query`, err);
         }
-      } catch (err) {
-        console.warn(`[api/admin/cj/search] Direct detail query for PID ${classification.cleanInput} failed, falling back to list`, err);
-      }
-    }
 
-    if (!list.length) {
+        if (!list.length) {
+          const res = await cjDropshipping.getProductList({
+            pageNum: page,
+            pageSize,
+            pid: classification.cleanInput,
+            categoryId: category,
+          });
+          list = res.list || [];
+          total = res.total || list.length;
+        }
+      } else if (detectedType === "SKU") {
+        const res = await cjDropshipping.getProductList({
+          pageNum: page,
+          pageSize,
+          productSku: classification.cleanInput,
+          categoryId: category,
+        });
+        list = res.list || [];
+        total = res.total || list.length;
+      } else {
+        // KEYWORD
+        const res = await cjDropshipping.getProductList({
+          pageNum: page,
+          pageSize,
+          keyWord: classification.cleanInput,
+          categoryId: category,
+        });
+        list = res.list || [];
+        total = res.total || list.length;
+      }
+    } else {
+      // Default catalog browsing (no query)
       const res = await cjDropshipping.getProductList({
         pageNum: page,
         pageSize,
-        keyWord: keyword,
-        productSku: sku,
         categoryId: category,
-        pid: pid,
       });
       list = res.list || [];
       total = res.total || list.length;
-      if (res.searchTypeDetected) {
-        detectedType = res.searchTypeDetected;
-      }
     }
 
     // Cross-reference with Supabase to flag already-imported products
