@@ -6,7 +6,7 @@
  */
 
 import { cjDropshipping } from "@/lib/cj-dropshipping";
-import { getOrderById, updateOrderStatus } from "@/lib/orders";
+import { getOrderById } from "@/lib/orders";
 import { createAdminSupabaseClient } from "@/lib/supabase";
 import { notifyAdmin } from "@/lib/notifications/admin";
 import type { OrderWithItems } from "@/lib/db/types";
@@ -105,7 +105,7 @@ export async function fulfillOrderWithCJ(orderId: string): Promise<FulfillmentRe
 
   // 5. Update Order in Supabase Database
   const now = new Date().toISOString();
-  const { data: updatedOrder, error: updateError } = await supabase
+  const { data: _updatedOrder, error: updateError } = await supabase
     .from("orders")
     .update({
       cj_order_id: cjOrderId,
@@ -196,3 +196,80 @@ export async function syncOrderTrackingFromCJ(orderId: string) {
     order: refreshed!,
   };
 }
+
+/**
+ * Validates and submits an order to Printful for fulfillment.
+ */
+export async function fulfillOrderWithPrintful(orderId: string): Promise<FulfillmentResult> {
+  const order = await getOrderById(orderId);
+
+  if (!order) {
+    return { success: false, error: `Order not found: ${orderId}` };
+  }
+
+  if (order.fulfillment_ref) {
+    return {
+      success: false,
+      error: `Order ${orderId} has already been submitted for fulfillment (Ref: ${order.fulfillment_ref})`,
+    };
+  }
+
+  const { printfulService } = await import("@/lib/printful/service");
+
+  try {
+    const printfulOrder = await printfulService.createOrder(
+      {
+        external_id: order.id,
+        recipient: {
+          name: `${order.customer_first_name} ${order.customer_last_name}`,
+          email: order.customer_email,
+          phone: order.customer_phone || undefined,
+          address1: order.shipping_address.address_line1,
+          address2: order.shipping_address.address_line2 || undefined,
+          city: order.shipping_address.city,
+          state_code: order.shipping_address.state,
+          country_code: order.shipping_address.country.substring(0, 2).toUpperCase(),
+          zip: order.shipping_address.postal_code,
+        },
+        items: order.order_items.map((item) => ({
+          sync_variant_id: item.variant_id ? parseInt(item.variant_id, 10) || undefined : undefined,
+          quantity: item.quantity,
+          name: item.product_title,
+          retail_price: String(item.unit_price),
+        })),
+      },
+      true // confirm order
+    );
+
+    const supabase = createAdminSupabaseClient();
+    await supabase
+      .from("orders")
+      .update({
+        fulfillment_ref: String(printfulOrder.id),
+        fulfillment_status: "processing",
+        synced_at: new Date().toISOString(),
+        status: "processing",
+      })
+      .eq("id", order.id);
+
+    await supabase.from("order_status_history").insert({
+      order_id: order.id,
+      old_status: order.status,
+      new_status: "processing",
+      note: `Submitted to Printful. Printful Order ID: ${printfulOrder.id}`,
+      changed_by: "printful_fulfillment_system",
+    });
+
+    const refreshedOrder = await getOrderById(order.id);
+    return {
+      success: true,
+      cjOrderId: String(printfulOrder.id),
+      order: refreshedOrder!,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Printful order creation failed";
+    console.error(`[fulfillment] Printful submission error for order ${orderId}:`, err);
+    return { success: false, error: msg };
+  }
+}
+

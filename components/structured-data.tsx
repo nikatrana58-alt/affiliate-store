@@ -1,4 +1,5 @@
 import type { Product } from "@/lib/products";
+import { getProductDisplayPrice } from "@/lib/pricing-engine";
 
 type OrganizationSchemaProps = {
   name?: string;
@@ -7,9 +8,9 @@ type OrganizationSchemaProps = {
 };
 
 export function OrganizationSchema({
-  name = "Curated Finds",
-  url = "https://curatedfinds.store",
-  logo = "https://curatedfinds.store/icon.png",
+  name = "RA2Z",
+  url = "https://ra2z.shop",
+  logo = "https://ra2z.shop/logo-gold.png",
 }: OrganizationSchemaProps) {
   const schemaData = {
     "@context": "https://schema.org",
@@ -18,8 +19,8 @@ export function OrganizationSchema({
     url,
     logo,
     sameAs: [
-      "https://twitter.com/curatedfinds",
-      "https://facebook.com/curatedfinds",
+      "https://twitter.com/ra2zshop",
+      "https://instagram.com/ra2zshop",
     ],
   };
 
@@ -41,9 +42,9 @@ export function ProductSchema({ product }: { product: Product }) {
     sku: product.id,
     offers: {
       "@type": "Offer",
-      url: `https://curatedfinds.store/products/${product.slug}`,
+      url: `https://ra2z.shop/products/${product.slug}`,
       priceCurrency: "USD",
-      price: product.price ?? 0,
+      price: getProductDisplayPrice(product).price,
       itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
     },

@@ -11,8 +11,8 @@ export function renderAccountAuthEmail(
     switch (type) {
       case "welcome":
         return {
-          title: "Welcome to Curated Finds",
-          message: "Thank you for creating an account with Curated Finds! Explore our exclusive product lines, manage your orders, and track your shipments anytime in your customer portal.",
+          title: "Welcome to RA2Z Luxury",
+          message: "Thank you for creating an account with RA2Z Luxury! Explore our exclusive product lines, manage your orders, and track your shipments anytime in your customer portal.",
           buttonText: "Access Customer Portal ↗",
         };
       case "verification":
@@ -31,7 +31,7 @@ export function renderAccountAuthEmail(
   };
 
   const details = getDetails();
-  const link = actionLink || `${process.env.NEXT_PUBLIC_APP_URL || "https://curatedfinds.store"}/account`;
+  const link = actionLink || `${process.env.NEXT_PUBLIC_APP_URL || "https://ra2z.shop"}/account`;
 
   const bodyContentHtml = `
     <h2 style="margin: 0 0 8px; font-size: 22px; color: #FFFFFF;">${details.title}</h2>

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import type { Product, ProductVariantItem } from "@/lib/products";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { getVariantFinalPrice, getProductDisplayPrice } from "@/lib/pricing-engine";
 import { MagneticButton } from "@/components/magnetic-button";
 
 import { PremiumProductGallery } from "@/components/premium-product-gallery";
@@ -97,15 +98,11 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
   // Determine current active price
   const activePrice = useMemo(() => {
     if (selectedVariant) {
-      if (selectedVariant.price != null && selectedVariant.price > 0) {
-        return selectedVariant.price;
-      }
-      if (product.price != null) {
-        return product.price + (selectedVariant.price_delta || 0);
-      }
+      return getVariantFinalPrice(selectedVariant, product.price || 0, product.profit);
     }
-    return product.price;
-  }, [selectedVariant, product.price]);
+    const display = getProductDisplayPrice(product);
+    return display.price;
+  }, [selectedVariant, product]);
 
   // Inventory stock display text
   const stockText = useMemo(() => {

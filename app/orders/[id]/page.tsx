@@ -7,8 +7,8 @@ import { getOrderById, getOrderStatusHistory } from "@/lib/orders";
 import "@/app/checkout.css";
 
 export const metadata: Metadata = {
-  title: "Order Details & Tracking | Curated Finds",
-  description: "View order details, shipment tracking, and download invoice.",
+  title: "Order Details & Tracking | RA2Z Luxury",
+  description: "View order details, shipment tracking, and download invoice for RA2Z creations.",
 };
 
 type Props = {

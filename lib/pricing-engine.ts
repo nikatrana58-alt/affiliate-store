@@ -189,3 +189,111 @@ export function calculateProductPricing(
     markupMultiplier: multiplier,
   };
 }
+
+// -----------------------------------------------------------------------------
+// UNIFIED PRICING ENGINE CORE FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/**
+ * Calculates final selling price for a specific variant.
+ * Formula: finalPrice = baseCost + profit
+ */
+export function getVariantFinalPrice(
+  variant: { price?: number | null; cost_price?: number | null; price_delta?: number },
+  productBasePrice: number = 0,
+  productProfit?: number | null
+): number {
+  if (variant.price != null && Number(variant.price) > 0) {
+    return parseFloat(Number(variant.price).toFixed(2));
+  }
+  if (variant.cost_price != null && Number(variant.cost_price) > 0) {
+    const profit = productProfit != null ? Number(productProfit) : 0;
+    return parseFloat((Number(variant.cost_price) + profit).toFixed(2));
+  }
+  const base = Number(productBasePrice) || 0;
+  const delta = Number(variant?.price_delta) || 0;
+  return parseFloat((base + delta).toFixed(2));
+}
+
+import { SmartPricingEngine } from "@/lib/pricing/smart-pricing-engine";
+export { SmartPricingEngine };
+export type { SmartProductPricingInput, SmartVariantPricingInput, CalculatedProductPricing, CalculatedVariantPrice, PricingMode, CampaignConfig } from "@/lib/pricing/smart-pricing-engine";
+
+/**
+ * Returns the single unified display price for a product across all storefront components.
+ * delegates directly to SmartPricingEngine.getDisplayPrice().
+ */
+export function getProductDisplayPrice(product: any): {
+  price: number;
+  compareAtPrice: number | null;
+  minPrice: number;
+  maxPrice: number;
+  hasMultiplePrices: boolean;
+} {
+  return SmartPricingEngine.getDisplayPrice(product);
+}
+
+/**
+ * Recomputes all variant final prices when Admin updates profit/margin.
+ * Formula: finalPrice = baseCost + profit
+ * Base supplier cost is NEVER overwritten.
+ */
+export function recalculateAllVariantPrices(
+  variants: Array<{
+    id?: string;
+    name: string;
+    cost_price?: number | null;
+    price?: number | null;
+    price_delta: number;
+    stock: number;
+    color?: string | null;
+    size?: string | null;
+    sku?: string;
+    image?: string | null;
+  }>,
+  profit: number
+): {
+  updatedVariants: Array<{
+    id?: string;
+    name: string;
+    cost_price?: number | null;
+    price?: number | null;
+    price_delta: number;
+    stock: number;
+    color?: string | null;
+    size?: string | null;
+    sku?: string;
+    image?: string | null;
+  }>;
+  lowestPrice: number;
+  highestPrice: number;
+} {
+  if (!variants || !variants.length) {
+    return { updatedVariants: [], lowestPrice: 0, highestPrice: 0 };
+  }
+
+  const computed = variants.map((v) => {
+    const cost = Math.max(0, v.cost_price != null ? Number(v.cost_price) : 0);
+    const finalPrice = parseFloat((cost + profit).toFixed(2));
+    return {
+      ...v,
+      cost_price: cost,
+      price: finalPrice,
+    };
+  });
+
+  const finalPrices = computed.map((v) => v.price!);
+  const lowestPrice = Math.min(...finalPrices);
+  const highestPrice = Math.max(...finalPrices);
+
+  const updatedVariants = computed.map((v) => ({
+    ...v,
+    price_delta: parseFloat((v.price! - lowestPrice).toFixed(2)),
+  }));
+
+  return {
+    updatedVariants,
+    lowestPrice,
+    highestPrice,
+  };
+}

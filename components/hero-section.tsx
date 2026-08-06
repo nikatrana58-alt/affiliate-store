@@ -6,6 +6,7 @@ import { motion, useScroll, useTransform, useMotionValue, useSpring } from "fram
 import { HeroScene3D } from "@/components/hero-scene-3d";
 import { MagneticButton } from "@/components/magnetic-button";
 import type { Product } from "@/lib/products";
+import { getProductDisplayPrice } from "@/lib/pricing-engine";
 
 type HeroSectionProps = {
   product?: Product | null;
@@ -92,7 +93,6 @@ export function HeroSection({ product }: HeroSectionProps) {
       style={{
         scale: heroScale,
         y: heroY,
-        filter: `blur(${heroBlur.get()}px)`,
       }}
     >
       <HeroScene3D />
@@ -109,24 +109,23 @@ export function HeroSection({ product }: HeroSectionProps) {
         >
           <motion.p className="hero-eyebrow" variants={itemVariants}>
             <span className="eyebrow-dot" />
-            Premium curated collection
+            RA2Z LUXURY CURATION
           </motion.p>
 
           <motion.h1 className="hero-headline" variants={itemVariants}>
-            Discover Your
+            Redefining Modern
             <br />
-            <span className="hero-headline-accent">Next Obsession</span>
+            <span className="hero-headline-accent">Luxury & Prestige</span>
           </motion.h1>
 
           <motion.p className="hero-subtitle" variants={itemVariants}>
-            Handpicked products that redefine quality. Curated for those who
-            demand more from every purchase.
+            Handpicked masterpieces that embody perfection, quality, and timeless distinction.
           </motion.p>
 
           <motion.div className="hero-actions" variants={itemVariants}>
             <MagneticButton className="hero-cta-wrapper">
               <Link className="hero-cta" href="#products">
-                Explore collection
+                Explore Collection
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
                   <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
                 </svg>
@@ -134,23 +133,23 @@ export function HeroSection({ product }: HeroSectionProps) {
             </MagneticButton>
             <MagneticButton className="hero-cta-secondary-wrapper">
               <Link className="hero-cta-secondary" href="#products">
-                View all products
+                View All Creations
               </Link>
             </MagneticButton>
           </motion.div>
 
           <motion.div className="hero-stats" variants={itemVariants}>
             <div className="hero-stat">
-              <span className="hero-stat-number">500+</span>
-              <span className="hero-stat-label">Curated products</span>
+              <span className="hero-stat-number">100%</span>
+              <span className="hero-stat-label">Authentic Luxury</span>
             </div>
             <div className="hero-stat">
               <span className="hero-stat-number">10K+</span>
-              <span className="hero-stat-label">Happy customers</span>
+              <span className="hero-stat-label">Elite Clients</span>
             </div>
             <div className="hero-stat">
-              <span className="hero-stat-number">4.9★</span>
-              <span className="hero-stat-label">Average rating</span>
+              <span className="hero-stat-number">4.95★</span>
+              <span className="hero-stat-label">Excellence Rating</span>
             </div>
           </motion.div>
         </motion.div>
@@ -166,14 +165,15 @@ export function HeroSection({ product }: HeroSectionProps) {
             style={{
               x: showcaseX,
               y: showcaseY,
-            }}
-            animate={{
-              y: [0, -6, 0],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
+              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(212, 175, 55, 0.03) 100%)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              borderRadius: "28px",
+              border: "1px solid rgba(212, 175, 55, 0.35)",
+              boxShadow: "0 32px 80px rgba(0, 0, 0, 0.85), 0 0 40px rgba(212, 175, 55, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
+              padding: "24px",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
             <div className="showcase-ring showcase-ring-1" />
@@ -187,6 +187,7 @@ export function HeroSection({ product }: HeroSectionProps) {
                   alt={product.title}
                   src={product.image}
                   className="showcase-image"
+                  fetchPriority="high"
                 />
                 <div className="showcase-image-shimmer" />
               </div>
@@ -197,13 +198,13 @@ export function HeroSection({ product }: HeroSectionProps) {
                     <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
                   </svg>
                 </div>
-                <p>Featured product</p>
+                <p>Featured Creation</p>
               </div>
             )}
 
             {product && (
               <div className="showcase-meta">
-                <span className="showcase-price">{formatPrice(product.price)}</span>
+                <span className="showcase-price">{formatPrice(getProductDisplayPrice(product).price)}</span>
                 <span className="showcase-badge">Featured</span>
               </div>
             )}
@@ -215,7 +216,7 @@ export function HeroSection({ product }: HeroSectionProps) {
         <div className="scroll-mouse">
           <div className="scroll-dot" />
         </div>
-        <span>Scroll</span>
+        <span>Discover</span>
       </div>
     </motion.section>
   );

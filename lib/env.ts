@@ -37,6 +37,16 @@ export function validateEnv() {
     );
   }
 
+  // Warn when Printful credentials are absent — service will operate in mock mode.
+  const printfulApiToken = process.env.PRINTFUL_API_TOKEN || "";
+  const printfulStoreId = process.env.PRINTFUL_STORE_ID || "";
+  if (!printfulApiToken || printfulApiToken.includes("placeholder")) {
+    console.warn(
+      "[validateEnv] PRINTFUL_API_TOKEN credentials not fully configured. " +
+        "Printful service will run in mock/dry-run mode."
+    );
+  }
+
   return {
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
@@ -46,6 +56,8 @@ export function validateEnv() {
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     cjApiKey,
     cjMcpToken,
+    printfulApiToken,
+    printfulStoreId,
     emailProvider: process.env.EMAIL_PROVIDER || "mock",
     isProduction: process.env.NODE_ENV === "production",
   };

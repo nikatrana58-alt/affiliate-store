@@ -5,8 +5,8 @@ import { Footer } from "@/components/footer";
 import "./checkout.css";
 
 export const metadata: Metadata = {
-  title: "Checkout",
-  description: "Complete your order at Curated Finds — review your cart, enter shipping details, and place your order.",
+  title: "Checkout | RA2Z Luxury",
+  description: "Complete your order at RA2Z Luxury — review your cart, enter shipping details, and place your order.",
 };
 
 export default function CheckoutPage() {

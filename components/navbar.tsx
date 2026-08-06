@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MagneticButton } from "@/components/magnetic-button";
 import { CartButton } from "@/components/cart-button";
 
@@ -55,21 +56,60 @@ export function Navbar() {
       className={`navbar ${scrolled ? "navbar-scrolled" : ""} ${hidden ? "navbar-hidden" : ""}`}
     >
       <div className="navbar-inner">
-        <Link className="navbar-logo" href="/">
-          <span className="navbar-logo-icon gold-text">✦</span>
-          <span>Curated Finds</span>
+        {/* Far Left Symbol Logo Only - No Text */}
+        <Link className="navbar-logo-symbol" href="/" aria-label="RA2Z Home" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+          <Image
+            src="/logo-gold.png"
+            alt="RA2Z Symbol"
+            width={34}
+            height={44}
+            style={{ objectFit: "contain" }}
+            priority
+          />
         </Link>
 
-        <form className="navbar-search" action="/#products" onSubmit={handleSearch}>
-          <input aria-label="Search products" name="q" placeholder="Search products…" />
+        {/* Premium Glass Search Bar */}
+        <form className="navbar-search" action="/#products" onSubmit={handleSearch} style={{ position: "relative" }}>
+          <input
+            aria-label="Search luxury products"
+            name="q"
+            placeholder="Search luxury collection…"
+            style={{
+              paddingLeft: "36px",
+            }}
+          />
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{
+              position: "absolute",
+              left: "12px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: "15px",
+              height: "15px",
+              color: "var(--gold)",
+              opacity: 0.8,
+              pointerEvents: "none",
+            }}
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
         </form>
 
         <nav className="navbar-links" aria-label="Store navigation">
-          <MagneticButton className="navbar-link-wrapper"><Link href="/">Home</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/#products">Products</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/account">Account</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/orders">Track Order</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/admin">Admin</Link></MagneticButton>
+          <MagneticButton className="navbar-link-wrapper"><Link href="/" prefetch={true}>Home</Link></MagneticButton>
+          <MagneticButton className="navbar-link-wrapper"><Link href="/categories" prefetch={true}>Categories</Link></MagneticButton>
+          <MagneticButton className="navbar-link-wrapper"><Link href="/collections/luxury" prefetch={true}>Luxury</Link></MagneticButton>
+          <MagneticButton className="navbar-link-wrapper"><Link href="/collections/originals" prefetch={true}>Originals</Link></MagneticButton>
+          <MagneticButton className="navbar-link-wrapper"><Link href="/#new-arrivals" prefetch={true}>New Arrivals</Link></MagneticButton>
+          <MagneticButton className="navbar-link-wrapper"><Link href="/orders" prefetch={true}>Track Order</Link></MagneticButton>
+          <MagneticButton className="navbar-link-wrapper"><Link href="/account" prefetch={true}>Account</Link></MagneticButton>
           <CartButton />
         </nav>
       </div>

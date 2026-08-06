@@ -108,29 +108,67 @@ function CartItemRow({ item, index }: { item: CartItem; index: number }) {
   );
 }
 
-function EmptyCart() {
+function EmptyCart({ onClose }: { onClose?: () => void }) {
   return (
-    <div className="cart-empty">
-      <div className="cart-empty-icon" aria-hidden="true">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          width="48"
-          height="48"
-        >
-          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-          <path d="M3 6h18" />
-          <path d="M16 10a4 4 0 0 1-8 0" />
-        </svg>
+    <div className="cart-empty" style={{ padding: "40px 20px", textAlign: "center" }}>
+      <div
+        style={{
+          width: "64px",
+          height: "64px",
+          margin: "0 auto 20px",
+          borderRadius: "50%",
+          backgroundColor: "rgba(212, 175, 55, 0.12)",
+          border: "1px solid rgba(212, 175, 55, 0.3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "28px",
+          boxShadow: "0 0 24px rgba(212, 175, 55, 0.2)",
+        }}
+      >
+        👑
       </div>
-      <p className="cart-empty-title">Your cart is empty</p>
-      <p className="cart-empty-subtitle">
-        Add items from the collection to get started.
+      <p style={{ color: "#FFFFFF", fontFamily: "'Playfair Display', Georgia, serif", fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>
+        Your Luxury Cart is Waiting
       </p>
+      <p style={{ color: "var(--muted)", fontSize: "14px", lineHeight: "1.6", margin: "0 0 28px" }}>
+        Explore handpicked masterpieces and exclusive RA2Z Originals to add items to your cart.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <a
+          href="/collections/luxury"
+          onClick={() => onClose?.()}
+          style={{
+            padding: "12px 24px",
+            borderRadius: "999px",
+            backgroundColor: "var(--gold)",
+            color: "#0A0A0A",
+            fontWeight: 700,
+            fontSize: "13px",
+            textDecoration: "none",
+            boxShadow: "0 4px 16px rgba(212, 175, 55, 0.3)",
+          }}
+        >
+          Explore Luxury Collection →
+        </a>
+        <a
+          href="/collections/originals"
+          onClick={() => onClose?.()}
+          style={{
+            padding: "12px 24px",
+            borderRadius: "999px",
+            backgroundColor: "rgba(255, 255, 255, 0.05)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            color: "#FFFFFF",
+            fontWeight: 600,
+            fontSize: "13px",
+            textDecoration: "none",
+          }}
+        >
+          Explore RA2Z Originals
+        </a>
+      </div>
     </div>
   );
 }
@@ -231,7 +269,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             {/* Body */}
             <div className="cart-drawer-body">
               {items.length === 0 ? (
-                <EmptyCart />
+                <EmptyCart onClose={onClose} />
               ) : (
                 <div className="cart-items-list">
                   {items.map((item, idx) => (

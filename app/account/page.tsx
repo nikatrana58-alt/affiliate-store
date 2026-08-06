@@ -5,7 +5,7 @@ import { Footer } from "@/components/footer";
 import "@/app/checkout.css";
 
 export const metadata: Metadata = {
-  title: "Customer Account Dashboard | Curated Finds",
+  title: "Customer Account Dashboard | RA2Z Luxury",
   description: "Manage your profile, order history, active shipments, saved addresses, wishlist, and settings.",
 };
 

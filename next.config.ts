@@ -10,6 +10,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["127.0.0.1", "localhost", "127.0.0.1:3000", "localhost:3000"],
   poweredByHeader: false,
   reactStrictMode: true,
   turbopack: {
@@ -22,6 +23,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "**.cjdropshipping.com" },
       { protocol: "https", hostname: "**.stripe.com" },
+      { protocol: "https", hostname: "**.printful.com" },
+      { protocol: "https", hostname: "files.printful.com" },
+      { protocol: "https", hostname: "s3.amazonaws.com" },
     ],
   },
   async headers() {

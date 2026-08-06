@@ -102,7 +102,7 @@ export async function emitShipmentNotification(payload: NotificationEventPayload
  */
 export async function sendAuthEmail(email: string, type: AuthEmailType, actionLink?: string): Promise<void> {
   const titles: Record<AuthEmailType, string> = {
-    welcome: "Welcome to Curated Finds",
+    welcome: "Welcome to RA2Z Luxury",
     verification: "Verify Your Email Address",
     password_reset: "Reset Your Password",
   };

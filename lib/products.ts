@@ -1,11 +1,13 @@
 import fs from "fs";
 import path from "path";
-import { createPublicSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
+import crypto from "crypto";
+import { createPublicSupabaseClient, createAdminSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 import { calculateProfitMetrics } from "@/lib/pricing-engine";
 
 export type ProductVariantItem = {
   id?: string;
   cj_variant_id?: string;
+  printful_variant_id?: string | number | null;
   name: string;
   sku?: string;
   color?: string | null;
@@ -48,6 +50,10 @@ export type Product = {
   status?: "draft" | "published" | "hidden";
   affiliate_link: string;
   cj_product_id?: string | null;
+  printful_product_id?: string | number | null;
+  printful_sync_id?: string | number | null;
+  is_original?: boolean | null;
+  supplier_type?: "CJ" | "PRINTFUL" | "PRINTIFY" | "AMAZON" | "MANUAL" | null;
   created_at: string;
 };
 
@@ -55,91 +61,149 @@ export type ProductInput = Omit<Product, "id" | "created_at">;
 
 export const PRODUCT_COLUMNS = "*";
 
+export function stringToUuid(id: string): string {
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return id;
+  }
+  const hash = crypto.createHash("sha256").update(id).digest("hex");
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-a${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+}
+
+export function isJsonFallbackEnabled(): boolean {
+  return process.env.ENABLE_JSON_FALLBACK === "true";
+}
+
 export const FALLBACK_PRODUCTS: Product[] = [
+  // ── LUXURY COLLECTION ──
   {
-    id: "fallback-1",
-    title: "Obsidian & Gold Chronograph Watch",
-    slug: "obsidian-gold-chronograph-watch",
-    description: "Handcrafted precision chronograph featuring a sapphire crystal face and obsidian leather strap.",
-    category: "Timepieces",
-    badge: "Editor's Pick",
-    price: 495.0,
+    id: "luxury-1",
+    title: "RA2Z Obsidian & Gold Chronograph Watch",
+    slug: "ra2z-obsidian-gold-chronograph-watch",
+    description: "Handcrafted precision chronograph featuring a sapphire crystal face, Swiss movement, and obsidian leather strap.",
+    category: "Luxury",
+    collections: ["luxury"],
+    badge: "Editor's Choice",
+    price: 695.0,
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80",
-    affiliate_link: "https://example.com/watch",
+    affiliate_link: "https://ra2z.shop/products/ra2z-obsidian-gold-chronograph-watch",
     created_at: "2026-01-15T10:00:00.000Z",
   },
   {
-    id: "fallback-2",
-    title: "Acoustic Noise-Canceling Headphones",
-    slug: "acoustic-noise-canceling-headphones",
-    description: "Studio-grade wireless audio with custom champagne gold accents and 40-hour battery life.",
-    category: "Audio",
-    badge: "Best Seller",
-    price: 349.0,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80",
-    affiliate_link: "https://example.com/headphones",
+    id: "luxury-2",
+    title: "RA2Z Executive Leather Travel Duffel",
+    slug: "ra2z-executive-leather-travel-duffel",
+    description: "Full-grain Italian Nappa leather travel bag with hand-burnished champagne gold hardware.",
+    category: "Luxury",
+    collections: ["luxury"],
+    badge: "Luxury Edition",
+    price: 850.0,
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80",
+    affiliate_link: "https://ra2z.shop/products/ra2z-executive-leather-travel-duffel",
     created_at: "2026-01-14T10:00:00.000Z",
   },
   {
-    id: "fallback-3",
+    id: "luxury-3",
     title: "Minimalist Dual-Boiler Espresso Machine",
     slug: "minimalist-espresso-machine",
     description: "Italian designed dual-boiler espresso machine crafted from brushed titanium and matte black metal.",
-    category: "Home & Living",
+    category: "Luxury",
+    collections: ["luxury"],
     badge: "Trending",
-    price: 899.0,
+    price: 1290.0,
     image: "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=800&auto=format&fit=crop&q=80",
-    affiliate_link: "https://example.com/espresso",
+    affiliate_link: "https://ra2z.shop/products/minimalist-espresso-machine",
     created_at: "2026-01-13T10:00:00.000Z",
   },
   {
-    id: "fallback-4",
-    title: "Architectural Brass Desk Lamp",
-    slug: "architectural-brass-desk-lamp",
-    description: "Warm LED ambient lamp with touch dimming and solid brass weighted base.",
-    category: "Lighting",
-    badge: "Limited Edition",
-    price: 180.0,
-    image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&auto=format&fit=crop&q=80",
-    affiliate_link: "https://example.com/lamp",
+    id: "luxury-4",
+    title: "RA2Z Titanium & Gold Bifold Wallet",
+    slug: "ra2z-titanium-gold-bifold-wallet",
+    description: "RFID-blocking aerospace titanium cardholder wrapped in hand-stitched Tuscan leather.",
+    category: "Luxury",
+    collections: ["luxury"],
+    badge: "Best Seller",
+    price: 280.0,
+    image: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&auto=format&fit=crop&q=80",
+    affiliate_link: "https://ra2z.shop/products/ra2z-titanium-gold-bifold-wallet",
     created_at: "2026-01-12T10:00:00.000Z",
   },
+
+  // ── RA2Z ORIGINALS COLLECTION ──
   {
-    id: "fallback-5",
-    title: "Ergonomic Executive Leather Chair",
-    slug: "ergonomic-executive-leather-chair",
-    description: "Full-grain Nappa leather office chair engineered for lumbar support and effortless posture.",
-    category: "Furniture",
-    badge: "Top Rated",
-    price: 750.0,
-    image: "https://images.unsplash.com/photo-1580481072645-022f9a6d83d0?w=800&auto=format&fit=crop&q=80",
-    affiliate_link: "https://example.com/chair",
+    id: "original-1",
+    title: "RA2Z Signature Heavyweight Gold Hoodie",
+    slug: "ra2z-signature-heavyweight-gold-hoodie",
+    description: "450 GSM organic French terry cotton hoodie featuring 3D puff embroidery with raw metallic gold accents.",
+    category: "Apparel",
+    collections: ["originals"],
+    badge: "RA2Z Original",
+    price: 145.0,
+    image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800&auto=format&fit=crop&q=80",
+    affiliate_link: "https://ra2z.shop/products/ra2z-signature-heavyweight-gold-hoodie",
     created_at: "2026-01-11T10:00:00.000Z",
+    is_original: true,
   },
   {
-    id: "fallback-6",
-    title: "Ultra-Thin OLED Digital Reader",
-    slug: "ultra-thin-oled-digital-reader",
-    description: "Paper-like digital reader with anti-glare glass and warm backlighting for night reading.",
-    category: "Tech",
-    badge: "New Arrival",
-    price: 260.0,
-    image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80",
-    affiliate_link: "https://example.com/reader",
+    id: "original-2",
+    title: "RA2Z Monogram Stainless Tumbler (750ml)",
+    slug: "ra2z-monogram-stainless-tumbler-750ml",
+    description: "Double-wall vacuum insulated stainless steel water flask with signature laser-engraved RA2Z monogram.",
+    category: "Accessories",
+    collections: ["originals"],
+    badge: "RA2Z Original",
+    price: 65.0,
+    image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&auto=format&fit=crop&q=80",
+    affiliate_link: "https://ra2z.shop/products/ra2z-monogram-stainless-tumbler-750ml",
     created_at: "2026-01-10T10:00:00.000Z",
+    is_original: true,
+  },
+  {
+    id: "original-3",
+    title: "RA2Z Minimalist Matte Black Cap",
+    slug: "ra2z-minimalist-matte-black-cap",
+    description: "Structured 6-panel dad hat featuring waterproof matte nylon fabric and an embossed 3D metal RA2Z emblem.",
+    category: "Accessories",
+    collections: ["originals"],
+    badge: "RA2Z Original",
+    price: 55.0,
+    image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80",
+    affiliate_link: "https://ra2z.shop/products/ra2z-minimalist-matte-black-cap",
+    created_at: "2026-01-09T10:00:00.000Z",
+    is_original: true,
+  },
+  {
+    id: "original-4",
+    title: "RA2Z Executive Leather Desk Mat",
+    slug: "ra2z-executive-leather-desk-mat",
+    description: "Ultra-smooth waterproof vegan leather desk pad with micro-stitched gold borders and anti-slip backing.",
+    category: "Accessories",
+    collections: ["originals"],
+    badge: "RA2Z Original",
+    price: 85.0,
+    image: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&auto=format&fit=crop&q=80",
+    affiliate_link: "https://ra2z.shop/products/ra2z-executive-leather-desk-mat",
+    created_at: "2026-01-08T10:00:00.000Z",
+    is_original: true,
   },
 ];
 
 const LOCAL_PRODUCTS_FILE = path.join(process.cwd(), "data", "products.json");
 
 function ensureDataDirExists() {
-  const dir = path.join(process.cwd(), "data");
+  const dir = path.dirname(LOCAL_PRODUCTS_FILE);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 }
 
 let cachedLocalProducts: Product[] | null = null;
+let cachedProductsResponse: { data: Product[]; timestamp: number } | null = null;
+const CACHE_TTL_MS = 15000; // 15 seconds catalog cache
+
+export function invalidateProductsCache(): void {
+  cachedProductsResponse = null;
+  cachedLocalProducts = null;
+}
 
 export function getLocalProducts(): Product[] {
   if (cachedLocalProducts) {
@@ -162,48 +226,124 @@ export function getLocalProducts(): Product[] {
   return FALLBACK_PRODUCTS;
 }
 
-export function saveLocalProduct(product: Product): Product {
-  cachedLocalProducts = null;
-  try {
-    ensureDataDirExists();
-    const existing = getLocalProducts();
-    const index = existing.findIndex(
-      (p) => p.id === product.id || (p.cj_product_id && p.cj_product_id === product.cj_product_id)
-    );
+export async function saveProduct(product: Product): Promise<Product> {
+  invalidateProductsCache();
 
-    let updated: Product[];
-    if (index >= 0) {
-      updated = [...existing];
-      updated[index] = { ...updated[index], ...product };
-    } else {
-      updated = [product, ...existing];
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = createAdminSupabaseClient();
+      const uuid = stringToUuid(product.id);
+      const payload = {
+        id: uuid,
+        title: product.title,
+        description: product.description || null,
+        price: product.price,
+        image: product.image || null,
+        affiliate_link: product.affiliate_link || "",
+        created_at: product.created_at || new Date().toISOString(),
+        slug: product.slug || product.id,
+        category: product.category || "General",
+        badge: product.badge || null,
+      };
+
+      const { error } = await supabase.from("products").upsert(payload, { onConflict: "id" });
+      if (error) {
+        console.error("[products] Supabase product upsert failed:", error.message);
+      } else {
+        console.info(`[products] Successfully persisted product to Supabase: ${product.id}`);
+      }
+    } catch (err) {
+      console.error("[products] Exception during Supabase product upsert:", err);
     }
-
-    fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(updated, null, 2), "utf-8");
-    cachedLocalProducts = updated;
-    return product;
-  } catch (err) {
-    console.error("[products] Failed to save local product file:", err);
-    return product;
   }
+
+  // Only update local file snapshot if dev fallback flag is explicitly enabled
+  if (isJsonFallbackEnabled()) {
+    try {
+      ensureDataDirExists();
+      const existing = getLocalProducts();
+      const index = existing.findIndex(
+        (p) => p.id === product.id || (p.cj_product_id && p.cj_product_id === product.cj_product_id)
+      );
+
+      let updated: Product[];
+      if (index >= 0) {
+        updated = [...existing];
+        updated[index] = { ...updated[index], ...product };
+      } else {
+        updated = [product, ...existing];
+      }
+
+      fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+      cachedLocalProducts = updated;
+    } catch (err) {
+      console.warn("[products] Dev-only local product save failed:", err);
+    }
+  }
+
+  return product;
+}
+
+export function saveLocalProduct(product: Product): Product {
+  // Synchronously invalidate cache & fire Supabase save
+  invalidateProductsCache();
+  Promise.resolve(saveProduct(product)).catch((e) =>
+    console.error("[products] Async saveProduct failed:", e)
+  );
+  return product;
+}
+
+export async function deleteProduct(id: string): Promise<boolean> {
+  invalidateProductsCache();
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = createAdminSupabaseClient();
+      const uuid = stringToUuid(id);
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .or(`id.eq.${uuid},slug.eq.${id}`);
+
+      if (error) {
+        console.error("[products] Supabase product deletion failed:", error.message);
+      } else {
+        console.info(`[products] Successfully deleted product from Supabase: ${id}`);
+      }
+    } catch (err) {
+      console.error("[products] Exception during Supabase product deletion:", err);
+    }
+  }
+
+  // Only delete from local file snapshot if dev fallback flag is explicitly enabled
+  if (isJsonFallbackEnabled()) {
+    try {
+      ensureDataDirExists();
+      const existing = getLocalProducts();
+      const filtered = existing.filter(
+        (p) =>
+          p.id !== id &&
+          p.cj_product_id !== id &&
+          String(p.printful_sync_id) !== id &&
+          String(p.printful_product_id) !== id &&
+          p.slug !== id
+      );
+      fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(filtered, null, 2), "utf-8");
+      cachedLocalProducts = filtered;
+    } catch (err) {
+      console.warn("[products] Dev-only local product delete failed:", err);
+    }
+  }
+
+  return true;
 }
 
 export function deleteLocalProduct(id: string): boolean {
-  cachedLocalProducts = null;
-  try {
-    ensureDataDirExists();
-    const existing = getLocalProducts();
-    const filtered = existing.filter(
-      (p) => p.id !== id && p.cj_product_id !== id && p.slug !== id
-    );
-    fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(filtered, null, 2), "utf-8");
-    cachedLocalProducts = filtered;
-    console.info(`[products] Permanent delete local product completed for ID/PID: ${id}`);
-    return true;
-  } catch (err) {
-    console.error("[products] Failed to delete local product file:", err);
-    return false;
-  }
+  invalidateProductsCache();
+  Promise.resolve(deleteProduct(id)).catch((e) =>
+    console.error("[products] Async deleteProduct failed:", e)
+  );
+  return true;
 }
 
 export function validateProductInput(input: Partial<ProductInput>) {
@@ -246,13 +386,13 @@ export function normalizeProductInput(input: ProductInput): ProductInput {
     collections: Array.isArray(input.collections)
       ? input.collections
       : typeof input.collections === "string"
-      ? (input.collections as string).split(",").map((s) => s.trim()).filter(Boolean)
-      : null,
+        ? (input.collections as string).split(",").map((s) => s.trim()).filter(Boolean)
+        : null,
     tags: Array.isArray(input.tags)
       ? input.tags
       : typeof input.tags === "string"
-      ? (input.tags as string).split(",").map((s) => s.trim()).filter(Boolean)
-      : null,
+        ? (input.tags as string).split(",").map((s) => s.trim()).filter(Boolean)
+        : null,
     brand: input.brand?.trim() || null,
     badge: input.badge?.trim() || null,
     price,
@@ -337,8 +477,20 @@ async function queryWithTimeout<T>(promise: PromiseLike<T>, timeoutMs = 1500): P
 }
 
 export async function getProducts(): Promise<Product[]> {
+  const now = Date.now();
+  if (cachedProductsResponse && now - cachedProductsResponse.timestamp < CACHE_TTL_MS) {
+    return cachedProductsResponse.data;
+  }
+
   if (!isSupabaseConfigured()) {
-    return getLocalProducts();
+    if (isJsonFallbackEnabled()) {
+      const local = getLocalProducts();
+      cachedProductsResponse = { data: local, timestamp: now };
+      return local;
+    }
+    console.warn("[products] Supabase is not configured. Serving default static seed catalog.");
+    cachedProductsResponse = { data: FALLBACK_PRODUCTS, timestamp: now };
+    return FALLBACK_PRODUCTS;
   }
 
   try {
@@ -347,27 +499,77 @@ export async function getProducts(): Promise<Product[]> {
       .select(PRODUCT_COLUMNS)
       .order("created_at", { ascending: false });
 
-    const { data, error } = await queryWithTimeout(query, 1500);
+    const { data, error } = await queryWithTimeout(query, 2000);
 
-    if (error) {
-      console.warn("[products] Supabase query returned error, using fallback catalog:", error.message);
-      return getLocalProducts();
+    if (error || !data || data.length === 0) {
+      if (isJsonFallbackEnabled()) {
+        console.warn("[products] Supabase query returned no rows. Serving local JSON catalog (Dev Fallback Enabled).");
+        const local = getLocalProducts();
+        cachedProductsResponse = { data: local, timestamp: now };
+        return local;
+      }
+      console.warn("[products] Supabase query returned no rows:", error?.message);
+      cachedProductsResponse = { data: [], timestamp: now };
+      return [];
     }
 
-    if (!data || data.length === 0) {
-      return getLocalProducts();
-    }
+    const localMap = new Map(getLocalProducts().map((p) => [p.slug, p]));
+    const products = data.map((item: any) => {
+      const localMatch = localMap.get(item.slug);
+      return {
+        id: localMatch?.id || item.id,
+        title: item.title,
+        slug: item.slug || item.id,
+        description: item.description || localMatch?.description || null,
+        category: item.category || localMatch?.category || "General",
+        collections: localMatch?.collections || null,
+        tags: localMatch?.tags || null,
+        badge: item.badge || localMatch?.badge || null,
+        price: item.price ?? localMatch?.price ?? 0,
+        compare_at_price: localMatch?.compare_at_price || null,
+        cost_price: localMatch?.cost_price || null,
+        profit: localMatch?.profit || null,
+        margin_percent: localMatch?.margin_percent || null,
+        image: item.image || localMatch?.image || null,
+        images: localMatch?.images || (item.image ? [item.image] : []),
+        variants: localMatch?.variants || [],
+        sku: localMatch?.sku || null,
+        inventory_quantity: localMatch?.inventory_quantity ?? 999,
+        affiliate_link: item.affiliate_link || localMatch?.affiliate_link || "",
+        cj_product_id: localMatch?.cj_product_id || (item.slug?.startsWith("cj-") ? item.slug : null),
+        printful_product_id: localMatch?.printful_product_id || null,
+        printful_sync_id: localMatch?.printful_sync_id || null,
+        is_original: localMatch?.is_original || false,
+        supplier_type: localMatch?.supplier_type || null,
+        created_at: item.created_at || localMatch?.created_at || new Date().toISOString(),
+      } as Product;
+    });
 
-    return data as Product[];
+    cachedProductsResponse = { data: products, timestamp: now };
+    return products;
   } catch (error: any) {
-    console.warn("[products] Unable to reach Supabase database within 1.5s timeout. Serving fallback catalog.");
-    return getLocalProducts();
+    if (isJsonFallbackEnabled()) {
+      console.warn("[products] Supabase exception. Serving local JSON catalog (Dev Fallback Enabled):", error?.message);
+      const local = getLocalProducts();
+      cachedProductsResponse = { data: local, timestamp: now };
+      return local;
+    }
+    console.error("[products] Exception during Supabase getProducts():", error?.message);
+    cachedProductsResponse = { data: [], timestamp: now };
+    return [];
   }
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
+  const products = await getProducts();
+  const match = products.find((p) => p.slug === slug);
+  if (match) return match;
+
   if (!isSupabaseConfigured()) {
-    return getLocalProducts().find((p) => p.slug === slug) ?? null;
+    if (isJsonFallbackEnabled()) {
+      return getLocalProducts().find((p) => p.slug === slug) ?? null;
+    }
+    return FALLBACK_PRODUCTS.find((p) => p.slug === slug) ?? null;
   }
 
   try {
@@ -379,18 +581,67 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
     const { data, error } = await queryWithTimeout(query, 1500);
 
-    if (error) {
-      console.warn("[products] Supabase query error for slug:", slug, error.message);
-      return getLocalProducts().find((p) => p.slug === slug) ?? null;
+    if (error || !data) {
+      if (isJsonFallbackEnabled()) {
+        return getLocalProducts().find((p) => p.slug === slug) ?? null;
+      }
+      return null;
     }
 
-    if (!data) {
-      return getLocalProducts().find((p) => p.slug === slug) ?? null;
-    }
-
-    return data as Product;
+    const localMatch = getLocalProducts().find((p) => p.slug === slug);
+    return {
+      id: localMatch?.id || data.id,
+      title: data.title,
+      slug: data.slug || data.id,
+      description: data.description || localMatch?.description || null,
+      category: data.category || localMatch?.category || "General",
+      collections: localMatch?.collections || null,
+      tags: localMatch?.tags || null,
+      badge: data.badge || localMatch?.badge || null,
+      price: data.price ?? localMatch?.price ?? 0,
+      compare_at_price: localMatch?.compare_at_price || null,
+      cost_price: localMatch?.cost_price || null,
+      profit: localMatch?.profit || null,
+      margin_percent: localMatch?.margin_percent || null,
+      image: data.image || localMatch?.image || null,
+      images: localMatch?.images || (data.image ? [data.image] : []),
+      variants: localMatch?.variants || [],
+      sku: localMatch?.sku || null,
+      inventory_quantity: localMatch?.inventory_quantity ?? 999,
+      affiliate_link: data.affiliate_link || localMatch?.affiliate_link || "",
+      cj_product_id: localMatch?.cj_product_id || null,
+      printful_product_id: localMatch?.printful_product_id || null,
+      printful_sync_id: localMatch?.printful_sync_id || null,
+      is_original: localMatch?.is_original || false,
+      supplier_type: localMatch?.supplier_type || null,
+      created_at: data.created_at || localMatch?.created_at || new Date().toISOString(),
+    } as Product;
   } catch (error: any) {
-    console.warn("[products] Unable to reach Supabase database within 1.5s timeout. Serving fallback match.");
-    return getLocalProducts().find((p) => p.slug === slug) ?? null;
+    if (isJsonFallbackEnabled()) {
+      return getLocalProducts().find((p) => p.slug === slug) ?? null;
+    }
+    return null;
   }
+}
+
+export async function getLuxuryProducts(): Promise<Product[]> {
+  const products = await getProducts();
+  return products.filter((p) => {
+    if (p.is_original) return false;
+    if (p.collections?.includes("luxury")) return true;
+    if (p.category?.toLowerCase().includes("luxury") || p.category?.toLowerCase().includes("timepiece")) return true;
+    return (p.price ?? 0) >= 150;
+  });
+}
+
+export async function getOriginalsProducts(): Promise<Product[]> {
+  const products = await getProducts();
+  return products.filter((p) => {
+    return (
+      Boolean(p.is_original) ||
+      p.category?.toLowerCase().includes("original") ||
+      p.collections?.includes("originals") ||
+      p.badge?.toLowerCase().includes("ra2z original")
+    );
+  });
 }

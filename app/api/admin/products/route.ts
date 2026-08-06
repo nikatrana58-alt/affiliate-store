@@ -3,8 +3,7 @@ import {
   getProducts,
   getUniqueSlug,
   normalizeProductInput,
-  PRODUCT_COLUMNS,
-  saveLocalProduct,
+  saveProduct,
   type Product,
   type ProductInput,
   validateProductInput,
@@ -46,37 +45,19 @@ export async function POST(request: Request) {
     const uniqueSlug = await getUniqueSlug(supabase, normalizedInput.slug);
     normalizedInput.slug = uniqueSlug;
 
-    console.info("[products] Saving product.", {
+    console.info("[products] Saving product to Supabase primary database.", {
       adminUid: admin.uid,
       slug: normalizedInput.slug,
       title: normalizedInput.title,
     });
 
-    let savedProduct: Product | null = null;
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .insert(normalizedInput)
-        .select(PRODUCT_COLUMNS)
-        .single();
+    const productPayload: Product = {
+      id: `prod-${Date.now().toString(36)}`,
+      ...normalizedInput,
+      created_at: new Date().toISOString(),
+    };
 
-      if (!error && data) {
-        savedProduct = data as Product;
-      }
-    } catch (dbErr) {
-      console.warn("[products] Supabase insert failed, saving to local store:", dbErr);
-    }
-
-    if (!savedProduct) {
-      const fallbackObj: Product = {
-        id: `prod-${Date.now().toString(36)}`,
-        ...normalizedInput,
-        created_at: new Date().toISOString(),
-      };
-      savedProduct = saveLocalProduct(fallbackObj);
-    } else {
-      saveLocalProduct(savedProduct);
-    }
+    const savedProduct = await saveProduct(productPayload);
 
     console.info("[products] Product saved.", { id: savedProduct.id, slug: savedProduct.slug });
 

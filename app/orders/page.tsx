@@ -5,8 +5,8 @@ import { Footer } from "@/components/footer";
 import "@/app/checkout.css";
 
 export const metadata: Metadata = {
-  title: "Track Your Order | Curated Finds",
-  description: "Track your shipment, view order status, and check delivery timelines.",
+  title: "Track Your Order | RA2Z Luxury",
+  description: "Track your shipment, view order status, and check delivery timelines for RA2Z creations.",
 };
 
 export default function TrackOrderPage() {

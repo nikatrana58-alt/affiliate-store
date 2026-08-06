@@ -9,7 +9,11 @@ import { MagneticButton } from "@/components/magnetic-button";
 import { ProductReviewsSection } from "@/components/product-reviews-section";
 import { SmartRecommendations } from "@/components/smart-recommendations";
 import { StorefrontVariantSelector } from "@/components/storefront-variant-selector";
+import { ShippingEstimatorWidget } from "@/components/shipping-estimator-widget";
+import { ProductSchema } from "@/components/structured-data";
 import { getProductBySlug, getProducts, type Product } from "@/lib/products";
+
+import { ProductTabs } from "@/components/product-tabs";
 
 export const dynamic = "force-dynamic";
 
@@ -93,10 +97,12 @@ export default async function ProductPage({
 
   return (
     <>
+      <ProductSchema product={product} />
       <StoreHeader />
       <main className="product-landing-page">
         <div className="product-hero-section animate-fade-slide-up">
           <StorefrontVariantSelector product={product} />
+          <ProductTabs product={product} />
         </div>
 
         <section className="benefits-section">
@@ -146,8 +152,9 @@ export default async function ProductPage({
           </section>
         )}
 
-        {/* Customer Reviews & Star Ratings Section */}
+        {/* Customer Reviews, Shipping Estimator & Star Ratings Section */}
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
+          <ShippingEstimatorWidget variantId={product.variants?.[0]?.cj_variant_id || product.variants?.[0]?.id} />
           <ProductReviewsSection productId={product.id} />
           <SmartRecommendations currentProduct={product} allProducts={relatedProducts} />
         </div>

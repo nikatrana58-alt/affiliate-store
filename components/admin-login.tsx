@@ -7,6 +7,7 @@ import {
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
 import { getFirebaseClientAuth } from "@/lib/firebase/client";
 
 function getSignInErrorMessage(error: unknown) {
@@ -101,9 +102,16 @@ export function AdminLogin() {
 
   return (
     <main className="admin-login-shell">
-      <section className="admin-login-card">
-        <p className="eyebrow">Affiliate Store</p>
-        <h1>Admin sign in</h1>
+      <section className="admin-login-card" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <Image
+          src="/logo-gold.png"
+          alt="RA2Z Admin Logo"
+          width={48}
+          height={60}
+          style={{ objectFit: "contain", marginBottom: "16px" }}
+        />
+        <p className="eyebrow">RA2Z ADMIN PORTAL</p>
+        <h1>Admin Sign In</h1>
         <p className="muted">
           Use the Firebase account configured as the store administrator.
         </p>
@@ -147,4 +155,3 @@ export function AdminLogin() {
 }
 
 export default AdminLogin;
-

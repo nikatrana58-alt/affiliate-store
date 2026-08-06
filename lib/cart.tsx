@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Product } from "@/lib/products";
+import { getProductDisplayPrice } from "@/lib/pricing-engine";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         return item.product.id === action.product.id && itemVKey === vKey;
       });
 
-      const effectivePrice = action.variant?.price ?? action.product.price ?? 0;
+      const effectivePrice = action.variant?.price ?? getProductDisplayPrice(action.product).price;
 
       if (existingIndex >= 0) {
         const updated = [...state.items];
@@ -171,7 +172,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
 
   const cartTotal = state.items.reduce(
-    (sum, item) => sum + (item.unitPrice ?? item.variant?.price ?? item.product.price ?? 0) * item.quantity,
+    (sum, item) => sum + (item.unitPrice ?? item.variant?.price ?? getProductDisplayPrice(item.product).price) * item.quantity,
     0
   );
 

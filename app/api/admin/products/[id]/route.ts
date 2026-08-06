@@ -1,10 +1,10 @@
 import { requireCurrentAdmin } from "@/lib/auth/admin";
 import {
-  deleteLocalProduct,
+  deleteProduct,
   getUniqueSlug,
   normalizeProductInput,
-  PRODUCT_COLUMNS,
-  saveLocalProduct,
+  saveProduct,
+  stringToUuid,
   type Product,
   type ProductInput,
   validateProductInput,
@@ -82,40 +82,17 @@ export async function PUT(request: Request, { params }: ProductRouteContext) {
 
     console.info(`[product-save] Normalized Input for DB Update:`, normalizedInput);
 
-    let updatedProduct: Product | null = null;
-    try {
-      const uniqueSlug = await getUniqueSlug(supabase, normalizedInput.slug, id);
-      normalizedInput.slug = uniqueSlug;
+    const uniqueSlug = await getUniqueSlug(supabase, normalizedInput.slug, id);
+    normalizedInput.slug = uniqueSlug;
 
-      console.info(`[product-save] Executing DB update query for ID "${id}"...`);
-      const { data, error } = await supabase
-        .from("products")
-        .update(normalizedInput)
-        .eq("id", id)
-        .select()
-        .single();
+    const productPayload: Product = {
+      id,
+      ...normalizedInput,
+      created_at: new Date().toISOString(),
+    };
 
-      if (!error && data) {
-        updatedProduct = data as Product;
-        console.info(`[product-save] Supabase Update Success:`, updatedProduct);
-      } else if (error) {
-        console.warn(`[product-save] Supabase Update Error notice: ${error.message}`);
-      }
-    } catch (dbError) {
-      console.warn("[products] Supabase update notice, saving locally:", dbError);
-    }
-
-    if (!updatedProduct) {
-      const fallbackObj: Product = {
-        id,
-        ...normalizedInput,
-        created_at: new Date().toISOString(),
-      };
-      updatedProduct = saveLocalProduct(fallbackObj);
-      console.info(`[product-save] Saved to Local Store:`, updatedProduct);
-    } else {
-      saveLocalProduct(updatedProduct);
-    }
+    console.info(`[product-save] Saving product "${id}" to Supabase primary database...`);
+    const updatedProduct = await saveProduct(productPayload);
 
     console.info(`[product-save] Returning API response for ID "${id}"`);
     return Response.json({ product: updatedProduct });
@@ -147,12 +124,12 @@ export async function DELETE(_request: Request, { params }: ProductRouteContext)
     const supabase = createAdminSupabaseClient();
     const imagesToClean: string[] = [];
 
-    // Step 0: Fetch product details to collect images and metadata prior to deletion
+    // Step 0: Fetch product details to collect images prior to deletion
     try {
       const { data: dbProd } = await supabase
         .from("products")
         .select("id, image, images, cj_product_id")
-        .or(`id.eq.${productId},cj_product_id.eq.${productId}`)
+        .or(`id.eq.${stringToUuid(productId)},slug.eq.${productId}`)
         .maybeSingle();
 
       if (dbProd) {
@@ -162,57 +139,38 @@ export async function DELETE(_request: Request, { params }: ProductRouteContext)
         }
       }
     } catch (err) {
-      console.warn("[products/delete] Could not query pre-delete product details:", err);
+      console.warn("[products/delete] Pre-delete query note:", err);
     }
 
     // Step 1: Foreign Key Cascade Order Deletion from Database
-    if (!productId.startsWith("fallback-")) {
+    try {
+      const uuid = stringToUuid(productId);
+
       try {
-        // 1. Delete inventory records
-        const { error: invErr } = await supabase.from("inventory").delete().eq("product_id", productId);
-        if (invErr) console.warn("[products/delete] Inventory deletion note:", invErr.message);
+        await supabase.from("inventory").delete().eq("product_id", uuid);
+      } catch {}
 
-        // 2. Delete product variants
-        const { error: varErr } = await supabase.from("product_variants").delete().eq("product_id", productId);
-        if (varErr) console.warn("[products/delete] Product variants deletion note:", varErr.message);
+      try {
+        await supabase.from("product_variants").delete().eq("product_id", uuid);
+      } catch {}
 
-        // 3. Delete product reviews
-        try {
-          await supabase.from("product_reviews").delete().eq("product_id", productId);
-        } catch {}
+      try {
+        await supabase.from("product_reviews").delete().eq("product_id", uuid);
+      } catch {}
 
-        // 4. Delete product images
-        try {
-          await supabase.from("product_images").delete().eq("product_id", productId);
-        } catch {}
+      try {
+        await supabase.from("product_images").delete().eq("product_id", uuid);
+      } catch {}
 
-        // 5. Delete product SEO
-        try {
-          await supabase.from("product_seo").delete().eq("product_id", productId);
-        } catch {}
-
-        // 6. Delete CJ mapping records
-        try {
-          await supabase.from("cj_product_mapping").delete().eq("product_id", productId);
-        } catch {}
-
-        // 7. Delete cart items
-        try {
-          await supabase.from("cart_items").delete().eq("product_id", productId);
-        } catch {}
-
-        // 8. Delete Product row itself
-        const { error: prodErr } = await supabase.from("products").delete().or(`id.eq.${productId},cj_product_id.eq.${productId}`);
-        if (prodErr) throw new Error(`Supabase product row deletion failed: ${prodErr.message}`);
-
-        console.info(`[products/delete] Successfully deleted database rows for product ID: "${productId}"`);
-      } catch (dbError) {
-        console.error("[products/delete] Database cascade deletion error:", dbError);
-      }
+      try {
+        await supabase.from("cart_items").delete().eq("product_id", uuid);
+      } catch {}
+    } catch (cascadeErr) {
+      console.warn("[products/delete] Foreign key cascade deletion note:", cascadeErr);
     }
 
-    // Step 2: Delete from local persistent store
-    deleteLocalProduct(productId);
+    // Step 2: Delete product row via primary deleteProduct handler
+    await deleteProduct(productId);
 
     // Step 3: Remove uploaded image assets from Cloudinary / storage
     if (imagesToClean.length > 0) {
@@ -221,7 +179,7 @@ export async function DELETE(_request: Request, { params }: ProductRouteContext)
 
     return Response.json({
       ok: true,
-      message: `Product "${productId}" has been permanently deleted from database, local storage, and asset stores.`,
+      message: `Product "${productId}" has been permanently deleted from database.`,
     });
   } catch (error) {
     const isAuthError =

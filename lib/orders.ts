@@ -8,7 +8,7 @@
  * Uses the existing createAdminSupabaseClient() pattern.
  */
 
-import { createAdminSupabaseClient } from "@/lib/supabase";
+import { createAdminSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 import { validateCoupon, incrementCouponUses } from "@/lib/coupons";
 import { upsertAddress } from "@/lib/addresses";
 import type {
@@ -327,16 +327,21 @@ export async function getOrderById(id: string): Promise<OrderWithItems | null> {
  * Fetches all orders for a customer email, newest first.
  */
 export async function getOrdersByEmail(email: string): Promise<Order[]> {
-  const supabase = createAdminSupabaseClient();
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const supabase = createAdminSupabaseClient();
 
-  const { data, error } = await supabase
-    .from("orders")
-    .select(ORDER_COLS)
-    .eq("customer_email", email.toLowerCase())
-    .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("orders")
+      .select(ORDER_COLS)
+      .eq("customer_email", email.toLowerCase())
+      .order("created_at", { ascending: false });
 
-  if (error) throw error;
-  return (data ?? []) as unknown as Order[];
+    if (error) return [];
+    return (data ?? []) as unknown as Order[];
+  } catch {
+    return [];
+  }
 }
 
 /**

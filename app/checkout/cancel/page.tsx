@@ -5,8 +5,8 @@ import { Footer } from "@/components/footer";
 import "../checkout.css";
 
 export const metadata: Metadata = {
-  title: "Payment Cancelled | Curated Finds",
-  description: "Your payment was cancelled.",
+  title: "Payment Cancelled | RA2Z Luxury",
+  description: "Your payment session was cancelled.",
 };
 
 export default function CancelPage() {

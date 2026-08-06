@@ -1,0 +1,428 @@
+[
+  {
+    "id": "log_1785562314025_lbk2k",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1785562313443",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-01T05:31:53.443Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "test_runner",
+        "completedAt": "2026-08-01T05:31:54.024Z"
+      }
+    },
+    "timestamp": "2026-08-01T05:31:54.025Z"
+  },
+  {
+    "id": "log_1785562314639_fw4x3",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1785562314031",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-01T05:31:54.031Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "cron_scheduler",
+        "completedAt": "2026-08-01T05:31:54.639Z"
+      }
+    },
+    "timestamp": "2026-08-01T05:31:54.639Z"
+  },
+  {
+    "id": "log_1785562613724_5ey5b",
+    "category": "api",
+    "level": "info",
+    "action": "supplier_search",
+    "supplier": "PRINTFUL",
+    "message": "Searching catalog on Printful",
+    "metadata": {
+      "options": {
+        "keyword": "Hoodie"
+      }
+    },
+    "timestamp": "2026-08-01T05:36:53.724Z"
+  },
+  {
+    "id": "log_1785562613729_tn41n",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1785562613727",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-01T05:36:53.727Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "e2e_verifier",
+        "completedAt": "2026-08-01T05:36:53.729Z"
+      }
+    },
+    "timestamp": "2026-08-01T05:36:53.729Z"
+  },
+  {
+    "id": "log_1785562613731_o79rm",
+    "category": "import",
+    "level": "info",
+    "action": "e2e_verify",
+    "supplier": "PRINTFUL",
+    "message": "E2E verification logger check",
+    "timestamp": "2026-08-01T05:36:53.731Z"
+  },
+  {
+    "id": "log_1785562635000_8q3oh",
+    "category": "api",
+    "level": "info",
+    "action": "supplier_search",
+    "supplier": "PRINTFUL",
+    "message": "Searching catalog on Printful",
+    "metadata": {
+      "options": {
+        "keyword": "Hoodie"
+      }
+    },
+    "timestamp": "2026-08-01T05:37:15.000Z"
+  },
+  {
+    "id": "log_1785562653355_vsc34",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1785562652748",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-01T05:37:32.748Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "e2e_verifier",
+        "completedAt": "2026-08-01T05:37:33.355Z"
+      }
+    },
+    "timestamp": "2026-08-01T05:37:33.355Z"
+  },
+  {
+    "id": "log_1785562667459_hm8n4",
+    "category": "import",
+    "level": "info",
+    "action": "e2e_verify",
+    "supplier": "PRINTFUL",
+    "message": "E2E verification logger check",
+    "timestamp": "2026-08-01T05:37:47.459Z"
+  },
+  {
+    "id": "log_1785562688154_qfsbk",
+    "category": "api",
+    "level": "info",
+    "action": "supplier_search",
+    "supplier": "PRINTFUL",
+    "message": "Searching catalog on Printful",
+    "metadata": {
+      "options": {
+        "keyword": "Hoodie"
+      }
+    },
+    "timestamp": "2026-08-01T05:38:08.154Z"
+  },
+  {
+    "id": "log_1785562706504_p1igp",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1785562705882",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-01T05:38:25.882Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "e2e_verifier",
+        "completedAt": "2026-08-01T05:38:26.504Z"
+      }
+    },
+    "timestamp": "2026-08-01T05:38:26.504Z"
+  },
+  {
+    "id": "log_1785562727633_f2z1a",
+    "category": "import",
+    "level": "info",
+    "action": "e2e_verify",
+    "supplier": "PRINTFUL",
+    "message": "E2E verification logger check",
+    "timestamp": "2026-08-01T05:38:47.633Z"
+  },
+  {
+    "id": "log_1785562766044_llw94",
+    "category": "api",
+    "level": "info",
+    "action": "supplier_search",
+    "supplier": "PRINTFUL",
+    "message": "Searching catalog on Printful",
+    "metadata": {
+      "options": {
+        "keyword": "Hoodie"
+      }
+    },
+    "timestamp": "2026-08-01T05:39:26.044Z"
+  },
+  {
+    "id": "log_1785562784395_w53va",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1785562783758",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-01T05:39:43.758Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "e2e_verifier",
+        "completedAt": "2026-08-01T05:39:44.395Z"
+      }
+    },
+    "timestamp": "2026-08-01T05:39:44.395Z"
+  },
+  {
+    "id": "log_1785562805528_t39nq",
+    "category": "import",
+    "level": "info",
+    "action": "e2e_verify",
+    "supplier": "PRINTFUL",
+    "message": "E2E verification logger check",
+    "timestamp": "2026-08-01T05:40:05.528Z"
+  },
+  {
+    "id": "log_1786004759305_6cefq",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1786004758683",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-06T08:25:58.683Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "test_runner",
+        "completedAt": "2026-08-06T08:25:59.305Z"
+      }
+    },
+    "timestamp": "2026-08-06T08:25:59.305Z"
+  },
+  {
+    "id": "log_1786004759885_kx5ce",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1786004759309",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-06T08:25:59.309Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "cron_scheduler",
+        "completedAt": "2026-08-06T08:25:59.885Z"
+      }
+    },
+    "timestamp": "2026-08-06T08:25:59.885Z"
+  },
+  {
+    "id": "log_1786004766171_t2qcz",
+    "category": "api",
+    "level": "info",
+    "action": "supplier_search",
+    "supplier": "PRINTFUL",
+    "message": "Searching catalog on Printful",
+    "metadata": {
+      "options": {
+        "keyword": "Hoodie"
+      }
+    },
+    "timestamp": "2026-08-06T08:26:06.171Z"
+  },
+  {
+    "id": "log_1786004769452_kl8t1",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1786004768881",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-06T08:26:08.881Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "e2e_verifier",
+        "completedAt": "2026-08-06T08:26:09.452Z"
+      }
+    },
+    "timestamp": "2026-08-06T08:26:09.452Z"
+  },
+  {
+    "id": "log_1786004770058_oug7o",
+    "category": "import",
+    "level": "info",
+    "action": "e2e_verify",
+    "supplier": "PRINTFUL",
+    "message": "E2E verification logger check",
+    "timestamp": "2026-08-06T08:26:10.058Z"
+  },
+  {
+    "id": "log_1786004920260_3creo",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1786004919682",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-06T08:28:39.682Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "test_runner",
+        "completedAt": "2026-08-06T08:28:40.260Z"
+      }
+    },
+    "timestamp": "2026-08-06T08:28:40.260Z"
+  },
+  {
+    "id": "log_1786004920855_0r82s",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1786004920264",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-06T08:28:40.264Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "cron_scheduler",
+        "completedAt": "2026-08-06T08:28:40.855Z"
+      }
+    },
+    "timestamp": "2026-08-06T08:28:40.855Z"
+  },
+  {
+    "id": "log_1786006294526_xk20d",
+    "category": "api",
+    "level": "info",
+    "action": "supplier_search",
+    "supplier": "PRINTFUL",
+    "message": "Searching catalog on Printful",
+    "metadata": {
+      "options": {
+        "keyword": "Hoodie"
+      }
+    },
+    "timestamp": "2026-08-06T08:51:34.527Z"
+  },
+  {
+    "id": "log_1786006297028_x2qlm",
+    "category": "sync",
+    "level": "info",
+    "action": "sync_incremental",
+    "supplier": "PRINTFUL",
+    "message": "Printful INCREMENTAL sync completed. Processed: 1, Created: 0, Updated: 0",
+    "metadata": {
+      "logEntry": {
+        "id": "sync_1786006296451",
+        "mode": "incremental",
+        "status": "completed",
+        "startedAt": "2026-08-06T08:51:36.451Z",
+        "productsProcessed": 1,
+        "productsCreated": 0,
+        "productsUpdated": 0,
+        "productsDeleted": 0,
+        "errors": [],
+        "triggerSource": "e2e_verifier",
+        "completedAt": "2026-08-06T08:51:37.028Z"
+      }
+    },
+    "timestamp": "2026-08-06T08:51:37.028Z"
+  },
+  {
+    "id": "log_1786006297608_k1qh2",
+    "category": "import",
+    "level": "info",
+    "action": "e2e_verify",
+    "supplier": "PRINTFUL",
+    "message": "E2E verification logger check",
+    "timestamp": "2026-08-06T08:51:37.608Z"
+  }
+]

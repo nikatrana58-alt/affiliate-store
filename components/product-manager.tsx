@@ -13,6 +13,7 @@ import {
 } from "react";
 import { AnalyticsDashboard } from "@/components/analytics-dashboard";
 import { CJImporter } from "@/components/cj-importer";
+import { PrintfulImporter } from "@/components/printful-importer";
 import { OrdersDashboard } from "@/components/orders-dashboard";
 import {
   getFirebaseClientAuth,
@@ -24,6 +25,7 @@ import {
   recalculateFromSellingPrice,
   recalculateFromProfit,
   recalculateFromMargin,
+  recalculateAllVariantPrices,
 } from "@/lib/pricing-engine";
 import type { Product, ProductInput, ProductVariantItem } from "@/lib/products";
 
@@ -129,7 +131,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
   const [status, setStatus] = useState("");
   const [notification, setNotification] = useState<Notification>(null);
   const [isWorking, setIsWorking] = useState(false);
-  const [activeTab, setActiveTab] = useState<"inventory" | "orders" | "analytics" | "cj-import">("inventory");
+  const [activeTab, setActiveTab] = useState<"inventory" | "orders" | "analytics" | "cj-import" | "printful-import">("inventory");
   const [newImageUrl, setNewImageUrl] = useState("");
 
   function makeCoverImage(index: number) {
@@ -681,6 +683,13 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
             Import from CJ
           </button>
           <button
+            className={`button ${activeTab === "printful-import" ? "primary" : "secondary"}`}
+            onClick={() => safeSwitchTab("printful-import")}
+            type="button"
+          >
+            Import from Printful
+          </button>
+          <button
             className={`button ${activeTab === "orders" ? "primary" : "secondary"}`}
             onClick={() => safeSwitchTab("orders")}
             type="button"
@@ -993,12 +1002,21 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                         const newProfit = parseFloat(e.target.value) || 0;
                         const res = recalculateFromProfit(liveCost, newProfit);
                         setIsDirty(true);
-                        setForm((c) => ({
-                          ...c,
-                          price: res.sellingPrice.toString(),
-                          price_manually_overridden: true,
-                          last_modified_pricing_field: "profit",
-                        }));
+                        setForm((c) => {
+                          let updatedVariants = c.variants;
+                          if (c.variants && c.variants.length > 0) {
+                            const result = recalculateAllVariantPrices(c.variants, newProfit);
+                            updatedVariants = result.updatedVariants as ProductVariantItem[];
+                          }
+                          return {
+                            ...c,
+                            price: res.sellingPrice.toString(),
+                            profit: newProfit,
+                            variants: updatedVariants,
+                            price_manually_overridden: true,
+                            last_modified_pricing_field: "profit",
+                          };
+                        });
                       }}
                       style={{
                         borderColor: activeSource === "profit" ? "var(--gold)" : undefined,
@@ -1381,8 +1399,21 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                         <div className="image-placeholder">No image</div>
                       )}
                       <div className="admin-product-details">
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                           <strong>{product.title}</strong>
+                          {product.supplier_type === "PRINTFUL" || product.printful_sync_id || product.id.startsWith("pf-sync-") ? (
+                            <span style={{ fontSize: "9px", background: "rgba(201, 168, 76, 0.2)", color: "#F3E5AB", padding: "1px 6px", borderRadius: "4px", fontWeight: 700, border: "1px solid rgba(201, 168, 76, 0.4)" }}>
+                              🖨️ PRINTFUL
+                            </span>
+                          ) : product.supplier_type === "CJ" || product.cj_product_id || product.id.startsWith("cj-") ? (
+                            <span style={{ fontSize: "9px", background: "rgba(255, 102, 0, 0.2)", color: "#FF8C00", padding: "1px 6px", borderRadius: "4px", fontWeight: 700, border: "1px solid rgba(255, 102, 0, 0.4)" }}>
+                              📦 CJ DROPSHIPPING
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: "9px", background: "rgba(52, 152, 219, 0.2)", color: "#3498DB", padding: "1px 6px", borderRadius: "4px", fontWeight: 700, border: "1px solid rgba(52, 152, 219, 0.4)" }}>
+                              🏢 MANUAL
+                            </span>
+                          )}
                           {product.status === "draft" && (
                             <span style={{ fontSize: "9px", background: "rgba(201, 168, 76, 0.2)", color: "var(--gold)", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>DRAFT</span>
                           )}
@@ -1456,6 +1487,29 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
               }
             } catch (e) {
               console.error("Failed to refresh products after import", e);
+            }
+          }}
+        />
+      ) : activeTab === "printful-import" ? (
+        <PrintfulImporter
+          onProductImported={async (importedProduct) => {
+            try {
+              const response = await fetch("/api/admin/products");
+              if (response.ok) {
+                const data = await response.json();
+                if (data.products) setProducts(data.products);
+                const target = importedProduct || (data.products && data.products[0]);
+                if (target) {
+                  beginEdit(target);
+                  setActiveTab("inventory");
+                  setNotification({
+                    kind: "success",
+                    message: `Printful product imported! Pre-filled in editor below. Customize and click Publish.`,
+                  });
+                }
+              }
+            } catch (e) {
+              console.error("Failed to refresh products after Printful import", e);
             }
           }}
         />

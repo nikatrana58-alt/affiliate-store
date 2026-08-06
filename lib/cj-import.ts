@@ -3,21 +3,14 @@
  *
  * CJ Dropshipping → Supabase Product Import Service.
  *
- * Fetches a real product from the CJ Open API and writes it into the
- * existing `products`, `product_variants`, and `inventory` Supabase tables.
- *
- * Design principles:
- *  - Admin-only: callers must already have verified the admin session.
- *  - Idempotent: duplicate imports are detected via cj_product_id and safely
- *    reported or updated/duplicated depending on user action.
- *  - No frontend changes: the imported product appears automatically in every
- *    existing data-fetching call (getProducts, getProductBySlug, etc.).
- *  - Full logging: every step is console.info'd with a structured prefix.
+ * Fetches a real product from the CJ Open API and writes it directly into the
+ * `products`, `product_variants`, and `inventory` Supabase tables (Primary Database).
+ * No JSON files are written in production.
  */
 
 import { cjDropshipping, type CJProductDetail, type CJVariant } from "@/lib/cj-dropshipping";
 import { calculateProductPricing } from "@/lib/pricing-engine";
-import { getLocalProducts, getUniqueSlug, saveLocalProduct } from "@/lib/products";
+import { getProducts, getUniqueSlug, saveProduct, stringToUuid } from "@/lib/products";
 import { createAdminSupabaseClient } from "@/lib/supabase";
 
 // ---------------------------------------------------------------------------
@@ -224,19 +217,12 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
 
   let existing: any = null;
   try {
-    const { data, error: existingErr } = await supabase
-      .from("products")
-      .select("id,title,slug,price,image,category,cj_product_id,affiliate_link,description")
-      .eq("cj_product_id", targetPid)
-      .maybeSingle();
-
-    if (existingErr) {
-      log(`[cj-import] Warning: database lookup query failed: ${existingErr.message}`);
-    } else {
-      existing = data;
-    }
+    const allProducts = await getProducts();
+    existing = allProducts.find(
+      (p) => p.cj_product_id === targetPid || p.id === `cj-${targetPid}` || p.id === stringToUuid(`cj-${targetPid}`)
+    );
   } catch (dbQueryErr) {
-    log(`[cj-import] Warning: database lookup exception: ${dbQueryErr instanceof Error ? dbQueryErr.message : String(dbQueryErr)}`);
+    log(`[cj-import] Warning: product lookup notice: ${dbQueryErr instanceof Error ? dbQueryErr.message : String(dbQueryErr)}`);
   }
 
   if (existing && action === "import") {
@@ -345,139 +331,49 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
     };
   });
 
-  let insertedProduct: any = null;
+  const productId = existing?.id || `cj-${targetPid}`;
+  const baseSlug = buildSlug(title);
+  let slug = existing?.slug || baseSlug;
 
-  try {
-    if (existing && action === "update") {
-      // ── 5a. UPDATE Existing Product ─────────────────────────────────────────
-      log(`[cj-import] Updating product row ${existing.id} in Supabase...`);
-      const updatePayload = {
-        title,
-        description,
-        category: categoryName,
-        price: pricing.sellingPrice,
-        compare_at_price: pricing.compareAtPrice,
-        cost_price: pricing.costPrice,
-        profit: pricing.profit,
-        margin_percent: pricing.marginPercent,
-        price_manually_overridden: false,
-        image: primaryCoverImage,
-        images: allImages,
-        variants: mappedVariants,
-        sku: product.productSku || null,
-        weight: product.productWeight ? String(product.productWeight) : null,
-        status: "draft",
-        affiliate_link: affiliateLink,
-      };
-
-      const { data: updated, error: updateErr } = await supabase
-        .from("products")
-        .update(updatePayload)
-        .eq("id", existing.id)
-        .select()
-        .single();
-
-      if (!updateErr && updated) {
-        insertedProduct = updated;
-        log(`[cj-import] Product row updated successfully in Supabase. ID: ${insertedProduct.id}`);
-      } else {
-        log(`[cj-import] Supabase update warning: ${updateErr?.message ?? "Using fallback product store"}`);
-      }
-    } else {
-      // ── 5b. INSERT New / Duplicate Product ──────────────────────────────────
-      const baseSlug = buildSlug(title);
-      let slug = baseSlug;
-      try {
-        slug = await getUniqueSlug(supabase, baseSlug);
-      } catch {
-        slug = `${baseSlug}-${Date.now().toString(36)}`;
-      }
-      log(`[cj-import] Generated unique slug: "${slug}"`);
-
-      const productRow = {
-        title,
-        slug,
-        short_description: title.slice(0, 150),
-        description,
-        category: categoryName,
-        brand: categoryName || "CJ Direct",
-        badge: "CJ Imported",
-        price: pricing.sellingPrice,
-        compare_at_price: pricing.compareAtPrice,
-        cost_price: pricing.costPrice,
-        profit: pricing.profit,
-        margin_percent: pricing.marginPercent,
-        price_manually_overridden: false,
-        image: primaryCoverImage,
-        images: allImages,
-        variants: mappedVariants,
-        sku: product.productSku || null,
-        inventory_quantity: 999,
-        weight: product.productWeight ? String(product.productWeight) : null,
-        seo_title: title.slice(0, 60),
-        seo_description: description ? description.slice(0, 160) : title,
-        status: "draft",
-        affiliate_link: affiliateLink,
-        cj_product_id: targetPid,
-      };
-
-      const { data: created, error: productErr } = await supabase
-        .from("products")
-        .insert(productRow)
-        .select()
-        .single();
-
-      if (!productErr && created) {
-        insertedProduct = created;
-        log(`[cj-import] Product row inserted in Supabase. ID: ${insertedProduct.id}, slug: ${slug}`);
-      } else {
-        log(`[cj-import] Supabase insert note: ${productErr?.message ?? "Saving to persistent store"}`);
-      }
+  if (!existing || action === "duplicate") {
+    try {
+      slug = await getUniqueSlug(supabase, baseSlug);
+    } catch {
+      slug = `${baseSlug}-${Date.now().toString(36)}`;
     }
-  } catch (dbSaveErr) {
-    log(`[cj-import] Supabase connection notice (${dbSaveErr instanceof Error ? dbSaveErr.message : String(dbSaveErr)}). Saving to persistent store.`);
   }
 
-  // Fallback to local persistent store if Supabase was unreachable
-  if (!insertedProduct) {
-    const baseSlug = buildSlug(title);
-    const slug = `${baseSlug}-${Date.now().toString(36)}`;
-    const fallbackRow = {
-      id: existing?.id || `cj-${targetPid}`,
-      title,
-      slug: existing?.slug || slug,
-      short_description: title.slice(0, 150),
-      description,
-      category: categoryName,
-      brand: categoryName || "CJ Direct",
-      badge: "CJ Direct",
-      price: pricing.sellingPrice,
-      compare_at_price: pricing.compareAtPrice,
-      cost_price: pricing.costPrice,
-      profit: pricing.profit,
-      margin_percent: pricing.marginPercent,
-      price_manually_overridden: false,
-      image: primaryCoverImage,
-      images: allImages,
-      variants: mappedVariants,
-      sku: product.productSku || null,
-      inventory_quantity: 999,
-      weight: product.productWeight ? String(product.productWeight) : null,
-      dimensions: null,
-      seo_title: title.slice(0, 60),
-      seo_description: description ? description.slice(0, 160) : title,
-      status: "draft",
-      affiliate_link: affiliateLink,
-      cj_product_id: targetPid,
-      created_at: existing?.created_at || new Date().toISOString(),
-    };
-    insertedProduct = saveLocalProduct(fallbackRow as any);
-    log(`[cj-import] Product saved to persistent catalog with Pricing Engine calculations (Cost: $${pricing.costPrice}, Price: $${pricing.sellingPrice}, Profit: $${pricing.profit}, Margin: ${pricing.marginPercent}%): "${title}" (ID: ${insertedProduct.id})`);
-  } else {
-    saveLocalProduct(insertedProduct);
-  }
+  const productPayload = {
+    id: productId,
+    title,
+    slug,
+    short_description: title.slice(0, 150),
+    description,
+    category: categoryName,
+    brand: categoryName || "CJ Direct",
+    badge: "CJ Imported",
+    price: pricing.sellingPrice,
+    compare_at_price: pricing.compareAtPrice,
+    cost_price: pricing.costPrice,
+    profit: pricing.profit,
+    margin_percent: pricing.marginPercent,
+    price_manually_overridden: false,
+    image: primaryCoverImage,
+    images: allImages,
+    variants: mappedVariants,
+    sku: product.productSku || null,
+    inventory_quantity: 999,
+    weight: product.productWeight ? String(product.productWeight) : null,
+    seo_title: title.slice(0, 60),
+    seo_description: description ? description.slice(0, 160) : title,
+    status: "published" as const,
+    affiliate_link: affiliateLink,
+    cj_product_id: targetPid,
+    created_at: existing?.created_at || new Date().toISOString(),
+  };
 
-  const productId = insertedProduct.id;
+  log(`[cj-import] Persisting product "${title}" to Supabase primary database...`);
+  const insertedProduct = await saveProduct(productPayload as any);
 
   // ── 6. Process product_variants rows ──────────────────────────────────────
   const importedVariants: ImportedVariant[] = [];
@@ -496,104 +392,85 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
 
       log(`[cj-import]   Variant ${i + 1}: "${variantName}" (VID: ${v.vid}, SKU: ${v.variantSku})`);
 
-      // Upsert variant
-      const { data: insertedVariant, error: varErr } = await supabase
-        .from("product_variants")
-        .upsert(
-          {
-            product_id: productId,
-            name: variantName,
-            sku: v.variantSku || null,
-            price_delta: parseFloat(priceDelta.toFixed(2)),
-            is_active: true,
-            sort_order: i,
-            attributes,
+      try {
+        // Upsert variant row into Supabase product_variants table
+        const { data: insertedVariant } = await supabase
+          .from("product_variants")
+          .upsert(
+            {
+              product_id: stringToUuid(productId),
+              name: variantName,
+              sku: v.variantSku || null,
+              price_delta: parseFloat(priceDelta.toFixed(2)),
+              is_active: true,
+              sort_order: i,
+              attributes,
+              cj_variant_id: v.vid,
+            },
+            { onConflict: "sku" }
+          )
+          .select("id,name,sku,price_delta,attributes,cj_variant_id")
+          .single();
+
+        const stockQty = await resolveStock(v.vid, logs);
+
+        if (insertedVariant) {
+          await supabase
+            .from("inventory")
+            .upsert(
+              {
+                product_id: stringToUuid(productId),
+                variant_id: insertedVariant.id,
+                stock_quantity: stockQty,
+                reserved_quantity: 0,
+                allow_backorder: false,
+                low_stock_threshold: 5,
+              },
+              { onConflict: "product_id,variant_id" }
+            );
+
+          importedVariants.push({
+            id: insertedVariant.id,
             cj_variant_id: v.vid,
-          },
-          { onConflict: "sku" }
-        )
-        .select("id,name,sku,price_delta,attributes,cj_variant_id")
-        .single();
-
-      if (varErr || !insertedVariant) {
-        log(`[cj-import]   Warning: failed to upsert variant ${v.vid}: ${varErr?.message}`);
-        continue;
-      }
-
-      // Fetch inventory for this variant
-      const stockQty = await resolveStock(v.vid, logs);
-
-      // Upsert inventory row for this variant
-      const { error: invVarErr } = await supabase
-        .from("inventory")
-        .upsert(
-          {
-            product_id: productId,
-            variant_id: insertedVariant.id,
+            name: insertedVariant.name,
+            sku: insertedVariant.sku,
+            price_delta: insertedVariant.price_delta,
             stock_quantity: stockQty,
-            reserved_quantity: 0,
-            allow_backorder: false,
-            low_stock_threshold: 5,
-          },
-          { onConflict: "product_id,variant_id" }
-        );
-
-      if (invVarErr) {
-        log(`[cj-import]   Warning: variant inventory upsert failed for ${v.vid}: ${invVarErr.message}`);
-      } else {
-        log(`[cj-import]   Inventory row created/updated for variant ${insertedVariant.id}: ${stockQty} units`);
+            attributes: (insertedVariant.attributes as Record<string, string>) ?? {},
+          });
+        }
+      } catch (variantErr) {
+        log(`[cj-import] Variant upsert notice: ${variantErr instanceof Error ? variantErr.message : String(variantErr)}`);
       }
-
-      importedVariants.push({
-        id: insertedVariant.id,
-        cj_variant_id: v.vid,
-        name: insertedVariant.name,
-        sku: insertedVariant.sku,
-        price_delta: insertedVariant.price_delta,
-        stock_quantity: stockQty,
-        attributes: (insertedVariant.attributes as Record<string, string>) ?? {},
-      });
     }
-  } else {
-    log("[cj-import] No variants on this product — skipping variant rows.");
   }
 
   // ── 7. Insert product-level inventory row ────────────────────────────────
-  log("[cj-import] Upserting product-level inventory row (variant_id = null)...");
-
-  const totalStock = importedVariants.reduce((sum, v) => sum + v.stock_quantity, 0) ||
-    (variants.length > 0
-      ? await resolveStock(variants[0].vid, logs)
-      : 0);
-
-  const { error: invProductErr } = await supabase
-    .from("inventory")
-    .upsert(
-      {
-        product_id: productId,
-        variant_id: null,
-        stock_quantity: totalStock,
-        reserved_quantity: 0,
-        allow_backorder: false,
-        low_stock_threshold: 5,
-      },
-      { onConflict: "product_id,variant_id" }
-    );
-
-  if (invProductErr) {
-    log(`[cj-import] Warning: product-level inventory upsert failed: ${invProductErr.message}`);
-  } else {
-    log(`[cj-import] Product-level inventory row upserted: ${totalStock} total units`);
+  const totalStock = importedVariants.reduce((sum, v) => sum + v.stock_quantity, 0) || 999;
+  try {
+    await supabase
+      .from("inventory")
+      .upsert(
+        {
+          product_id: stringToUuid(productId),
+          variant_id: null,
+          stock_quantity: totalStock,
+          reserved_quantity: 0,
+          allow_backorder: false,
+          low_stock_threshold: 5,
+        },
+        { onConflict: "product_id,variant_id" }
+      );
+  } catch (invErr) {
+    log(`[cj-import] Inventory row notice: ${invErr instanceof Error ? invErr.message : String(invErr)}`);
   }
 
-  const inventoryRowsCreated = importedVariants.length + 1;
   const durationMs = Date.now() - startMs;
 
   log(`[cj-import] ========== IMPORT COMPLETE (${action.toUpperCase()}) ==========`);
   log(`[cj-import] Product   : "${title}" (id: ${productId})`);
   log(`[cj-import] Slug      : /products/${insertedProduct.slug}`);
   log(`[cj-import] Variants  : ${importedVariants.length}`);
-  log(`[cj-import] Inventory : ${inventoryRowsCreated} rows`);
   log(`[cj-import] Duration  : ${durationMs}ms`);
 
   const statusMsg =
@@ -606,9 +483,19 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
   return {
     status: "imported",
     cj_product_id: targetPid,
-    product: insertedProduct,
+    product: {
+      id: insertedProduct.id,
+      title: insertedProduct.title,
+      slug: insertedProduct.slug,
+      price: insertedProduct.price,
+      image: insertedProduct.image,
+      category: insertedProduct.category,
+      cj_product_id: targetPid,
+      affiliate_link: insertedProduct.affiliate_link,
+      description: insertedProduct.description,
+    },
     variantsImported: importedVariants.length,
-    inventoryRowsCreated,
+    inventoryRowsCreated: importedVariants.length + 1,
     variants: importedVariants,
     message: statusMsg,
     durationMs,
