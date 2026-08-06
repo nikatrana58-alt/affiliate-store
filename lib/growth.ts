@@ -51,16 +51,24 @@ export type LoyaltyAccount = {
 // ─── 1. REVIEWS & RATINGS ───────────────────────────────────────────────────
 
 export async function getProductReviews(productId: string): Promise<ProductReview[]> {
-  const supabase = createAdminSupabaseClient();
-  const { data, error } = await supabase
-    .from("product_reviews")
-    .select("*")
-    .eq("product_id", productId)
-    .eq("is_approved", true)
-    .order("created_at", { ascending: false });
+  try {
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+      .from("product_reviews")
+      .select("*")
+      .eq("product_id", productId)
+      .eq("is_approved", true)
+      .order("created_at", { ascending: false });
 
-  if (error) throw error;
-  return (data ?? []) as unknown as ProductReview[];
+    if (error) {
+      console.warn("[growth] product_reviews query notice:", error.message);
+      return [];
+    }
+    return (data ?? []) as unknown as ProductReview[];
+  } catch (err) {
+    console.warn("[growth] product_reviews exception:", err);
+    return [];
+  }
 }
 
 export async function submitProductReview(
