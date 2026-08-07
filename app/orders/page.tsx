@@ -14,7 +14,7 @@ export default function TrackOrderPage() {
     <div className="min-h-screen flex flex-col bg-[#0A0A18] text-white">
       <Navbar />
 
-      <main className="flex-1 checkout-shell">
+      <main className="flex-1 checkout-shell" style={{ padding: "115px 22px 100px" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto", padding: "20px 0" }}>
           <div style={{ textAlign: "center", marginBottom: "32px" }}>
             <p className="eyebrow" style={{ color: "var(--gold)" }}>Customer Portal</p>

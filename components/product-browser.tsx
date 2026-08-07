@@ -36,9 +36,18 @@ function includesSearchTerm(product: Product, searchTerm: string) {
 
 export function ProductBrowser({ products }: ProductBrowserProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const featuredProducts = products.slice(0, 4);
-  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const normalizedSearch = debouncedSearchTerm.trim().toLowerCase();
   const normalizedCategory = selectedCategory.toLowerCase();
   const filteredProducts = products.filter((product) => {
     const matchesCategory =

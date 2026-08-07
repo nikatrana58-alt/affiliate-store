@@ -1,408 +1,210 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import {
   Float,
   ContactShadows,
   Sparkles,
-  MeshTransmissionMaterial,
   AdaptiveDpr,
   AdaptiveEvents,
-  Environment,
-  RoundedBox,
 } from "@react-three/drei";
 import * as THREE from "three";
 
 /**
- * Cinematic Obsidian Monolith — tall premium black glass slab
+ * 3D Obsidian Luxury Pedestal Platform
+ * Chamfered obsidian cylinder base with champagne gold metallic inlay ring
  */
-function ObsidianMonolith({
-  position,
-  rotation,
-  scale,
-  speed,
-}: {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: [number, number, number];
-  speed: number;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
+function ObsidianPedestal() {
+  const ref = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     if (!ref.current) return;
     const t = state.clock.elapsedTime;
-    ref.current.rotation.y = rotation[1] + Math.sin(t * speed * 0.18) * 0.12;
-    ref.current.rotation.x = rotation[0] + Math.cos(t * speed * 0.12) * 0.06;
-    ref.current.position.y = position[1] + Math.sin(t * speed * 0.22) * 0.12;
+    ref.current.rotation.y = Math.sin(t * 0.08) * 0.05;
   });
 
   return (
-    <Float speed={speed * 0.6} rotationIntensity={0.08} floatIntensity={0.25}>
-      <mesh ref={ref} position={position} rotation={rotation} scale={scale} castShadow>
-        <RoundedBox args={[1.4, 2.6, 0.06]} radius={0.04} smoothness={4}>
-          <MeshTransmissionMaterial
-            color="#0D0D1A"
-            roughness={0.03}
-            thickness={0.5}
-            ior={1.88}
-            transmission={0.92}
-            transparent
-            metalness={0.15}
-            chromaticAberration={0.06}
-            anisotropy={0.2}
-            distortion={0.02}
-            distortionScale={0.1}
-            temporalDistortion={0.03}
-          />
-        </RoundedBox>
-        {/* Elegant gold rim glow */}
-        <mesh>
-          <RoundedBox args={[1.42, 2.62, 0.04]} radius={0.04} smoothness={4}>
-            <meshStandardMaterial
-              color="#C9A84C"
-              metalness={0.9}
-              roughness={0.2}
-              emissive="#C9A84C"
-              emissiveIntensity={0.04}
-              transparent
-              opacity={0.15}
-            />
-          </RoundedBox>
-        </mesh>
-      </mesh>
-    </Float>
-  );
-}
-
-/**
- * Liquid Gold Ribbon — smooth torus-knot with brushed gold metal
- */
-function GoldLiquidRibbon({
-  position,
-  scale,
-  speed,
-}: {
-  position: [number, number, number];
-  scale: number;
-  speed: number;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (!ref.current) return;
-    const t = state.clock.elapsedTime;
-    ref.current.rotation.y += 0.003 * speed;
-    ref.current.rotation.z = Math.sin(t * speed * 0.3) * 0.15;
-  });
-
-  return (
-    <Float speed={speed * 0.7} rotationIntensity={0.2} floatIntensity={0.4}>
-      <mesh ref={ref} position={position} scale={scale} castShadow>
-        <torusKnotGeometry args={[0.38, 0.08, 200, 20, 2, 3]} />
+    <group ref={ref} position={[0, -1.25, 0]}>
+      {/* Main Obsidian Cylinder Base */}
+      <mesh castShadow receiveShadow position={[0, 0, 0]}>
+        <cylinderGeometry args={[2.2, 2.5, 0.45, 32]} />
         <meshStandardMaterial
-          color="#E5C158"
-          metalness={0.97}
-          roughness={0.07}
-          envMapIntensity={2.5}
-          emissive="#D4AF37"
-          emissiveIntensity={0.06}
+          color="#08080E"
+          metalness={0.92}
+          roughness={0.08}
+          envMapIntensity={1.2}
         />
       </mesh>
-    </Float>
-  );
-}
 
-/**
- * Chrome Mirror Sphere — perfect reflective ball
- */
-function ChromeSphere({
-  position,
-  scale,
-  speed,
-}: {
-  position: [number, number, number];
-  scale: number;
-  speed: number;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (!ref.current) return;
-    const t = state.clock.elapsedTime;
-    ref.current.position.y = position[1] + Math.sin(t * speed * 0.4) * 0.18;
-    ref.current.rotation.y += 0.002 * speed;
-  });
-
-  return (
-    <Float speed={speed * 0.5} rotationIntensity={0.06} floatIntensity={0.5}>
-      <mesh ref={ref} position={position} scale={scale} castShadow>
-        <sphereGeometry args={[0.5, 96, 96]} />
-        <meshStandardMaterial
-          color="#F0EEE6"
-          metalness={1.0}
-          roughness={0.0}
-          envMapIntensity={3.0}
-        />
-      </mesh>
-    </Float>
-  );
-}
-
-/**
- * Diamond Crystal Prism — high-refraction luxury gem
- */
-function DiamondCrystal({
-  position,
-  scale,
-  speed,
-}: {
-  position: [number, number, number];
-  scale: number;
-  speed: number;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (!ref.current) return;
-    const t = state.clock.elapsedTime;
-    ref.current.rotation.y += 0.004 * speed;
-    ref.current.rotation.x = Math.sin(t * speed * 0.35) * 0.2;
-    ref.current.rotation.z = Math.cos(t * speed * 0.25) * 0.1;
-  });
-
-  return (
-    <Float speed={speed * 0.8} rotationIntensity={0.35} floatIntensity={0.55}>
-      <mesh ref={ref} position={position} scale={scale} castShadow>
-        <octahedronGeometry args={[0.6, 0]} />
-        <MeshTransmissionMaterial
-          backside
-          backsideThickness={0.8}
-          chromaticAberration={0.12}
-          color="#FFF8E7"
-          distortion={0.15}
-          distortionScale={0.3}
-          ior={2.1}
-          roughness={0.0}
-          thickness={0.6}
-          transparent
-          metalness={0.0}
-          temporalDistortion={0.05}
-          anisotropy={0.5}
-        />
-      </mesh>
-    </Float>
-  );
-}
-
-/**
- * Thin brushed gold accent ring
- */
-function GoldAccentRing({
-  position,
-  rotation,
-  scale,
-  speed,
-}: {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: number;
-  speed: number;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-
-  useFrame(() => {
-    if (!ref.current) return;
-    ref.current.rotation.z += 0.002 * speed;
-    ref.current.rotation.y += 0.0015 * speed;
-  });
-
-  return (
-    <Float speed={speed * 0.6} rotationIntensity={0.15} floatIntensity={0.3}>
-      <mesh ref={ref} position={position} rotation={rotation} scale={scale}>
-        <torusGeometry args={[0.85, 0.018, 32, 120]} />
+      {/* Champagne Gold Outer Rim Ring */}
+      <mesh position={[0, 0.22, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[2.22, 0.025, 12, 48]} />
         <meshStandardMaterial
           color="#D4AF37"
-          metalness={0.97}
-          roughness={0.08}
-          envMapIntensity={2.2}
-          emissive="#C9A84C"
-          emissiveIntensity={0.08}
+          metalness={0.95}
+          roughness={0.15}
+          emissive="#D4AF37"
+          emissiveIntensity={0.12}
         />
       </mesh>
+
+      {/* Inner Dark Glass Inset Disc */}
+      <mesh position={[0, 0.23, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[2.18, 32]} />
+        <meshStandardMaterial
+          color="#0B0B12"
+          metalness={0.8}
+          roughness={0.04}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * Floating 3D Illuminated Gold RA2Z Emblem Centerpiece
+ * Sculpted metallic gold emblem with smooth rotation and subtle float
+ */
+function GoldEmblemCenterpiece() {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
+    groupRef.current.rotation.y = t * 0.18;
+    groupRef.current.position.y = 0.25 + Math.sin(t * 0.4) * 0.08;
+  });
+
+  return (
+    <Float speed={1.2} rotationIntensity={0.08} floatIntensity={0.25}>
+      <group ref={groupRef} position={[0, 0.25, 0]}>
+        {/* Outer Sculpted Metallic Shield / Crest */}
+        <mesh castShadow position={[0, 0, 0]}>
+          <octahedronGeometry args={[1.05, 0]} />
+          <meshStandardMaterial
+            color="#D4AF37"
+            metalness={0.96}
+            roughness={0.15}
+            emissive="#C9A84C"
+            emissiveIntensity={0.08}
+          />
+        </mesh>
+
+        {/* Inner Diamond Core */}
+        <mesh position={[0, 0, 0]} scale={[0.6, 0.6, 0.6]}>
+          <octahedronGeometry args={[1.0, 0]} />
+          <meshStandardMaterial
+            color="#FFF8DC"
+            metalness={0.98}
+            roughness={0.05}
+            emissive="#F3E5AB"
+            emissiveIntensity={0.18}
+          />
+        </mesh>
+
+        {/* Concentric Gold Orbit Ring 1 */}
+        <mesh rotation={[Math.PI / 3, 0.4, 0]}>
+          <torusGeometry args={[1.5, 0.018, 12, 48]} />
+          <meshStandardMaterial
+            color="#E5C158"
+            metalness={0.95}
+            roughness={0.1}
+            emissive="#D4AF37"
+            emissiveIntensity={0.15}
+          />
+        </mesh>
+
+        {/* Concentric Gold Orbit Ring 2 */}
+        <mesh rotation={[-Math.PI / 4, -0.6, 0]}>
+          <torusGeometry args={[1.8, 0.014, 12, 48]} />
+          <meshStandardMaterial
+            color="#C9A84C"
+            metalness={0.9}
+            roughness={0.15}
+            emissive="#C9A84C"
+            emissiveIntensity={0.1}
+          />
+        </mesh>
+      </group>
     </Float>
   );
 }
 
 /**
- * Floating acrylic sheet — transparent layered premium panel
+ * Main Studio Scene Lighting & Ambient Environment Rig
  */
-function AcrylicSheet({
-  position,
-  rotation,
-  scale,
-  speed,
-}: {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: [number, number, number];
-  speed: number;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (!ref.current) return;
-    const t = state.clock.elapsedTime;
-    ref.current.rotation.y = rotation[1] + Math.sin(t * speed * 0.2) * 0.1;
-    ref.current.position.y = position[1] + Math.cos(t * speed * 0.28) * 0.08;
-  });
-
-  return (
-    <Float speed={speed * 0.5} rotationIntensity={0.06} floatIntensity={0.2}>
-      <mesh ref={ref} position={position} rotation={rotation} scale={scale}>
-        <planeGeometry args={[1.2, 1.8, 1, 1]} />
-        <MeshTransmissionMaterial
-          color="#C9D8E8"
-          roughness={0.04}
-          thickness={0.12}
-          ior={1.45}
-          transmission={0.96}
-          transparent
-          metalness={0.05}
-          chromaticAberration={0.02}
-        />
-      </mesh>
-    </Float>
-  );
-}
-
 function SceneContent() {
-  const { mouse } = useThree();
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame(() => {
-    if (!groupRef.current) return;
-    groupRef.current.rotation.x = THREE.MathUtils.lerp(
-      groupRef.current.rotation.x,
-      (mouse.y * Math.PI) / 28,
-      0.025,
-    );
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(
-      groupRef.current.rotation.y,
-      (mouse.x * Math.PI) / 28,
-      0.025,
-    );
-  });
-
   return (
-    <group ref={groupRef}>
-      {/* Premium cinematic environment for reflections */}
-      <Environment preset="city" />
+    <group>
+      {/* Balanced Studio Lighting */}
+      <ambientLight intensity={0.45} />
 
-      {/* Studio + cinematic lighting */}
-      <ambientLight intensity={0.4} />
+      {/* Main Champagne Gold Key Light */}
       <directionalLight
         castShadow
+        intensity={1.8}
+        position={[4, 8, 5]}
+        shadow-mapSize={[512, 512]}
+        color="#FFF5E0"
+      />
+
+      {/* Secondary Soft Fill Light */}
+      <directionalLight
+        intensity={0.5}
+        position={[-6, 4, -3]}
+        color="#E8D5FF"
+      />
+
+      {/* Gold Accent Point Light */}
+      <pointLight
         intensity={2.2}
-        position={[5, 10, 5]}
-        shadow-mapSize={[2048, 2048]}
-        color="#FFF8F0"
-      />
-      <directionalLight intensity={0.6} position={[-8, 4, -4]} color="#E8D5FF" />
-      {/* Gold key light */}
-      <pointLight intensity={2.5} position={[1, 4, 4]} color="#D4AF37" distance={12} />
-      {/* Rim light from behind */}
-      <pointLight intensity={1.2} position={[-4, -2, -5]} color="#C9A84C" distance={10} />
-      {/* Cool fill from side */}
-      <pointLight intensity={0.6} position={[6, 0, 2]} color="#8888FF" distance={8} />
-
-      {/* === MAIN OBSIDIAN GLASS MONOLITHS === */}
-      <ObsidianMonolith
-        position={[-2.2, 0.5, -1.0]}
-        rotation={[0.08, 0.35, -0.08]}
-        scale={[1.05, 1.05, 1.05]}
-        speed={0.65}
-      />
-      <ObsidianMonolith
-        position={[2.3, -0.3, -1.5]}
-        rotation={[-0.06, -0.45, 0.1]}
-        scale={[0.78, 0.78, 0.78]}
-        speed={0.85}
+        position={[1.5, 3.5, 3]}
+        color="#D4AF37"
+        distance={10}
       />
 
-      {/* === GOLD LIQUID RIBBON === */}
-      <GoldLiquidRibbon position={[0.4, 0.6, -1.0]} scale={0.72} speed={0.8} />
-      <GoldLiquidRibbon position={[-1.2, -1.0, -1.6]} scale={0.45} speed={1.1} />
-
-      {/* === CHROME MIRROR SPHERES === */}
-      <ChromeSphere position={[-0.6, 1.1, -0.9]} scale={0.42} speed={0.6} />
-      <ChromeSphere position={[1.4, -0.9, -0.7]} scale={0.28} speed={0.9} />
-
-      {/* === DIAMOND CRYSTALS === */}
-      <DiamondCrystal position={[0.2, -1.1, -1.3]} scale={0.5} speed={0.75} />
-      <DiamondCrystal position={[-1.8, -0.4, -1.8]} scale={0.35} speed={1.0} />
-
-      {/* === ACCENT RINGS === */}
-      <GoldAccentRing
-        position={[-1.6, -0.6, -0.5]}
-        rotation={[0.5, 0.3, 0]}
-        scale={0.72}
-        speed={0.7}
-      />
-      <GoldAccentRing
-        position={[1.8, 0.9, -1.2]}
-        rotation={[-0.4, 0.7, 0.3]}
-        scale={0.58}
-        speed={0.95}
+      {/* Deep Gold Rim Light from Behind */}
+      <pointLight
+        intensity={1.2}
+        position={[-3, -1, -4]}
+        color="#C9A84C"
+        distance={8}
       />
 
-      {/* === ACRYLIC ACCENT SHEETS === */}
-      <AcrylicSheet
-        position={[1.0, 0.2, -2.0]}
-        rotation={[0.1, -0.5, 0.15]}
-        scale={[0.7, 0.7, 0.7]}
-        speed={0.7}
-      />
+      {/* Floating Obsidian Pedestal Base */}
+      <ObsidianPedestal />
 
-      {/* === PREMIUM AMBIENT PARTICLES === */}
-      {/* Main champagne gold dust */}
+      {/* Illuminated Floating Gold RA2Z Emblem */}
+      <GoldEmblemCenterpiece />
+
+      {/* Champagne Gold Ambient Dust Particles */}
       <Sparkles
         color="#D4AF37"
-        count={100}
+        count={65}
         opacity={0.45}
-        scale={8}
-        size={0.08}
-        speed={0.25}
+        scale={7}
+        size={0.09}
+        speed={0.2}
       />
-      {/* Soft warm white dust */}
       <Sparkles
         color="#FFF8E7"
-        count={50}
-        opacity={0.22}
-        scale={6}
+        count={35}
+        opacity={0.25}
+        scale={5}
         size={0.05}
-        speed={0.18}
-      />
-      {/* Blue-violet accent sparkles */}
-      <Sparkles
-        color="#BBA0FF"
-        count={25}
-        opacity={0.12}
-        scale={4}
-        size={0.04}
         speed={0.15}
       />
 
-      {/* Cinematic contact shadows */}
+      {/* Soft Contact Shadows on Pedestal Base */}
       <ContactShadows
-        blur={4.0}
-        color="#0A0A0A"
-        far={5}
-        opacity={0.45}
-        position={[0, -1.4, 0]}
-        resolution={1024}
-        scale={8}
+        blur={3.5}
+        color="#050508"
+        far={4}
+        opacity={0.6}
+        position={[0, -1.48, 0]}
+        resolution={512}
+        scale={7}
       />
     </group>
   );
@@ -415,12 +217,12 @@ export function HeroScene3D() {
   }, []);
 
   return (
-    <div className="hero-3d-canvas" aria-hidden="true">
+    <div className="hero-3d-canvas" aria-hidden="true" suppressHydrationWarning>
       {mounted && (
         <Canvas
           camera={{
-            fov: 42,
-            position: [0, 0, 5.2],
+            fov: 40,
+            position: [0, 0.4, 5.4],
             near: 0.1,
             far: 25,
           }}
@@ -430,7 +232,7 @@ export function HeroScene3D() {
             alpha: true,
             powerPreference: "high-performance",
             toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.2,
+            toneMappingExposure: 1.15,
           }}
           shadows
           style={{
@@ -449,4 +251,3 @@ export function HeroScene3D() {
     </div>
   );
 }
-

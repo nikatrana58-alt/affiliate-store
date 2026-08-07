@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import { cache } from "react";
 import { createPublicSupabaseClient, createAdminSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 import { calculateProfitMetrics } from "@/lib/pricing-engine";
 
@@ -476,7 +477,7 @@ async function queryWithTimeout<T>(promise: PromiseLike<T>, timeoutMs = 1500): P
   return Promise.race([Promise.resolve(promise), timeoutPromise]).finally(() => clearTimeout(timeoutId));
 }
 
-export async function getProducts(): Promise<Product[]> {
+export const getProducts = cache(async function getProducts(): Promise<Product[]> {
   const now = Date.now();
   if (cachedProductsResponse && now - cachedProductsResponse.timestamp < CACHE_TTL_MS) {
     return cachedProductsResponse.data;
@@ -558,9 +559,9 @@ export async function getProducts(): Promise<Product[]> {
     cachedProductsResponse = { data: [], timestamp: now };
     return [];
   }
-}
+});
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
+export const getProductBySlug = cache(async function getProductBySlug(slug: string): Promise<Product | null> {
   const products = await getProducts();
   const match = products.find((p) => p.slug === slug);
   if (match) return match;
@@ -622,7 +623,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     }
     return null;
   }
-}
+});
 
 export async function getLuxuryProducts(): Promise<Product[]> {
   const products = await getProducts();

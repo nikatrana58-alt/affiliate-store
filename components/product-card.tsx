@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, memo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Tilt from "react-parallax-tilt";
 import { ProductBadge } from "@/components/product-badge";
 import { MagneticButton } from "@/components/magnetic-button";
@@ -23,7 +24,7 @@ function formatPrice(price: number | null) {
   }).format(price);
 }
 
-export function ProductCard({ product, variant = "default" }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ product, variant = "default" }: ProductCardProps) {
   const [mounted, setMounted] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -158,15 +159,14 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
         >
           {/* Image Showcase & Quick Action Overlay */}
           <div className="store-product-image-wrapper" style={{ position: "relative", aspectRatio: "1/1", overflow: "hidden", background: "rgba(0,0,0,0.2)" }}>
-            <Link className="store-product-image" href={`/products/${product.slug}`} prefetch={true} style={{ display: "block", width: "100%", height: "100%" }}>
+            <Link className="store-product-image" href={`/products/${product.slug}`} prefetch={true} style={{ display: "block", width: "100%", height: "100%", position: "relative" }}>
               {primaryImage ? (
-                <img
+                <Image
                   alt={product.title}
                   src={isHovered && secondaryImage ? secondaryImage : primaryImage}
-                  loading="lazy"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   style={{
-                    width: "100%",
-                    height: "100%",
                     objectFit: "cover",
                     transition: "transform 0.4s ease, filter 0.3s ease",
                     transform: isHovered ? "scale(1.06)" : "scale(1)",
@@ -493,12 +493,14 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
         </article>
       </Tilt>
 
-      {/* Quick View Modal */}
-      <QuickViewModal
-        product={product}
-        isOpen={isQuickViewOpen}
-        onClose={() => setIsQuickViewOpen(false)}
-      />
+      {/* Quick View Modal - Mounted conditionally only when opened */}
+      {isQuickViewOpen && (
+        <QuickViewModal
+          product={product}
+          isOpen={true}
+          onClose={() => setIsQuickViewOpen(false)}
+        />
+      )}
     </>
   );
-}
+});

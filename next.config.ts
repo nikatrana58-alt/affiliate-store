@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.printful.com" },
       { protocol: "https", hostname: "files.printful.com" },
       { protocol: "https", hostname: "s3.amazonaws.com" },
+      { protocol: "https", hostname: "**.supabase.co" },
     ],
   },
   async headers() {

@@ -6,9 +6,12 @@ import Image from "next/image";
 import { MagneticButton } from "@/components/magnetic-button";
 import { CartButton } from "@/components/cart-button";
 
+import { useAuth } from "@/components/auth-context";
+
 const productSearchEventName = "store-product-search";
 
 export function Navbar() {
+  const { user, role, openAuthModal } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const lastScroll = useRef(0);
@@ -21,8 +24,12 @@ export function Navbar() {
 
       requestAnimationFrame(() => {
         const currentScroll = window.scrollY;
-        setScrolled(currentScroll > 40);
-        setHidden(currentScroll > 200 && currentScroll > lastScroll.current);
+        const nextScrolled = currentScroll > 40;
+        const nextHidden = currentScroll > 200 && currentScroll > lastScroll.current;
+
+        setScrolled((prev) => (prev !== nextScrolled ? nextScrolled : prev));
+        setHidden((prev) => (prev !== nextHidden ? nextHidden : prev));
+
         lastScroll.current = currentScroll;
         ticking.current = false;
       });
@@ -107,10 +114,52 @@ export function Navbar() {
           <MagneticButton className="navbar-link-wrapper"><Link href="/categories" prefetch={true}>Categories</Link></MagneticButton>
           <MagneticButton className="navbar-link-wrapper"><Link href="/collections/luxury" prefetch={true}>Luxury</Link></MagneticButton>
           <MagneticButton className="navbar-link-wrapper"><Link href="/collections/originals" prefetch={true}>Originals</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/#new-arrivals" prefetch={true}>New Arrivals</Link></MagneticButton>
           <MagneticButton className="navbar-link-wrapper"><Link href="/orders" prefetch={true}>Track Order</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/account" prefetch={true}>Account</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/admin" prefetch={true}>Admin</Link></MagneticButton>
+
+          {role === "GUEST" ? (
+            <MagneticButton className="navbar-link-wrapper">
+              <button
+                onClick={() => openAuthModal("signin")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--gold)",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  padding: 0,
+                }}
+              >
+                Sign In
+              </button>
+            </MagneticButton>
+          ) : (
+            <>
+              <MagneticButton className="navbar-link-wrapper">
+                <Link href="/account" prefetch={true} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  {user?.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt="Profile"
+                      style={{ width: "22px", height: "22px", borderRadius: "50%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <span>Account</span>
+                  )}
+                </Link>
+              </MagneticButton>
+              <MagneticButton className="navbar-link-wrapper">
+                <Link href="/account?tab=wishlist" prefetch={true}>Wishlist</Link>
+              </MagneticButton>
+            </>
+          )}
+
+          {role === "ADMIN" && (
+            <MagneticButton className="navbar-link-wrapper">
+              <Link href="/admin" prefetch={true}>Admin</Link>
+            </MagneticButton>
+          )}
+
           <CartButton />
         </nav>
       </div>

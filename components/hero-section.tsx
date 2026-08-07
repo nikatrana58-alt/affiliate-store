@@ -2,11 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { HeroScene3D } from "@/components/hero-scene-3d";
 import { MagneticButton } from "@/components/magnetic-button";
 import type { Product } from "@/lib/products";
 import { getProductDisplayPrice } from "@/lib/pricing-engine";
+
+const HeroScene3D = dynamic(
+  () => import("@/components/hero-scene-3d").then((mod) => mod.HeroScene3D),
+  { ssr: false }
+);
 
 type HeroSectionProps = {
   product?: Product | null;
@@ -21,37 +27,17 @@ function formatPrice(price: number | null) {
 }
 
 const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.2,
-    },
-  },
+  hidden: { opacity: 1 },
+  visible: { opacity: 1 },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.8,
-      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-    },
-  },
+  hidden: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 },
 };
 
 export function HeroSection({ product }: HeroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
-  const [isTouch, setIsTouch] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0)) {
-      setIsTouch(true);
-    }
-  }, []);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -60,31 +46,8 @@ export function HeroSection({ product }: HeroSectionProps) {
 
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const heroBlur = useTransform(scrollYProgress, [0, 0.8], [0, 6]);
   const contentY = useTransform(scrollYProgress, [0, 1], [0, -40]);
   const opacityScale = useTransform(scrollYProgress, [0, 0.85], [1, 0.3]);
-
-  const mouseX = useMotionValue(0.5);
-  const mouseY = useMotionValue(0.5);
-  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 50, damping: 20 });
-
-  const showcaseX = useTransform(springX, [0, 1], [-8, 8]);
-  const showcaseY = useTransform(springY, [0, 1], [8, -8]);
-
-  useEffect(() => {
-    if (isTouch) return;
-
-    function handleMouse(e: MouseEvent) {
-      const x = (e.clientX - window.innerWidth / 2) / window.innerWidth + 0.5;
-      const y = (e.clientY - window.innerHeight / 2) / window.innerHeight + 0.5;
-      mouseX.set(x);
-      mouseY.set(y);
-    }
-
-    window.addEventListener("mousemove", handleMouse);
-    return () => window.removeEventListener("mousemove", handleMouse);
-  }, [isTouch, mouseX, mouseY]);
 
   return (
     <motion.section
@@ -104,7 +67,7 @@ export function HeroSection({ product }: HeroSectionProps) {
         <motion.div
           className="hero-text-col"
           variants={containerVariants}
-          initial="hidden"
+          initial="visible"
           animate="visible"
         >
           <motion.p className="hero-eyebrow" variants={itemVariants}>
@@ -156,15 +119,14 @@ export function HeroSection({ product }: HeroSectionProps) {
 
         <motion.div
           className="hero-showcase-col"
-          initial={{ opacity: 0, scale: 0.85 }}
+          initial={{ opacity: 1, scale: 1 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
           <motion.div
             className="product-showcase-card"
             style={{
-              x: showcaseX,
-              y: showcaseY,
+              x: 0,
+              y: 0,
               background: "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(212, 175, 55, 0.03) 100%)",
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
@@ -182,12 +144,14 @@ export function HeroSection({ product }: HeroSectionProps) {
 
             {product?.image ? (
               <div className="showcase-image-wrapper">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   alt={product.title}
                   src={product.image}
                   className="showcase-image"
-                  fetchPriority="high"
+                  width={360}
+                  height={360}
+                  sizes="(max-width: 768px) 100vw, 360px"
+                  priority
                 />
                 <div className="showcase-image-shimmer" />
               </div>

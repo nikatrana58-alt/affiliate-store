@@ -12,6 +12,8 @@ import type {
 } from "@/lib/db/types";
 import type { Product } from "@/lib/products";
 
+import { useAuth } from "@/components/auth-context";
+
 function formatPrice(price: number) {
   return new Intl.NumberFormat("en-US", {
     currency: "USD",
@@ -67,6 +69,7 @@ type TabType = "home" | "orders" | "addresses" | "wishlist" | "notifications" | 
 
 export function CustomerDashboard() {
   const { addToCart } = useCart();
+  const { user, signOut: authSignOut, openAuthModal } = useAuth();
 
   // Authentication Email state
   const [customerEmail, setCustomerEmail] = useState("");
@@ -134,6 +137,29 @@ export function CustomerDashboard() {
     }
   }, []);
 
+  // Sync with AuthContext user
+  useEffect(() => {
+    if (user?.email) {
+      const email = user.email.toLowerCase().trim();
+      setCustomerEmail(email);
+      setEmailInput(email);
+      setIsAuthenticated(true);
+      if (user.displayName) setProfileName(user.displayName);
+      if (user.phoneNumber) setProfilePhone(user.phoneNumber);
+      loadAccountData(email);
+    } else {
+      const saved = localStorage.getItem("customer_dashboard_email");
+      if (saved) {
+        setCustomerEmail(saved);
+        setEmailInput(saved);
+        setIsAuthenticated(true);
+        loadAccountData(saved);
+      } else {
+        setIsAuthenticated(false);
+      }
+    }
+  }, [user, loadAccountData]);
+
   // Login / Session handler
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,20 +171,11 @@ export function CustomerDashboard() {
     loadAccountData(normalized);
   };
 
-  useEffect(() => {
-    const saved = localStorage.getItem("customer_dashboard_email");
-    if (saved) {
-      setCustomerEmail(saved);
-      setEmailInput(saved);
-      setIsAuthenticated(true);
-      loadAccountData(saved);
-    }
-  }, [loadAccountData]);
-
   const handleLogout = () => {
     localStorage.removeItem("customer_dashboard_email");
     setIsAuthenticated(false);
     setCustomerEmail("");
+    authSignOut();
   };
 
   // Reorder Action
@@ -290,31 +307,50 @@ export function CustomerDashboard() {
   // Render Login Prompt if not authenticated
   if (!isAuthenticated) {
     return (
-      <div style={{ maxWidth: "480px", margin: "40px auto" }} className="panel">
-        <div style={{ textAlign: "center", marginBottom: "20px" }}>
-          <p className="eyebrow" style={{ color: "var(--gold)" }}>Customer Account</p>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", margin: "4px 0" }}>Sign In to Account</h2>
-          <p style={{ fontSize: "13px", color: "var(--muted)" }}>
-            Enter the email address used during checkout to access your portal.
+      <div style={{ maxWidth: "480px", margin: "40px auto", textAlign: "center" }} className="panel">
+        <div style={{ marginBottom: "24px" }}>
+          <p className="eyebrow" style={{ color: "var(--gold)" }}>Customer Portal</p>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", margin: "8px 0" }}>Sign In to Your RA2Z Account</h2>
+          <p style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>
+            Access your luxury profile, view live order tracking status, manage saved shipping addresses, and sync your account wishlist.
           </p>
         </div>
 
-        <form onSubmit={handleLogin} style={{ display: "grid", gap: "16px" }}>
+        <div style={{ display: "grid", gap: "12px" }}>
+          <button
+            onClick={() => openAuthModal("signin")}
+            className="button primary"
+            type="button"
+            style={{ width: "100%", justifyContent: "center", padding: "12px", fontSize: "14px", fontWeight: 700 }}
+          >
+            Sign In to Account
+          </button>
+          <button
+            onClick={() => openAuthModal("signup")}
+            className="button secondary"
+            type="button"
+            style={{ width: "100%", justifyContent: "center", padding: "12px", fontSize: "14px" }}
+          >
+            Create New Account
+          </button>
+        </div>
+
+        <div style={{ margin: "24px 0 16px", color: "#555", fontSize: "12px" }}>OR QUICK ACCESSS VIA EMAIL</div>
+
+        <form onSubmit={handleLogin} style={{ display: "grid", gap: "12px" }}>
           <div className="co-field">
-            <label className="co-label" htmlFor="acc-email">Email Address</label>
             <input
               id="acc-email"
               className="co-input"
               type="email"
-              placeholder="you@example.com"
+              placeholder="Enter email used at checkout..."
               required
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
             />
           </div>
-
-          <button type="submit" className="button primary" style={{ width: "100%", justifyContent: "center" }}>
-            Access Customer Dashboard
+          <button type="submit" className="button secondary" style={{ width: "100%", justifyContent: "center", fontSize: "13px" }}>
+            Access Order History with Email
           </button>
         </form>
       </div>

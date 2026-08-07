@@ -30,7 +30,14 @@ export async function GET(request: Request) {
     };
 
     const result = await searchEngine.searchProducts(filterOptions);
-    return NextResponse.json({ success: true, ...result });
+    return NextResponse.json(
+      { success: true, ...result },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to fetch products";
     return NextResponse.json({ success: false, error: message }, { status: 500 });

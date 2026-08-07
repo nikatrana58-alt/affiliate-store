@@ -14,7 +14,7 @@ export default function AccountPage() {
     <div className="min-h-screen flex flex-col bg-[#0A0A18] text-white">
       <Navbar />
 
-      <main className="flex-1 checkout-shell" style={{ padding: "32px 22px 100px" }}>
+      <main className="flex-1 checkout-shell" style={{ padding: "115px 22px 100px" }}>
         <div style={{ maxWidth: "1080px", margin: "0 auto" }}>
           <CustomerDashboard />
         </div>

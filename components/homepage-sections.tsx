@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ProductCard } from "@/components/product-card";
 import { SectionReveal } from "@/components/section-reveal";
 import { MagneticButton } from "@/components/magnetic-button";
@@ -139,15 +140,12 @@ export function HomepageSections({ products }: HomepageSectionsProps) {
                 }}
               >
                 {/* Background Image */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={c.image}
                   alt={c.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
                   style={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
                     objectFit: "cover",
                     filter: "brightness(0.35)",
                     transition: "transform 0.6s cubic-bezier(0.16,1,0.3,1), filter 0.5s ease",

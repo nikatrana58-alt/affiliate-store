@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import { LenisProvider } from "@/components/lenis-provider";
 import { PageTransition } from "@/components/page-transition";
-import { MouseGlow } from "@/components/mouse-glow";
-import { LuxuryLoadingScreen } from "@/components/luxury-loading-screen";
 import { CartProvider } from "@/lib/cart";
+import { AuthProvider } from "@/components/auth-context";
+import { AuthModal } from "@/components/auth-modal";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -27,8 +27,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "RA2Z | Luxury Brand Collection",
-    template: "%s | RA2Z Luxury",
+    default: "RA2Z | Redefining Modern Luxury & Prestige",
+    template: "%s | RA2Z",
   },
   description: "Exquisite luxury curation. Redefining modern quality, luxury, and prestige.",
   icons: {
@@ -50,15 +50,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${jakarta.variable} ${inter.variable}`} style={{ backgroundColor: "#0A0A0A" }}>
       <body style={{ backgroundColor: "#0A0A0A", color: "#FFFFFF", margin: 0, padding: 0 }}>
-        <LuxuryLoadingScreen />
-        <CartProvider>
-          <LenisProvider>
-            <PageTransition>
-              <MouseGlow />
-              {children}
-            </PageTransition>
-          </LenisProvider>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <LenisProvider>
+              <PageTransition>
+                {children}
+              </PageTransition>
+              <AuthModal />
+            </LenisProvider>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
