@@ -189,6 +189,7 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
               }}
             >
               <span
+                className="product-card-supplier-badge"
                 style={{
                   fontSize: "10px",
                   fontWeight: 800,
@@ -359,7 +360,7 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
               </h2>
 
               {/* Description & See More / See Less Toggle */}
-              <div style={{ marginBottom: "12px" }}>
+              <div className="product-card-description-block" style={{ marginBottom: "12px" }}>
                 <p
                   style={{
                     fontSize: "12px",
