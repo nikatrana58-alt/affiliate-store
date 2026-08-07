@@ -91,7 +91,7 @@ export function Navbar() {
           </Link>
 
           {/* Search Bar */}
-          <form className="navbar-search" action="/#products" onSubmit={handleSearch}>
+          <form className="navbar-search" action="/#products" onSubmit={handleSearch} style={{ position: "relative" }}>
             <input
               aria-label="Search luxury products"
               name="q"

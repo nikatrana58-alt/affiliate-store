@@ -518,6 +518,7 @@ button {
   display: block;
   flex: 1;
   max-width: 300px;
+  position: relative;
 }
 
 .navbar-search input {
