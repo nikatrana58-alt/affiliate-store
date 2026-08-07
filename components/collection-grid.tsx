@@ -67,8 +67,8 @@ export function CollectionGrid({ initialProducts }: CollectionGridProps) {
       {/* Product Grid */}
       {sortedProducts.length > 0 ? (
         <div className="store-products stagger-children" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
-          {sortedProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {sortedProducts.map((product, idx) => (
+            <ProductCard key={`col-${product.id || product.slug || idx}-${idx}`} product={product} />
           ))}
         </div>
       ) : (

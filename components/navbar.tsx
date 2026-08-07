@@ -110,6 +110,7 @@ export function Navbar() {
           <MagneticButton className="navbar-link-wrapper"><Link href="/#new-arrivals" prefetch={true}>New Arrivals</Link></MagneticButton>
           <MagneticButton className="navbar-link-wrapper"><Link href="/orders" prefetch={true}>Track Order</Link></MagneticButton>
           <MagneticButton className="navbar-link-wrapper"><Link href="/account" prefetch={true}>Account</Link></MagneticButton>
+          <MagneticButton className="navbar-link-wrapper"><Link href="/admin" prefetch={true}>Admin</Link></MagneticButton>
           <CartButton />
         </nav>
       </div>

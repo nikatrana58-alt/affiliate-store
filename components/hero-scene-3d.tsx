@@ -414,38 +414,39 @@ export function HeroScene3D() {
     setMounted(true);
   }, []);
 
-  if (!mounted) return <div className="hero-3d-canvas" aria-hidden="true" />;
-
   return (
     <div className="hero-3d-canvas" aria-hidden="true">
-      <Canvas
-        camera={{
-          fov: 42,
-          position: [0, 0, 5.2],
-          near: 0.1,
-          far: 25,
-        }}
-        dpr={[1, 1.5]}
-        gl={{
-          antialias: true,
-          alpha: true,
-          powerPreference: "high-performance",
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.2,
-        }}
-        shadows
-        style={{
-          height: "100%",
-          left: 0,
-          position: "absolute",
-          top: 0,
-          width: "100%",
-        }}
-      >
-        <AdaptiveDpr pixelated />
-        <AdaptiveEvents />
-        <SceneContent />
-      </Canvas>
+      {mounted && (
+        <Canvas
+          camera={{
+            fov: 42,
+            position: [0, 0, 5.2],
+            near: 0.1,
+            far: 25,
+          }}
+          dpr={[1, 1.5]}
+          gl={{
+            antialias: true,
+            alpha: true,
+            powerPreference: "high-performance",
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.2,
+          }}
+          shadows
+          style={{
+            height: "100%",
+            left: 0,
+            position: "absolute",
+            top: 0,
+            width: "100%",
+          }}
+        >
+          <AdaptiveDpr pixelated />
+          <AdaptiveEvents />
+          <SceneContent />
+        </Canvas>
+      )}
     </div>
   );
 }
+

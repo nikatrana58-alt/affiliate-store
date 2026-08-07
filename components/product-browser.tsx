@@ -74,8 +74,8 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
               </div>
             </div>
             <div className="featured-grid stagger-children">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} variant="featured" />
+              {featuredProducts.map((product, idx) => (
+                <ProductCard key={`feat-${product.id || idx}-${idx}`} product={product} variant="featured" />
               ))}
             </div>
           </section>
@@ -118,8 +118,8 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
         </section>
       ) : filteredProducts.length ? (
         <div className="store-products stagger-children" key={`${selectedCategory}-${searchTerm}`}>
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {filteredProducts.map((product, idx) => (
+            <ProductCard key={`browser-${product.id || idx}-${idx}`} product={product} />
           ))}
         </div>
       ) : (

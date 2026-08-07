@@ -144,8 +144,8 @@ export default async function ProductPage({
                 </div>
               </div>
               <div className="related-products-grid stagger-children">
-                {relatedProducts.map((relatedProduct) => (
-                  <ProductCard key={relatedProduct.id} product={relatedProduct} />
+                {relatedProducts.map((relatedProduct, idx) => (
+                  <ProductCard key={`related-${relatedProduct.id || idx}-${idx}`} product={relatedProduct} />
                 ))}
               </div>
             </div>

@@ -221,8 +221,8 @@ export function HomepageSections({ products }: HomepageSectionsProps) {
             </div>
           </div>
           <div className="featured-grid stagger-children" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "24px" }}>
-            {luxuryProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {luxuryProducts.map((p, idx) => (
+              <ProductCard key={`lux-${p.id || idx}-${idx}`} product={p} />
             ))}
           </div>
         </section>
@@ -254,8 +254,8 @@ export function HomepageSections({ products }: HomepageSectionsProps) {
             </div>
           </div>
           <div className="featured-grid stagger-children" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "24px" }}>
-            {originalsProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {originalsProducts.map((p, idx) => (
+              <ProductCard key={`orig-${p.id || idx}-${idx}`} product={p} />
             ))}
           </div>
         </section>
@@ -274,8 +274,8 @@ export function HomepageSections({ products }: HomepageSectionsProps) {
             </h2>
           </div>
           <div className="featured-grid stagger-children" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "24px" }}>
-            {trendingProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {trendingProducts.map((p, idx) => (
+              <ProductCard key={`trend-${p.id || idx}-${idx}`} product={p} />
             ))}
           </div>
         </section>
@@ -294,8 +294,8 @@ export function HomepageSections({ products }: HomepageSectionsProps) {
             </h2>
           </div>
           <div className="featured-grid stagger-children" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "24px" }}>
-            {newArrivals.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {newArrivals.map((p, idx) => (
+              <ProductCard key={`new-${p.id || idx}-${idx}`} product={p} />
             ))}
           </div>
         </section>
@@ -425,8 +425,8 @@ export function HomepageSections({ products }: HomepageSectionsProps) {
             </h2>
           </div>
           <div className="featured-grid stagger-children" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "24px" }}>
-            {featuredProducts.map((p) => (
-              <ProductCard key={p.id} product={p} variant="featured" />
+            {featuredProducts.map((p, idx) => (
+              <ProductCard key={`feat-${p.id || idx}-${idx}`} product={p} />
             ))}
           </div>
         </section>
@@ -445,8 +445,8 @@ export function HomepageSections({ products }: HomepageSectionsProps) {
             </h2>
           </div>
           <div className="featured-grid stagger-children" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "24px" }}>
-            {bestSellers.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {bestSellers.map((p, idx) => (
+              <ProductCard key={`best-${p.id || idx}-${idx}`} product={p} />
             ))}
           </div>
         </section>
