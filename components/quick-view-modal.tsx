@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { Product } from "@/lib/products";
 import { getProductDisplayPrice, getVariantFinalPrice } from "@/lib/pricing-engine";
 import { useCart } from "@/lib/cart";
+import { sanitizeProductDescription } from "@/lib/utils/product-formatter";
+import { recordRecentlyViewed } from "@/components/product-card";
 
 type QuickViewModalProps = {
   product: Product | null;
@@ -16,6 +18,12 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && product?.id) {
+      recordRecentlyViewed(product.id);
+    }
+  }, [isOpen, product?.id]);
 
   if (!isOpen || !product) return null;
 
@@ -152,7 +160,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontSize: "12px", color: "var(--gold)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>
-                {product.category || "Curated Find"}
+                {product.category || "RA2Z Curation"}
               </div>
               <h2 style={{ fontSize: "22px", fontWeight: 800, margin: "8px 0 12px", lineHeight: "1.3" }}>
                 {product.title}
@@ -170,7 +178,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
               </div>
 
               <p style={{ fontSize: "14px", color: "var(--foreground-secondary)", lineHeight: "1.6", marginBottom: "20px" }}>
-                {product.description || "High quality production-ready item curated for maximum performance and elegance."}
+                {sanitizeProductDescription(product.description)}
               </p>
 
               {/* Variant Selector */}

@@ -23,6 +23,18 @@ export function ShippingEstimatorWidget({ variantId, className = "" }: ShippingE
   const [rates, setRates] = useState<PrintfulShippingRate[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Dynamic realistic delivery estimate calculation (Current date + 4 to 7 days)
+  const deliveryRange = () => {
+    const start = new Date();
+    start.setDate(start.getDate() + 4);
+    const end = new Date();
+    end.setDate(end.getDate() + 7);
+
+    const startStr = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const endStr = end.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return `${startStr} – ${endStr}`;
+  };
+
   const handleEstimate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,6 +74,29 @@ export function ShippingEstimatorWidget({ variantId, className = "" }: ShippingE
 
   return (
     <div className={`shipping-estimator-container ${className}`} style={{ marginTop: "24px" }}>
+      {/* Task 6: Realistic Delivery Estimate Banner */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "12px 16px",
+          borderRadius: "12px",
+          background: "rgba(212, 175, 55, 0.08)",
+          border: "1px solid rgba(212, 175, 55, 0.25)",
+          marginBottom: "12px",
+          color: "#FFFFFF",
+          fontSize: "13px",
+        }}
+      >
+        <span style={{ fontSize: "16px" }}>📦</span>
+        <div>
+          <span style={{ color: "var(--gold)", fontWeight: 700 }}>Estimated Delivery: </span>
+          <strong style={{ color: "#FFFFFF" }}>{deliveryRange()}</strong>
+          <span style={{ color: "var(--muted)", fontSize: "12px", marginLeft: "6px" }}>(Standard Express Shipping)</span>
+        </div>
+      </div>
+
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -82,7 +117,7 @@ export function ShippingEstimatorWidget({ variantId, className = "" }: ShippingE
         }}
       >
         <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          🚚 Estimate Shipping Fee & Delivery Time
+          🚚 Calculate Custom Rates & International Delivery
         </span>
         <span>{isOpen ? "▲" : "▼"}</span>
       </button>

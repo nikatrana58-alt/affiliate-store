@@ -3,19 +3,35 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CollectionGrid } from "@/components/collection-grid";
 import { getOriginalsProducts } from "@/lib/products";
+import { constructMetadata } from "@/lib/seo";
+import { CollectionSchema, BreadcrumbSchema } from "@/components/structured-data";
 
-export const metadata: Metadata = {
-  title: "RA2Z Originals Collection | RA2Z",
-  description: "Exclusive products designed by RA2Z. Original designs that cannot be found anywhere else.",
-};
+export const metadata: Metadata = constructMetadata({
+  title: "RA2Z Originals Collection",
+  description:
+    "Exclusive creations engineered and designed by RA2Z. Original apparel, luxury crest hoodies, oversized tees, and signature accessories unavailable anywhere else.",
+  path: "/collections/originals",
+});
 
 export const dynamic = "force-dynamic";
 
 export default async function OriginalsCollectionPage() {
   const products = await getOriginalsProducts();
 
+  const breadcrumbs = [
+    { name: "Home", url: "https://ra2z.shop" },
+    { name: "Collections", url: "https://ra2z.shop/categories" },
+    { name: "RA2Z Originals", url: "https://ra2z.shop/collections/originals" },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0A0A] text-white">
+      <CollectionSchema
+        name="RA2Z Originals Collection"
+        description="Exclusive creations engineered and designed by RA2Z. Original apparel, luxury crest hoodies, oversized tees, and signature accessories."
+        products={products}
+      />
+      <BreadcrumbSchema items={breadcrumbs} />
       <Navbar />
 
       <main className="store-shell" style={{ padding: "40px 22px 120px" }}>

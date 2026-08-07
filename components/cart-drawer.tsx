@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/lib/cart";
@@ -185,6 +185,11 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<number>(0);
+  const [couponMsg, setCouponMsg] = useState("");
+
   // Trap focus & close on Escape
   useEffect(() => {
     if (!open) return;
@@ -202,6 +207,27 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
       document.body.style.overflow = "";
     };
   }, [open, onClose]);
+
+  const handleApplyCoupon = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = couponCode.trim().toUpperCase();
+    if (!clean) return;
+
+    if (clean === "RA2Z10" || clean === "WELCOME10" || clean === "LUXURY10") {
+      const discount = cartTotal * 0.1;
+      setAppliedDiscount(discount);
+      setCouponMsg(`✓ Coupon ${clean} Applied (10% OFF)`);
+    } else if (clean === "VIP15") {
+      const discount = cartTotal * 0.15;
+      setAppliedDiscount(discount);
+      setCouponMsg(`✓ VIP Coupon ${clean} Applied (15% OFF)`);
+    } else {
+      setAppliedDiscount(0);
+      setCouponMsg("Invalid coupon code. Try 'RA2Z10' for 10% OFF.");
+    }
+  };
+
+  const finalTotal = Math.max(0, cartTotal - appliedDiscount);
 
   return (
     <AnimatePresence>
@@ -284,11 +310,71 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
               <div className="cart-drawer-footer">
                 <div className="cart-drawer-divider" aria-hidden="true" />
 
+                {/* Task 13: Promo Coupon Form */}
+                <form onSubmit={handleApplyCoupon} style={{ marginBottom: "14px", display: "flex", gap: "8px" }}>
+                  <input
+                    type="text"
+                    placeholder="Promo Code (e.g. RA2Z10)"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: "8px 12px",
+                      borderRadius: "8px",
+                      background: "rgba(255, 255, 255, 0.04)",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#FFFFFF",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "8px",
+                      background: "var(--gold)",
+                      color: "#000000",
+                      fontWeight: 700,
+                      fontSize: "11px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Apply
+                  </button>
+                </form>
+                {couponMsg && (
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: appliedDiscount > 0 ? "#6BCB77" : "var(--gold)",
+                      margin: "-6px 0 12px",
+                    }}
+                  >
+                    {couponMsg}
+                  </p>
+                )}
+
                 <div className="cart-summary">
                   <div className="cart-summary-row">
                     <span className="cart-summary-label">Subtotal</span>
                     <span className="cart-summary-value">
                       {formatPrice(cartTotal)}
+                    </span>
+                  </div>
+                  {appliedDiscount > 0 && (
+                    <div className="cart-summary-row" style={{ color: "#6BCB77" }}>
+                      <span className="cart-summary-label">Discount</span>
+                      <span className="cart-summary-value">
+                        -{formatPrice(appliedDiscount)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="cart-summary-row" style={{ fontWeight: 700, fontSize: "16px", marginTop: "4px" }}>
+                    <span className="cart-summary-label">Total</span>
+                    <span className="cart-summary-value" style={{ color: "var(--gold)" }}>
+                      {formatPrice(finalTotal)}
                     </span>
                   </div>
                   <p className="cart-summary-note">
@@ -339,4 +425,3 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
 }
 
 export default CartDrawer;
-

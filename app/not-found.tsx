@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { constructMetadata } from "@/lib/seo";
 import "@/app/checkout.css";
+
+export const metadata: Metadata = constructMetadata({
+  title: "404 Page Not Found",
+  description: "The requested page or product cannot be found. Return to RA2Z Luxury Storefront.",
+  noIndex: true,
+});
 
 export default function NotFoundPage() {
   return (
@@ -26,7 +34,7 @@ export default function NotFoundPage() {
             Uncharted Territory
           </h1>
           <p style={{ fontSize: "15px", color: "var(--muted)", lineHeight: "1.6", marginBottom: "32px" }}>
-            The requested piece or page cannot be found. Explore our curated collections or return to the main storefront.
+            The requested piece or page cannot be found. Explore our RA2Z collections or return to the main storefront.
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>

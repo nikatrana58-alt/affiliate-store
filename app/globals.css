@@ -482,6 +482,18 @@ button {
   width: 100%;
 }
 
+.navbar-desktop-layout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.navbar-mobile-layout {
+  display: none !important;
+}
+
 .navbar-scrolled .navbar-inner {
   background: rgba(7, 7, 9, 0.90);
   border-color: rgba(201, 168, 76, 0.14);
@@ -2813,6 +2825,17 @@ textarea {
     overflow-x: hidden;
   }
 
+  .navbar-desktop-layout {
+    display: none !important;
+  }
+
+  .navbar-mobile-layout {
+    display: flex !important;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+
   .desktop-auth-links {
     display: none !important;
   }
@@ -3137,6 +3160,7 @@ textarea {
     margin: 0 0 6px 0 !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;

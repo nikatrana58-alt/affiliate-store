@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { constructMetadata } from "@/lib/seo";
+import { BreadcrumbSchema } from "@/components/structured-data";
 
-export const metadata: Metadata = {
-  title: "Shop by Category | RA2Z Luxury",
-  description: "Explore RA2Z curated departments: Luxury Collection, RA2Z Originals, Fine Jewelry, Timepieces, and Home & Living.",
-};
+export const metadata: Metadata = constructMetadata({
+  title: "Shop by Category",
+  description:
+    "Explore RA2Z luxury departments: Fine Timepieces, Luxury Apparel, RA2Z Originals, Electronics, Home & Living, and Accessories.",
+  path: "/categories",
+});
 
 const CATEGORIES = [
   {
@@ -16,7 +20,7 @@ const CATEGORIES = [
     icon: "👑",
     href: "/collections/luxury",
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80",
-    badge: "Curated",
+    badge: "RA2Z Curation",
   },
   {
     id: "originals",
@@ -86,8 +90,14 @@ const CATEGORIES = [
 ];
 
 export default function CategoriesPage() {
+  const breadcrumbs = [
+    { name: "Home", url: "https://ra2z.shop" },
+    { name: "Categories", url: "https://ra2z.shop/categories" },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0A0A] text-white">
+      <BreadcrumbSchema items={breadcrumbs} />
       <Navbar />
 
       <main className="store-shell" style={{ padding: "40px 22px 120px" }}>
@@ -103,7 +113,7 @@ export default function CategoriesPage() {
           }}
         >
           <p className="eyebrow" style={{ color: "var(--gold)", letterSpacing: "3px" }}>
-            CURATED DEPARTMENTS
+            RA2Z DEPARTMENTS
           </p>
           <h1
             style={{
@@ -156,7 +166,7 @@ export default function CategoriesPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={c.image}
-                alt={c.name}
+                alt={`${c.name} - RA2Z Luxury Curation`}
                 className="category-card-image"
                 style={{
                   position: "absolute",

@@ -5,33 +5,33 @@ import { SectionReveal } from "@/components/section-reveal";
 const TRUST_ITEMS = [
   {
     icon: "🛡️",
-    title: "Secure Payments",
-    description: "Encrypted Stripe & credit card processing with 256-bit protection.",
+    title: "Secure Checkout",
+    description: "Encrypted 256-bit SSL protection on all transactions.",
   },
   {
-    icon: "🔒",
-    title: "SSL Protected Checkout",
-    description: "Bank-grade SSL encryption for absolute security on every order.",
-  },
-  {
-    icon: "💬",
-    title: "Fast Customer Support",
-    description: "Dedicated client concierge available to assist with all inquiries.",
-  },
-  {
-    icon: "✨",
-    title: "Premium Quality Products",
-    description: "Hand-inspected creations engineered for timeless luxury standards.",
+    icon: "💎",
+    title: "Verified Products",
+    description: "100% verified luxury products and exclusive RA2Z Originals.",
   },
   {
     icon: "📦",
-    title: "Easy Order Tracking",
-    description: "Real-time dispatch alerts and milestone tracking portal.",
+    title: "Fast Global Shipping",
+    description: "Direct dispatch with real-time tracking updates.",
   },
   {
-    icon: "👑",
-    title: "Curated Collections",
-    description: "100% verified luxury products and exclusive RA2Z Originals.",
+    icon: "🔒",
+    title: "Encrypted Payments",
+    description: "Bank-grade encrypted Stripe & card processing.",
+  },
+  {
+    icon: "↩️",
+    title: "Money Back Guarantee",
+    description: "Hassle-free returns and quality satisfaction policy.",
+  },
+  {
+    icon: "💬",
+    title: "Premium Client Support",
+    description: "Dedicated client concierge available for all inquiries.",
   },
 ];
 

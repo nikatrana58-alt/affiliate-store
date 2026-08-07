@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { CustomerDashboard } from "@/components/customer-dashboard";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { constructMetadata } from "@/lib/seo";
 import "@/app/checkout.css";
 
-export const metadata: Metadata = {
-  title: "Customer Account Dashboard | RA2Z Luxury",
+export const metadata: Metadata = constructMetadata({
+  title: "Customer Account Dashboard",
   description: "Manage your profile, order history, active shipments, saved addresses, wishlist, and settings.",
-};
+  path: "/account",
+  noIndex: true,
+});
 
 export default function AccountPage() {
   return (

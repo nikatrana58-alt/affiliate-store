@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/add-to-cart-button";
-import { ProductBadge } from "@/components/product-badge";
 import { ProductCard } from "@/components/product-card";
 import { StoreHeader } from "@/components/store-header";
 import { Footer } from "@/components/footer";
@@ -10,16 +9,16 @@ import { ProductReviewsSection } from "@/components/product-reviews-section";
 import { SmartRecommendations } from "@/components/smart-recommendations";
 import { StorefrontVariantSelector } from "@/components/storefront-variant-selector";
 import { ShippingEstimatorWidget } from "@/components/shipping-estimator-widget";
-import { ProductSchema } from "@/components/structured-data";
+import { ProductSchema, BreadcrumbSchema } from "@/components/structured-data";
 import { getProductBySlug, getProducts, type Product } from "@/lib/products";
-
 import { ProductTabs } from "@/components/product-tabs";
+import { constructMetadata } from "@/lib/seo";
+import { sanitizeProductDescription } from "@/lib/utils/product-formatter";
 
 export const dynamic = "force-dynamic";
 
 function formatPrice(price: number | null) {
   if (price === null) return "Check current price";
-
   return new Intl.NumberFormat("en-US", {
     currency: "USD",
     style: "currency",
@@ -35,30 +34,21 @@ export async function generateMetadata({
   const product = await getProductBySlug(slug);
 
   if (!product) {
-    return {
+    return constructMetadata({
       title: "Product Not Found",
-    };
+      noIndex: true,
+    });
   }
 
-  const title = `${product.title} | Affiliate Store`;
-  const description = product.description || `Buy ${product.title} at the best price.`;
+  const cleanDescription = sanitizeProductDescription(product.description);
 
-  return {
-    description,
-    openGraph: {
-      description,
-      images: product.image ? [{ url: product.image }] : [],
-      title,
-      type: "website",
-    },
-    title,
-    twitter: {
-      card: "summary_large_image",
-      description,
-      images: product.image ? [product.image] : [],
-      title,
-    },
-  };
+  return constructMetadata({
+    title: product.title,
+    description: cleanDescription.slice(0, 160),
+    image: product.image,
+    path: `/products/${product.slug}`,
+    type: "website",
+  });
 }
 
 export default async function ProductPage({
@@ -95,9 +85,16 @@ export default async function ProductPage({
 
   if (!product) notFound();
 
+  const breadcrumbs = [
+    { name: "Home", url: "https://ra2z.shop" },
+    { name: product.category || "Catalog", url: "https://ra2z.shop/categories" },
+    { name: product.title, url: `https://ra2z.shop/products/${product.slug}` },
+  ];
+
   return (
     <>
       <ProductSchema product={product} />
+      <BreadcrumbSchema items={breadcrumbs} />
       <StoreHeader />
       <main className="product-landing-page">
         <div className="product-hero-section animate-fade-slide-up">
@@ -106,7 +103,7 @@ export default async function ProductPage({
         </div>
 
         <section className="benefits-section">
-          <div className="section-container animate-fade-slide-up" style={{animationDelay: "0.15s"}}>
+          <div className="section-container animate-fade-slide-up" style={{ animationDelay: "0.15s" }}>
             <p className="eyebrow">Why you&apos;ll love it</p>
             <h2>Product Benefits</h2>
             <div className="benefits-grid stagger-children">
@@ -136,7 +133,7 @@ export default async function ProductPage({
 
         {relatedProducts.length > 0 && (
           <section className="related-products-section" aria-label="You may also like">
-            <div className="section-container animate-fade-slide-up" style={{animationDelay: "0.2s"}}>
+            <div className="section-container animate-fade-slide-up" style={{ animationDelay: "0.2s" }}>
               <div className="section-heading">
                 <div>
                   <p className="eyebrow">Discover more</p>

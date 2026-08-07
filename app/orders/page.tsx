@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { CustomerOrderLookup } from "@/components/customer-order-lookup";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { constructMetadata } from "@/lib/seo";
 import "@/app/checkout.css";
 
-export const metadata: Metadata = {
-  title: "Track Your Order | RA2Z Luxury",
-  description: "Track your shipment, view order status, and check delivery timelines for RA2Z creations.",
-};
+export const metadata: Metadata = constructMetadata({
+  title: "Track Your Order",
+  description:
+    "Track your shipment, view real-time delivery status, carrier updates, and order details for RA2Z creations.",
+  path: "/orders",
+});
 
 export default function TrackOrderPage() {
   return (

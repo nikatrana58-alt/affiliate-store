@@ -7,7 +7,7 @@ import { MagneticButton } from "@/components/magnetic-button";
 const BRAND_PILLARS = [
   {
     icon: "💎",
-    title: "Carefully Curated Curation",
+    title: "Carefully Curated Selection",
     description: "Every item in our luxury line is hand-selected and verified to meet strict standards of quality and design.",
   },
   {

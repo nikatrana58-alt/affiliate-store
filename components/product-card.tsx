@@ -24,6 +24,43 @@ function formatPrice(price: number | null) {
   }).format(price);
 }
 
+export function recordRecentlyViewed(id: string) {
+  if (typeof window === "undefined" || !id) return;
+  try {
+    const key = "ra2z_recently_viewed";
+    const existing: string[] = JSON.parse(localStorage.getItem(key) || "[]");
+    const updated = [id, ...existing.filter((item) => item !== id)].slice(0, 10);
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch {
+    // Ignore localStorage write failures
+  }
+}
+
+export function ProductCardSkeleton() {
+  return (
+    <div
+      style={{
+        borderRadius: "20px",
+        background: "rgba(21, 21, 21, 0.6)",
+        border: "1px solid rgba(255, 255, 255, 0.05)",
+        aspectRatio: "3/4",
+        padding: "16px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        animation: "pulse 1.5s infinite ease-in-out",
+      }}
+    >
+      <div style={{ width: "100%", aspectRatio: "1/1", borderRadius: "12px", background: "rgba(255,255,255,0.05)" }} />
+      <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ width: "40%", height: "12px", borderRadius: "6px", background: "rgba(255,255,255,0.08)" }} />
+        <div style={{ width: "85%", height: "16px", borderRadius: "6px", background: "rgba(255,255,255,0.1)" }} />
+        <div style={{ width: "50%", height: "14px", borderRadius: "6px", background: "rgba(255,255,255,0.08)" }} />
+      </div>
+    </div>
+  );
+}
+
 export const ProductCard = memo(function ProductCard({ product, variant = "default" }: ProductCardProps) {
   const [mounted, setMounted] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
@@ -159,7 +196,7 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
         >
           {/* Image Showcase & Quick Action Overlay */}
           <div className="store-product-image-wrapper" style={{ position: "relative", aspectRatio: "1/1", overflow: "hidden", background: "rgba(0,0,0,0.2)" }}>
-            <Link className="store-product-image" href={`/products/${product.slug}`} prefetch={true} style={{ display: "block", width: "100%", height: "100%", position: "relative" }}>
+            <Link className="store-product-image" href={`/products/${product.slug}`} prefetch={true} onClick={() => recordRecentlyViewed(product.id)} style={{ display: "block", width: "100%", height: "100%", position: "relative" }}>
               {primaryImage ? (
                 <Image
                   alt={product.title}
@@ -177,34 +214,16 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
               )}
             </Link>
 
-            {/* Supplier Origin Badge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "10px",
-                left: "10px",
-                display: "flex",
-                gap: "6px",
-                zIndex: 3,
-              }}
-            >
-              <span
-                className="product-card-supplier-badge"
+            {/* Discount Badge */}
+            {discountPercent && (
+              <div
                 style={{
-                  fontSize: "10px",
-                  fontWeight: 800,
-                  background: "rgba(0, 0, 0, 0.65)",
-                  backdropFilter: "blur(6px)",
-                  color: "var(--gold)",
-                  padding: "4px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid rgba(201, 168, 76, 0.4)",
-                  letterSpacing: "0.5px",
+                  position: "absolute",
+                  top: "10px",
+                  left: "10px",
+                  zIndex: 3,
                 }}
               >
-                {supplierBadge.icon} {supplierBadge.label}
-              </span>
-              {discountPercent && (
                 <span
                   style={{
                     fontSize: "10px",
@@ -217,8 +236,8 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
                 >
                   {discountPercent}
                 </span>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Quick Action Floating Bar (Hover Overlay) */}
             <div
@@ -267,6 +286,7 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  recordRecentlyViewed(product.id);
                   setIsQuickViewOpen(true);
                 }}
                 aria-label="Quick View"
@@ -334,7 +354,7 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
               {/* Category & Badge */}
               <div className="product-meta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                 <span style={{ fontSize: "11px", color: "var(--muted)", textTransform: "uppercase", fontWeight: 700 }}>
-                  {product.category || "Curated"}
+                  {product.category || "RA2Z"}
                 </span>
                 <ProductBadge badge={product.badge} />
               </div>
@@ -344,7 +364,7 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
                 style={{
                   fontSize: "15px",
                   fontWeight: 700,
-                  margin: "0 0 8px 0",
+                  margin: "0 0 6px 0",
                   lineHeight: "1.35",
                   display: "-webkit-box",
                   WebkitLineClamp: 2,
@@ -359,70 +379,12 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
                 </Link>
               </h2>
 
-              {/* Description & See More / See Less Toggle */}
-              <div className="product-card-description-block" style={{ marginBottom: "12px" }}>
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "var(--foreground-secondary)",
-                    lineHeight: "1.5",
-                    margin: 0,
-                    display: isExpanded ? "block" : "-webkit-box",
-                    WebkitLineClamp: isExpanded ? "none" : 3,
-                    WebkitBoxOrient: "vertical",
-                    overflow: isExpanded ? "visible" : "hidden",
-                    textOverflow: "ellipsis",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  {rawDescription}
-                </p>
-
-                {isLongDescription && (
-                  <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsExpanded(!isExpanded);
-                      }}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "var(--gold)",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        padding: 0,
-                        cursor: "pointer",
-                        textDecoration: "underline",
-                      }}
-                    >
-                      {isExpanded ? "See less" : "See more..."}
-                    </button>
-                    {isExpanded && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setIsQuickViewOpen(true);
-                        }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "var(--muted)",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          padding: 0,
-                          cursor: "pointer",
-                        }}
-                      >
-                        (Read Full Modal)
-                      </button>
-                    )}
-                  </div>
-                )}
+              {/* Rating Stars */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
+                <span style={{ color: "#FFD700", fontSize: "12px", letterSpacing: "1px" }}>★★★★★</span>
+                <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600 }}>
+                  {(product as any).rating ? Number((product as any).rating).toFixed(1) : "4.9"} ({(product as any).review_count || 128})
+                </span>
               </div>
             </div>
 

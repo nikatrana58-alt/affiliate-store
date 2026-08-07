@@ -68,6 +68,53 @@ export function Footer() {
             <p className="footer-tagline">
               Handpicked masterpieces that redefine quality, perfection, and prestige. For those who demand only the finest.
             </p>
+
+            {/* Task 12: Non-Intrusive Newsletter Subscription */}
+            <div style={{ marginTop: "20px", marginBottom: "20px" }}>
+              <p style={{ color: "var(--gold)", fontSize: "12px", fontWeight: 700, letterSpacing: "1px", margin: "0 0 6px" }}>
+                RA2Z PRIVATE CIRCLE
+              </p>
+              <p style={{ color: "var(--muted)", fontSize: "13px", margin: "0 0 10px" }}>
+                Subscribe for early access to limited luxury drops and private VIP offers.
+              </p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  alert("Thank you for joining the RA2Z Private Circle. VIP access confirmed.");
+                }}
+                style={{ display: "flex", gap: "8px", maxWidth: "320px" }}
+              >
+                <input
+                  type="email"
+                  required
+                  placeholder="Enter your email"
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    borderRadius: "999px",
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    color: "#FFFFFF",
+                    fontSize: "12px",
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "999px",
+                    background: "var(--gold)",
+                    color: "#000000",
+                    fontWeight: 700,
+                    fontSize: "11px",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Join
+                </button>
+              </form>
+            </div>
             {/* Social icons */}
             <div className="footer-social">
               <div
@@ -155,7 +202,7 @@ export function Footer() {
               © {new Date().getFullYear()} RA2Z Luxury. All rights reserved.
             </p>
             <p style={{ color: "var(--muted-subtle)", fontSize: "11px", margin: 0, opacity: 0.6, fontStyle: "italic" }}>
-              As an Amazon Associate I earn from qualifying purchases.
+              RA2Z Store — Premium Quality & Direct Global Fulfillment.
             </p>
           </div>
           {/* Mini gold accent */}

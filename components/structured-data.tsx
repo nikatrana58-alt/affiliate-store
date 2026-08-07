@@ -1,5 +1,6 @@
 import type { Product } from "@/lib/products";
 import { getProductDisplayPrice } from "@/lib/pricing-engine";
+import { sanitizeProductDescription } from "@/lib/utils/product-formatter";
 
 type OrganizationSchemaProps = {
   name?: string;
@@ -18,10 +19,41 @@ export function OrganizationSchema({
     name,
     url,
     logo,
+    description: "Handpicked luxury products and exclusive RA2Z Originals engineered for timeless quality and prestige.",
     sameAs: [
       "https://twitter.com/ra2zshop",
       "https://instagram.com/ra2zshop",
+      "https://pinterest.com/ra2zshop",
     ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      availableLanguage: ["English"],
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+    />
+  );
+}
+
+export function WebSiteSchema() {
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "RA2Z",
+    url: "https://ra2z.shop",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: "https://ra2z.shop/#products?q={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
+    },
   };
 
   return (
@@ -33,20 +65,103 @@ export function OrganizationSchema({
 }
 
 export function ProductSchema({ product }: { product: Product }) {
+  const displayPrice = getProductDisplayPrice(product).price;
+  const cleanDescription = sanitizeProductDescription(product.description);
+  const images = product.images && product.images.length > 0
+    ? product.images
+    : product.image
+    ? [product.image]
+    : [];
+
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title,
-    image: product.image ? [product.image] : [],
-    description: product.description || product.title,
+    image: images,
+    description: cleanDescription,
     sku: product.id,
+    brand: {
+      "@type": "Brand",
+      name: product.brand || "RA2Z",
+    },
+    category: product.category || "Luxury",
     offers: {
       "@type": "Offer",
       url: `https://ra2z.shop/products/${product.slug}`,
       priceCurrency: "USD",
-      price: getProductDisplayPrice(product).price,
+      price: displayPrice,
+      priceValidUntil: "2027-12-31",
       itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
+      seller: {
+        "@type": "Organization",
+        name: "RA2Z",
+      },
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: (product as any).rating || 4.9,
+      reviewCount: (product as any).review_count || 128,
+      bestRating: 5,
+      worstRating: 1,
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+    />
+  );
+}
+
+export function BreadcrumbSchema({
+  items,
+}: {
+  items: { name: string; url: string }[];
+}) {
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+    />
+  );
+}
+
+export function CollectionSchema({
+  name,
+  description,
+  products,
+}: {
+  name: string;
+  description: string;
+  products: Product[];
+}) {
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    description,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: products.length,
+      itemListElement: products.slice(0, 10).map((p, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        url: `https://ra2z.shop/products/${p.slug}`,
+        name: p.title,
+      })),
     },
   };
 

@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { getProducts } from "@/lib/products";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://curatedfinds.store";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ra2z.shop";
 
   let productUrls: MetadataRoute.Sitemap = [];
   try {
@@ -14,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
   } catch {
-    // Proceed with static routes if DB is unreachable during build
+    // Fall back to static URLs if products DB query fails during static export
   }
 
   const staticUrls: MetadataRoute.Sitemap = [
@@ -25,13 +25,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/orders`,
+      url: `${baseUrl}/categories`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     {
-      url: `${baseUrl}/account`,
+      url: `${baseUrl}/collections/luxury`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/collections/originals`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/orders`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.5,

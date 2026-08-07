@@ -5,6 +5,7 @@ import { PageTransition } from "@/components/page-transition";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/components/auth-context";
 import { AuthModal } from "@/components/auth-modal";
+import { constructMetadata } from "@/lib/seo";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -25,22 +26,7 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "RA2Z | Redefining Modern Luxury & Prestige",
-    template: "%s | RA2Z",
-  },
-  description: "Exquisite luxury curation. Redefining modern quality, luxury, and prestige.",
-  icons: {
-    icon: [
-      { url: "/favicon.ico" },
-      { url: "/icon.png", type: "image/png" },
-    ],
-    apple: [
-      { url: "/apple-touch-icon.png" },
-    ],
-  },
-};
+export const metadata: Metadata = constructMetadata();
 
 export default function RootLayout({
   children,
@@ -49,6 +35,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${playfair.variable} ${jakarta.variable} ${inter.variable}`} style={{ backgroundColor: "#0A0A0A" }}>
+      <head>
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <meta name="theme-color" content="#0A0A0A" />
+      </head>
       <body style={{ backgroundColor: "#0A0A0A", color: "#FFFFFF", margin: 0, padding: 0 }}>
         <AuthProvider>
           <CartProvider>

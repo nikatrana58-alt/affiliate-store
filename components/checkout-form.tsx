@@ -746,12 +746,19 @@ export function CheckoutForm() {
             <span className="co-summary-total-value">{formatPrice(grandTotal)}</span>
           </div>
 
-          {/* Security badge */}
-          <div className="co-security-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" aria-hidden="true">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            <span>Secure, encrypted checkout</span>
+          {/* Task 10: Checkout Confidence Badges */}
+          <div className="co-security-badge" style={{ flexDirection: "column", gap: "8px", alignItems: "flex-start", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--gold)", fontSize: "12px", fontWeight: 600 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span>Bank-Grade 256-Bit SSL Encrypted Checkout</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--muted)", fontSize: "11px" }}>
+              <span>📦 Direct Global Fulfillment</span>
+              <span>•</span>
+              <span>🛡️ 30-Day Money Back Guarantee</span>
+            </div>
           </div>
         </div>
       </aside>

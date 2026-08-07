@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Product } from "@/lib/products";
+import { formatProductDetails } from "@/lib/utils/product-formatter";
 
 type ProductTabsProps = {
   product: Product;
@@ -9,6 +10,10 @@ type ProductTabsProps = {
 
 export function ProductTabs({ product }: ProductTabsProps) {
   const [activeTab, setActiveTab] = useState<"description" | "specs" | "shipping" | "faqs">("description");
+
+  const details = useMemo(() => {
+    return formatProductDetails(product.description, product.category);
+  }, [product.description, product.category]);
 
   const faqs = [
     {
@@ -52,7 +57,7 @@ export function ProductTabs({ product }: ProductTabsProps) {
         }}
       >
         {[
-          { id: "description", label: "Description & Craft" },
+          { id: "description", label: "Description & Overview" },
           { id: "specs", label: "Specifications" },
           { id: "shipping", label: "Shipping & Delivery" },
           { id: "faqs", label: "FAQs" },
@@ -82,18 +87,52 @@ export function ProductTabs({ product }: ProductTabsProps) {
       {/* Tab Content */}
       <div>
         {activeTab === "description" && (
-          <div style={{ color: "var(--foreground-secondary)", fontSize: "15px", lineHeight: "1.7" }}>
-            <h3 style={{ color: "#FFFFFF", fontSize: "18px", fontWeight: 700, marginBottom: "12px" }}>
-              About {product.title}
-            </h3>
-            <p>{product.description || "Designed with meticulous attention to detail and premium luxury materials."}</p>
+          <div style={{ color: "var(--foreground-secondary)", fontSize: "15px", lineHeight: "1.7", display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Overview */}
+            <div>
+              <h3 style={{ color: "#FFFFFF", fontSize: "18px", fontWeight: 700, marginBottom: "8px" }}>
+                Overview
+              </h3>
+              <p style={{ margin: 0 }}>{details.overview}</p>
+            </div>
+
+            {/* Key Features */}
+            <div>
+              <h3 style={{ color: "#FFFFFF", fontSize: "16px", fontWeight: 700, marginBottom: "10px" }}>
+                Key Features
+              </h3>
+              <ul style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                {details.keyFeatures.map((feat, idx) => (
+                  <li key={idx} style={{ color: "var(--foreground)" }}>{feat}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Material & Specifications Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginTop: "8px" }}>
+              <div style={{ padding: "16px", borderRadius: "14px", backgroundColor: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <h4 style={{ color: "var(--gold)", fontSize: "13px", fontWeight: 700, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Material & Build</h4>
+                <p style={{ color: "#FFFFFF", fontSize: "14px", margin: 0, fontWeight: 600 }}>{details.material}</p>
+              </div>
+
+              <div style={{ padding: "16px", borderRadius: "14px", backgroundColor: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <h4 style={{ color: "var(--gold)", fontSize: "13px", fontWeight: 700, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Available Sizes</h4>
+                <p style={{ color: "#FFFFFF", fontSize: "14px", margin: 0, fontWeight: 600 }}>{details.availableSizes}</p>
+              </div>
+            </div>
+
+            {/* Care Instructions */}
+            <div style={{ padding: "16px", borderRadius: "14px", backgroundColor: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+              <h4 style={{ color: "#FFFFFF", fontSize: "15px", fontWeight: 700, margin: "0 0 6px" }}>Care Instructions</h4>
+              <p style={{ color: "var(--muted)", fontSize: "14px", margin: 0 }}>{details.careInstructions}</p>
+            </div>
           </div>
         )}
 
         {activeTab === "specs" && (
           <div style={{ color: "var(--foreground-secondary)", fontSize: "14px" }}>
             <h3 style={{ color: "#FFFFFF", fontSize: "18px", fontWeight: 700, marginBottom: "16px" }}>
-              Technical Specifications
+              Product Specifications
             </h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px" }}>
               <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
@@ -105,28 +144,37 @@ export function ProductTabs({ product }: ProductTabsProps) {
                 <strong style={{ color: "#FFFFFF" }}>{product.weight || "Standard Luxury Weight"}</strong>
               </div>
               <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
-                <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>SKU</span>
-                <strong style={{ color: "#FFFFFF" }}>{product.sku || product.id.slice(0, 10).toUpperCase()}</strong>
+                <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Authenticity</span>
+                <strong style={{ color: "#FFFFFF" }}>Verified RA2Z Standard</strong>
               </div>
               <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
-                <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Badge</span>
-                <strong style={{ color: "var(--gold)" }}>{product.badge || "Luxury Curation"}</strong>
+                <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Collection</span>
+                <strong style={{ color: "var(--gold)" }}>{product.badge || "RA2Z Curation"}</strong>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === "shipping" && (
-          <div style={{ color: "var(--foreground-secondary)", fontSize: "14px", lineHeight: "1.7" }}>
-            <h3 style={{ color: "#FFFFFF", fontSize: "18px", fontWeight: 700, marginBottom: "12px" }}>
-              Shipping & Fulfillment Timeline
-            </h3>
-            <p>Orders are processed within 1-2 business days with rigorous quality control inspections prior to dispatch.</p>
-            <ul style={{ paddingLeft: "20px", marginTop: "12px", color: "var(--muted)" }}>
-              <li>Real-time tracking link dispatched via email</li>
-              <li>Signature options available on high-value orders</li>
-              <li>SSL Encrypted order management</li>
-            </ul>
+          <div style={{ color: "var(--foreground-secondary)", fontSize: "14px", lineHeight: "1.7", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div>
+              <h3 style={{ color: "#FFFFFF", fontSize: "18px", fontWeight: 700, marginBottom: "12px" }}>
+                Shipping & Fulfillment
+              </h3>
+              <p style={{ margin: 0 }}>{details.shipping}</p>
+              <ul style={{ paddingLeft: "20px", marginTop: "12px", color: "var(--muted)" }}>
+                <li>Real-time tracking link dispatched via email</li>
+                <li>Signature options available on high-value orders</li>
+                <li>SSL Encrypted order management</li>
+              </ul>
+            </div>
+
+            <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "16px" }}>
+              <h3 style={{ color: "#FFFFFF", fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
+                Returns & Exchange Guarantee
+              </h3>
+              <p style={{ margin: 0 }}>{details.returns}</p>
+            </div>
           </div>
         )}
 

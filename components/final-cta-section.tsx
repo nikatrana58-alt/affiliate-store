@@ -12,7 +12,7 @@ export function FinalCTASection() {
           Find your perfect product
         </h2>
         <p className="final-cta-text">
-          Browse our curated collection of premium products handpicked for quality, design, and lasting value.
+          Browse our RA2Z collection of premium products handpicked for quality, design, and lasting value.
         </p>
         <MagneticButton className="final-cta-button-wrapper">
           <Link className="final-cta-button" href="/#products">

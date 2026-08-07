@@ -3,19 +3,35 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CollectionGrid } from "@/components/collection-grid";
 import { getLuxuryProducts } from "@/lib/products";
+import { constructMetadata } from "@/lib/seo";
+import { CollectionSchema, BreadcrumbSchema } from "@/components/structured-data";
 
-export const metadata: Metadata = {
-  title: "Luxury Collection | RA2Z",
-  description: "Handpicked luxury products designed for people who appreciate premium quality and timeless elegance.",
-};
+export const metadata: Metadata = constructMetadata({
+  title: "RA2Z Luxury Collection",
+  description:
+    "Discover handpicked luxury products designed for people who appreciate premium quality, meticulous craftsmanship, and timeless elegance.",
+  path: "/collections/luxury",
+});
 
 export const dynamic = "force-dynamic";
 
 export default async function LuxuryCollectionPage() {
   const products = await getLuxuryProducts();
 
+  const breadcrumbs = [
+    { name: "Home", url: "https://ra2z.shop" },
+    { name: "Collections", url: "https://ra2z.shop/categories" },
+    { name: "Luxury Collection", url: "https://ra2z.shop/collections/luxury" },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0A0A] text-white">
+      <CollectionSchema
+        name="RA2Z Luxury Collection"
+        description="Handpicked luxury products designed for people who appreciate premium quality and timeless elegance."
+        products={products}
+      />
+      <BreadcrumbSchema items={breadcrumbs} />
       <Navbar />
 
       <main className="store-shell" style={{ padding: "40px 22px 120px" }}>

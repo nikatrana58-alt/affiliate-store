@@ -76,10 +76,10 @@ export function Navbar() {
       className={`navbar ${scrolled ? "navbar-scrolled" : ""} ${hidden ? "navbar-hidden" : ""}`}
     >
       <div className="navbar-inner">
-        {/* Top Row Container: Logo, Search Bar, Sign In / Profile Avatar, Cart */}
-        <div className="navbar-top-row">
+        {/* Desktop Navbar Layout (>= 768px) - 100% Original Desktop Design */}
+        <div className="navbar-desktop-layout">
           {/* Logo Symbol */}
-          <Link className="navbar-logo-symbol" href="/" aria-label="RA2Z Home">
+          <Link className="navbar-logo-symbol" href="/" aria-label="RA2Z Home" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
             <Image
               src="/logo-gold.png"
               alt="RA2Z Symbol"
@@ -90,12 +90,23 @@ export function Navbar() {
             />
           </Link>
 
-          {/* Search Bar */}
+          {/* Premium Glass Search Bar */}
           <form className="navbar-search" action="/#products" onSubmit={handleSearch} style={{ position: "relative" }}>
             <input
               aria-label="Search luxury products"
               name="q"
-              placeholder="Search collection…"
+              placeholder="Search luxury collection…"
+              onChange={(e) => {
+                const val = e.target.value;
+                if (window.location.pathname === "/") {
+                  window.dispatchEvent(
+                    new CustomEvent(productSearchEventName, { detail: val })
+                  );
+                }
+              }}
+              style={{
+                paddingLeft: "36px",
+              }}
             />
             <svg
               viewBox="0 0 24 24"
@@ -104,89 +115,31 @@ export function Navbar() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="navbar-search-icon"
+              style={{
+                position: "absolute",
+                left: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "15px",
+                height: "15px",
+                color: "var(--gold)",
+                opacity: 0.8,
+                pointerEvents: "none",
+              }}
             >
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </form>
 
-          {/* Mobile Actions Bar: Sign In / Profile Avatar + Cart */}
-          <div className="navbar-mobile-actions">
-            {role === "GUEST" ? (
-              <button
-                type="button"
-                className="mobile-auth-btn"
-                onClick={() => openAuthModal("signin")}
-              >
-                Sign In
-              </button>
-            ) : (
-              <div className="mobile-profile-container" ref={profileMenuRef}>
-                <button
-                  type="button"
-                  className="mobile-avatar-btn"
-                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  aria-label="Open Profile Menu"
-                >
-                  {user?.photoURL ? (
-                    <img src={user.photoURL} alt="Profile" className="mobile-avatar-img" />
-                  ) : (
-                    <span className="mobile-avatar-initial">
-                      {(user?.displayName || user?.email || "U")[0].toUpperCase()}
-                    </span>
-                  )}
-                </button>
+          {/* Desktop Nav Links */}
+          <nav className="navbar-links" aria-label="Store navigation">
+            <MagneticButton className="navbar-link-wrapper"><Link href="/" prefetch={true}>Home</Link></MagneticButton>
+            <MagneticButton className="navbar-link-wrapper"><Link href="/categories" prefetch={true}>Categories</Link></MagneticButton>
+            <MagneticButton className="navbar-link-wrapper"><Link href="/collections/luxury" prefetch={true}>Luxury</Link></MagneticButton>
+            <MagneticButton className="navbar-link-wrapper"><Link href="/collections/originals" prefetch={true}>Originals</Link></MagneticButton>
+            <MagneticButton className="navbar-link-wrapper"><Link href="/orders" prefetch={true}>Track Order</Link></MagneticButton>
 
-                {/* Mobile Profile Dropdown Menu */}
-                {isProfileMenuOpen && (
-                  <div className="mobile-profile-dropdown">
-                    <div className="mobile-profile-dropdown-header">
-                      <strong>{user?.displayName || "Member"}</strong>
-                      <span>{user?.email}</span>
-                    </div>
-                    <hr className="mobile-profile-divider" />
-                    <Link href="/account" onClick={() => setIsProfileMenuOpen(false)}>My Account</Link>
-                    <Link href="/account?tab=orders" onClick={() => setIsProfileMenuOpen(false)}>My Orders</Link>
-                    <Link href="/account?tab=wishlist" onClick={() => setIsProfileMenuOpen(false)}>Wishlist</Link>
-                    <Link href="/account?tab=addresses" onClick={() => setIsProfileMenuOpen(false)}>Saved Addresses</Link>
-                    <Link href="/account?tab=notifications" onClick={() => setIsProfileMenuOpen(false)}>Notifications</Link>
-                    <Link href="/account?tab=settings" onClick={() => setIsProfileMenuOpen(false)}>Settings</Link>
-                    {role === "ADMIN" && (
-                      <Link href="/admin" onClick={() => setIsProfileMenuOpen(false)} style={{ color: "var(--gold)" }}>Admin Dashboard</Link>
-                    )}
-                    <hr className="mobile-profile-divider" />
-                    <button
-                      type="button"
-                      className="mobile-profile-logout"
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        signOut();
-                      }}
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="mobile-cart-wrapper">
-              <CartButton />
-            </div>
-          </div>
-        </div>
-
-        {/* Content Navigation Links */}
-        <nav className="navbar-links" aria-label="Store navigation">
-          <MagneticButton className="navbar-link-wrapper"><Link href="/" prefetch={true}>Home</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/categories" prefetch={true}>Categories</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/collections/luxury" prefetch={true}>Luxury</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/collections/originals" prefetch={true}>Originals</Link></MagneticButton>
-          <MagneticButton className="navbar-link-wrapper"><Link href="/orders" prefetch={true}>Track Order</Link></MagneticButton>
-
-          {/* Desktop Only Auth & Admin Links */}
-          <div className="desktop-auth-links">
             {role === "GUEST" ? (
               <MagneticButton className="navbar-link-wrapper">
                 <button
@@ -233,8 +186,123 @@ export function Navbar() {
             )}
 
             <CartButton />
+          </nav>
+        </div>
+
+        {/* Mobile Navbar Layout (< 768px) - Approved Mobile Experience */}
+        <div className="navbar-mobile-layout">
+          <div className="navbar-top-row">
+            <Link className="navbar-logo-symbol" href="/" aria-label="RA2Z Home">
+              <Image
+                src="/logo-gold.png"
+                alt="RA2Z Symbol"
+                width={34}
+                height={44}
+                style={{ objectFit: "contain" }}
+                priority
+              />
+            </Link>
+
+            <form className="navbar-search" action="/#products" onSubmit={handleSearch} style={{ position: "relative" }}>
+              <input
+                aria-label="Search luxury products"
+                name="q"
+                placeholder="Search collection…"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (window.location.pathname === "/") {
+                    window.dispatchEvent(
+                      new CustomEvent(productSearchEventName, { detail: val })
+                    );
+                  }
+                }}
+              />
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="navbar-search-icon"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </form>
+
+            <div className="navbar-mobile-actions">
+              {role === "GUEST" ? (
+                <button
+                  type="button"
+                  className="mobile-auth-btn"
+                  onClick={() => openAuthModal("signin")}
+                >
+                  Sign In
+                </button>
+              ) : (
+                <div className="mobile-profile-container" ref={profileMenuRef}>
+                  <button
+                    type="button"
+                    className="mobile-avatar-btn"
+                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                    aria-label="Open Profile Menu"
+                  >
+                    {user?.photoURL ? (
+                      <img src={user.photoURL} alt="Profile" className="mobile-avatar-img" />
+                    ) : (
+                      <span className="mobile-avatar-initial">
+                        {(user?.displayName || user?.email || "U")[0].toUpperCase()}
+                      </span>
+                    )}
+                  </button>
+
+                  {isProfileMenuOpen && (
+                    <div className="mobile-profile-dropdown">
+                      <div className="mobile-profile-dropdown-header">
+                        <strong>{user?.displayName || "Member"}</strong>
+                        <span>{user?.email}</span>
+                      </div>
+                      <hr className="mobile-profile-divider" />
+                      <Link href="/account" onClick={() => setIsProfileMenuOpen(false)}>My Account</Link>
+                      <Link href="/account?tab=orders" onClick={() => setIsProfileMenuOpen(false)}>My Orders</Link>
+                      <Link href="/account?tab=wishlist" onClick={() => setIsProfileMenuOpen(false)}>Wishlist</Link>
+                      <Link href="/account?tab=addresses" onClick={() => setIsProfileMenuOpen(false)}>Saved Addresses</Link>
+                      <Link href="/account?tab=notifications" onClick={() => setIsProfileMenuOpen(false)}>Notifications</Link>
+                      <Link href="/account?tab=settings" onClick={() => setIsProfileMenuOpen(false)}>Settings</Link>
+                      {role === "ADMIN" && (
+                        <Link href="/admin" onClick={() => setIsProfileMenuOpen(false)} style={{ color: "var(--gold)" }}>Admin Dashboard</Link>
+                      )}
+                      <hr className="mobile-profile-divider" />
+                      <button
+                        type="button"
+                        className="mobile-profile-logout"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          signOut();
+                        }}
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mobile-cart-wrapper">
+                <CartButton />
+              </div>
+            </div>
           </div>
-        </nav>
+
+          <nav className="navbar-links" aria-label="Store navigation">
+            <MagneticButton className="navbar-link-wrapper"><Link href="/" prefetch={true}>Home</Link></MagneticButton>
+            <MagneticButton className="navbar-link-wrapper"><Link href="/categories" prefetch={true}>Categories</Link></MagneticButton>
+            <MagneticButton className="navbar-link-wrapper"><Link href="/collections/luxury" prefetch={true}>Luxury</Link></MagneticButton>
+            <MagneticButton className="navbar-link-wrapper"><Link href="/collections/originals" prefetch={true}>Originals</Link></MagneticButton>
+            <MagneticButton className="navbar-link-wrapper"><Link href="/orders" prefetch={true}>Track Order</Link></MagneticButton>
+          </nav>
+        </div>
       </div>
     </header>
   );

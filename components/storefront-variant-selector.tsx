@@ -5,8 +5,8 @@ import type { Product, ProductVariantItem } from "@/lib/products";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { getVariantFinalPrice, getProductDisplayPrice } from "@/lib/pricing-engine";
 import { MagneticButton } from "@/components/magnetic-button";
-
 import { PremiumProductGallery } from "@/components/premium-product-gallery";
+import { sanitizeProductDescription } from "@/lib/utils/product-formatter";
 
 type StorefrontVariantSelectorProps = {
   product: Product;
@@ -270,13 +270,12 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "10px 14px", margin: "14px 0 20px", fontSize: "12px", color: "var(--muted)" }}>
               <span>Selected Variant: </span>
               <strong style={{ color: "var(--gold)" }}>{selectedVariant.name}</strong>
-              {selectedVariant.sku && <span style={{ marginLeft: "12px" }}>SKU: <code>{selectedVariant.sku}</code></span>}
               <span style={{ marginLeft: "12px" }}>Stock: <strong>{selectedVariant.stock} units</strong></span>
             </div>
           )}
 
           <p className="product-description">
-            {product.description || "High-quality product recommended by our experts. Perfect for your home or as a thoughtful gift."}
+            {sanitizeProductDescription(product.description)}
           </p>
 
           {/* Factual Dynamic Shipping Information Block */}
@@ -297,7 +296,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             <div>
               <div style={{ color: "var(--muted)", fontSize: "11px", fontWeight: 600 }}>Ships From</div>
               <div style={{ color: "var(--foreground)", fontWeight: 700, marginTop: "2px" }}>
-                {product.cj_product_id ? "Supplier Direct Warehouse" : "Store Warehouse"}
+                RA2Z Fulfillment Center
               </div>
             </div>
 
