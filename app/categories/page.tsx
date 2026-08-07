@@ -136,6 +136,7 @@ export default function CategoriesPage() {
               key={c.id}
               href={c.href}
               prefetch={true}
+              className="category-card-item"
               style={{
                 position: "relative",
                 height: "260px",
@@ -156,6 +157,7 @@ export default function CategoriesPage() {
               <img
                 src={c.image}
                 alt={c.name}
+                className="category-card-image"
                 style={{
                   position: "absolute",
                   inset: 0,
@@ -179,6 +181,7 @@ export default function CategoriesPage() {
               {/* Badge if present */}
               {c.badge && (
                 <div
+                  className="category-card-badge"
                   style={{
                     position: "absolute",
                     top: "20px",
@@ -199,10 +202,11 @@ export default function CategoriesPage() {
               )}
 
               {/* Content */}
-              <div style={{ position: "relative", zIndex: 2 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "24px" }}>{c.icon}</span>
+              <div className="category-card-content" style={{ position: "relative", zIndex: 2 }}>
+                <div className="category-card-title-row" style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                  <span className="category-card-icon" style={{ fontSize: "24px" }}>{c.icon}</span>
                   <h2
+                    className="category-card-title"
                     style={{
                       color: "#FFFFFF",
                       fontFamily: "'Playfair Display', Georgia, serif",
@@ -214,9 +218,10 @@ export default function CategoriesPage() {
                     {c.name}
                   </h2>
                 </div>
-                <p style={{ color: "var(--muted)", fontSize: "13px", margin: 0, lineHeight: "1.5" }}>
+                <p className="category-card-subtitle" style={{ color: "var(--muted)", fontSize: "13px", margin: 0, lineHeight: "1.5" }}>
                   {c.subtitle}
                 </p>
+                <span className="category-card-arrow-mobile">Shop →</span>
               </div>
             </Link>
           ))}

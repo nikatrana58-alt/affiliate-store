@@ -97,12 +97,13 @@ export function HomepageSections({ products }: HomepageSectionsProps) {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: "18px" }}>
+          <div className="category-grid-container">
             {categories.map((c) => (
               <Link
                 key={c.name}
                 href={c.link}
                 prefetch={true}
+                className="category-card-item"
                 style={{
                   position: "relative",
                   height: "220px",
