@@ -130,13 +130,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Category Cards Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: "24px",
-          }}
-        >
+        <div className="category-grid-container">
           {CATEGORIES.map((c) => (
             <Link
               key={c.id}
