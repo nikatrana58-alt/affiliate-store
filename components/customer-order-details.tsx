@@ -288,7 +288,7 @@ export function CustomerOrderDetails({ order, history = [] }: Props) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={item.product_image}
-                    alt=""
+                    alt={item.product_title || "Product Image"}
                     style={{ width: "48px", height: "48px", borderRadius: "10px", objectFit: "cover" }}
                   />
                 ) : (

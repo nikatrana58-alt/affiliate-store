@@ -6,6 +6,7 @@ import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/components/auth-context";
 import { AuthModal } from "@/components/auth-modal";
 import { constructMetadata } from "@/lib/seo";
+import { OrganizationSchema, WebSiteSchema } from "@/components/structured-data";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -39,6 +40,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <meta name="theme-color" content="#0A0A0A" />
+        <OrganizationSchema />
+        <WebSiteSchema />
       </head>
       <body style={{ backgroundColor: "#0A0A0A", color: "#FFFFFF", margin: 0, padding: 0 }}>
         <AuthProvider>

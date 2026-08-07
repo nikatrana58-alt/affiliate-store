@@ -41,9 +41,9 @@ export function WhyRA2ZSection() {
           textAlign: "center",
         }}
       >
-        <div style={{ maxWidth: "760px", margin: "0 auto 48px" }}>
+        <div style={{ maxWidth: "800px", margin: "0 auto 48px" }}>
           <p className="eyebrow" style={{ color: "var(--gold)", letterSpacing: "3px" }}>
-            THE RA2Z STANDARD
+            THE BRAND STORY & PHILOSOPHY
           </p>
           <h2
             style={{
@@ -55,10 +55,10 @@ export function WhyRA2ZSection() {
               lineHeight: "1.15",
             }}
           >
-            Why Choose RA2Z?
+            Redefining Prestige & Modern Luxury
           </h2>
-          <p style={{ color: "var(--muted)", fontSize: "16px", lineHeight: "1.65", margin: 0 }}>
-            RA2Z is more than an online store. We are a curated luxury destination built for individuals who choose quality over quantity.
+          <p style={{ color: "var(--muted)", fontSize: "16px", lineHeight: "1.7", margin: 0 }}>
+            Founded on the principle that true luxury is defined by substance, precision craftsmanship, and quiet confidence, RA2Z brings together hand-inspected masterpieces for discerning clients worldwide.
           </p>
         </div>
 

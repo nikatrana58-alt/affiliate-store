@@ -531,7 +531,7 @@ export function CustomerDashboard() {
                   <div key={prod.id} style={{ border: "1px solid var(--glass-border)", borderRadius: "14px", padding: "12px", background: "rgba(255,255,255,0.02)" }}>
                     {prod.image && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={prod.image} alt="" style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "10px", marginBottom: "8px" }} />
+                      <img src={prod.image} alt={prod.title || "Recommended product"} style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "10px", marginBottom: "8px" }} />
                     )}
                     <div style={{ fontWeight: "600", fontSize: "13px" }}>{prod.title}</div>
                     <div style={{ color: "var(--gold)", fontSize: "14px", fontWeight: "700", margin: "4px 0 8px" }}>{formatPrice(prod.price ?? 0)}</div>
@@ -719,7 +719,7 @@ export function CustomerDashboard() {
                 <div key={item.id} style={{ border: "1px solid var(--glass-border)", borderRadius: "14px", padding: "14px", background: "rgba(255,255,255,0.02)", display: "grid", gap: "8px" }}>
                   {item.image && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.image} alt="" style={{ width: "100%", height: "160px", objectFit: "cover", borderRadius: "10px" }} />
+                    <img src={item.image} alt={item.title || "Wishlist product"} style={{ width: "100%", height: "160px", objectFit: "cover", borderRadius: "10px" }} />
                   )}
                   <div style={{ fontWeight: "600", fontSize: "14px" }}>{item.title}</div>
                   <div style={{ color: "var(--gold)", fontWeight: "700" }}>{formatPrice(item.price ?? 0)}</div>

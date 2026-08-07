@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 export const SITE_CONFIG = {
   name: "RA2Z",
   siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://ra2z.shop",
-  defaultTitle: "RA2Z | Redefining Modern Luxury & Prestige",
+  defaultTitle: "RA2Z – Premium Luxury Collection",
   titleTemplate: "%s | RA2Z",
   description:
-    "RA2Z Luxury Store — Handpicked masterpieces that redefine quality, perfection, and prestige. Explore fine timepieces, executive leather, luxury apparel, and RA2Z Originals.",
+    "RA2Z Luxury Collection — Handpicked masterpieces redefining modern luxury, fine apparel, executive accessories, and RA2Z Originals. Enjoy fast worldwide delivery & secure shopping.",
   logoUrl: "https://ra2z.shop/logo-gold.png",
   ogImage: "https://ra2z.shop/logo-gold.png",
   twitterHandle: "@ra2zshop",
@@ -90,11 +90,16 @@ export function constructMetadata({
         },
     icons: {
       icon: [
-        { url: "/favicon.ico" },
-        { url: "/icon.png", type: "image/png" },
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/icon.png", type: "image/png", sizes: "512x512" },
+        { url: "/logo-icon.png", type: "image/png", sizes: "512x512" },
       ],
-      apple: [{ url: "/apple-touch-icon.png" }],
+      apple: [
+        { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      ],
+      shortcut: ["/favicon.ico"],
     },
+    manifest: "/manifest.webmanifest",
     metadataBase: new URL(SITE_CONFIG.siteUrl),
   };
 }

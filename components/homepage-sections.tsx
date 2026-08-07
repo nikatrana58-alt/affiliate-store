@@ -27,15 +27,11 @@ export function HomepageSections({ products }: HomepageSectionsProps) {
   const featuredProducts = products.slice(0, 4);
 
   const categories = [
-    { name: "Fashion", icon: "👔", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80", link: "/categories" },
-    { name: "Luxury Collection", icon: "👑", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80", link: "/collections/luxury" },
-    { name: "RA2Z Originals", icon: "⚡", image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&auto=format&fit=crop&q=80", link: "/collections/originals" },
-    { name: "Electronics", icon: "💻", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80", link: "/categories" },
-    { name: "Home & Living", icon: "🏡", image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop&q=80", link: "/categories" },
-    { name: "Beauty", icon: "✨", image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&auto=format&fit=crop&q=80", link: "/categories" },
-    { name: "Fitness", icon: "🏋️", image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=80", link: "/categories" },
-    { name: "Accessories", icon: "💼", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=80", link: "/categories" },
-    { name: "Pets", icon: "🐾", image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&auto=format&fit=crop&q=80", link: "/categories" },
+    { name: "Executive Collection", icon: "💼", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=80", link: "/collections/luxury" },
+    { name: "Minimal Collection", icon: "✨", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80", link: "/collections/luxury" },
+    { name: "Travel Collection", icon: "🛫", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80", link: "/collections/luxury" },
+    { name: "Home Collection", icon: "🏡", image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop&q=80", link: "/collections/luxury" },
+    { name: "Elite Originals", icon: "⚡", image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&auto=format&fit=crop&q=80", link: "/collections/originals" },
   ];
 
   return (

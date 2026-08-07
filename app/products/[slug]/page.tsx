@@ -12,6 +12,7 @@ import { ShippingEstimatorWidget } from "@/components/shipping-estimator-widget"
 import { ProductSchema, BreadcrumbSchema } from "@/components/structured-data";
 import { getProductBySlug, getProducts, type Product } from "@/lib/products";
 import { ProductTabs } from "@/components/product-tabs";
+import { LuxuryPackagingSection } from "@/components/luxury-packaging-section";
 import { constructMetadata } from "@/lib/seo";
 import { sanitizeProductDescription } from "@/lib/utils/product-formatter";
 
@@ -100,6 +101,7 @@ export default async function ProductPage({
         <div className="product-hero-section animate-fade-slide-up">
           <StorefrontVariantSelector product={product} />
           <ProductTabs product={product} />
+          <LuxuryPackagingSection />
         </div>
 
         <section className="benefits-section">

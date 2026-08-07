@@ -62,18 +62,23 @@ export function sanitizeProductDescription(raw?: string | null): string {
     ""
   );
 
-  // 5. Remove CJ product codes, SKUs, internal supplier IDs
-  text = text.replace(/\b(CJ|CJJJ|CJBH|CJSX)[A-Z0-9_-]{5,}\b/gi, "");
+  // 5. Remove CJ & Printful product codes, SKUs, internal supplier IDs
+  text = text.replace(/\b(CJ|CJJJ|CJBH|CJSX|PF|PRINTFUL)[A-Z0-9_-]{4,}\b/gi, "");
   text = text.replace(/SKU\s*:\s*[A-Z0-9_-]+/gi, "");
   text = text.replace(/Product ID\s*:\s*[A-Z0-9_-]+/gi, "");
   text = text.replace(/Supplier Code\s*:\s*[A-Z0-9_-]+/gi, "");
+  text = text.replace(/CJ Direct/gi, "");
+  text = text.replace(/Printful Direct/gi, "");
 
-  // 6. Remove raw package list/content dumps & supplier headers
+  // 6. Remove raw package list/content dumps, machine notes & supplier headers
   text = text.replace(/Packing list\s*:[^\n]*/gi, "");
-  text = text.replace(/Package content\s*:[^\n]*/gi, "");
+  text = text.replace(/Package content(s)?\s*:[^\n]*/gi, "");
+  text = text.replace(/Attention\s*:[^\n]*/gi, "");
+  text = text.replace(/Notice\s*:[^\n]*/gi, "");
   text = text.replace(/Overview\s*:\s*/gi, "");
-  text = text.replace(/Specification\s*:\s*/gi, "");
+  text = text.replace(/Specification(s)?\s*:\s*/gi, "");
   text = text.replace(/Note\s*:\s*/gi, "");
+  text = text.replace(/\d+\s*[\*x]\s*[A-Za-z0-9\s]+/gi, "");
 
   // 7. Clean up multiple spaces, line breaks & orphan characters
   text = text

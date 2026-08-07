@@ -15,19 +15,16 @@ export function OrganizationSchema({
 }: OrganizationSchemaProps) {
   const schemaData = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": ["Organization", "OnlineStore"],
     name,
+    legalName: "RA2Z Luxury Store",
     url,
     logo,
-    description: "Handpicked luxury products and exclusive RA2Z Originals engineered for timeless quality and prestige.",
-    sameAs: [
-      "https://twitter.com/ra2zshop",
-      "https://instagram.com/ra2zshop",
-      "https://pinterest.com/ra2zshop",
-    ],
+    description: "RA2Z Luxury Collection — Handpicked masterpieces redefining modern luxury, fine apparel, executive accessories, and RA2Z Originals.",
+    sameAs: [],
     contactPoint: {
       "@type": "ContactPoint",
-      contactType: "customer service",
+      contactType: "customer concierge",
       availableLanguage: ["English"],
     },
   };
