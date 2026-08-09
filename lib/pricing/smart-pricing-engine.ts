@@ -189,9 +189,9 @@ export class SmartPricingEngine {
       const totalMargin = calculatedVariants.reduce((sum, v) => sum + v.marginPercent, 0);
       const avgMargin = parseFloat((totalMargin / calculatedVariants.length).toFixed(2));
 
-      const compAt = product.compare_at_price != null
+      const compAt = (product.compare_at_price != null && Number(product.compare_at_price) > minPrice)
         ? parseFloat(this.safeNum(product.compare_at_price, 0).toFixed(2))
-        : parseFloat((minPrice * 1.35).toFixed(2));
+        : null;
 
       return {
         displayPrice: minPrice,
@@ -229,9 +229,9 @@ export class SmartPricingEngine {
     }
 
     finalPrice = parseFloat(this.safeNum(finalPrice, 0).toFixed(2));
-    const compareAt = product.compare_at_price != null
+    const compareAt = (product.compare_at_price != null && Number(product.compare_at_price) > finalPrice)
       ? parseFloat(this.safeNum(product.compare_at_price, 0).toFixed(2))
-      : parseFloat((finalPrice * 1.35).toFixed(2));
+      : null;
     const calcProfit = parseFloat((finalPrice - cost).toFixed(2));
     const margin = finalPrice > 0 ? parseFloat(((calcProfit / finalPrice) * 100).toFixed(2)) : 0;
 

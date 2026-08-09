@@ -133,13 +133,6 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
   const primaryImage = product.image || (product.images && product.images[0]) || "";
   const secondaryImage = (product.images && product.images.length > 1) ? product.images[1] : primaryImage;
 
-  // Determine supplier origin badge
-  const supplierBadge = useMemo(() => {
-    if (product.printful_sync_id || product.supplier_type === "PRINTFUL") return { label: "PRINTFUL", icon: "🖨️" };
-    if (product.cj_product_id || product.supplier_type === "CJ") return { label: "CJ DROPSHIPPING", icon: "📦" };
-    return { label: "STORE DIRECT", icon: "🏢" };
-  }, [product]);
-
   // Check if description is long enough to warrant See More
   const rawDescription = product.description || "High quality product handpicked for quality and elegance.";
   const isLongDescription = rawDescription.length > 110;
@@ -379,13 +372,15 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
                 </Link>
               </h2>
 
-              {/* Rating Stars */}
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
-                <span style={{ color: "#FFD700", fontSize: "12px", letterSpacing: "1px" }}>★★★★★</span>
-                <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600 }}>
-                  {(product as any).rating ? Number((product as any).rating).toFixed(1) : "4.9"} ({(product as any).review_count || 128})
-                </span>
-              </div>
+              {/* Rating Stars (Only when verified rating data exists) */}
+              {(product as any).rating || (product as any).review_count ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
+                  <span style={{ color: "#FFD700", fontSize: "12px", letterSpacing: "1px" }}>★★★★★</span>
+                  <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600 }}>
+                    {Number((product as any).rating || 5).toFixed(1)} ({(product as any).review_count || 0})
+                  </span>
+                </div>
+              ) : null}
             </div>
 
             {/* Product Card Footer (Price & Action Buttons) */}

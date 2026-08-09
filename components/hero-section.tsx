@@ -100,21 +100,6 @@ export function HeroSection({ product }: HeroSectionProps) {
               </Link>
             </MagneticButton>
           </motion.div>
-
-          <motion.div className="hero-stats" variants={itemVariants}>
-            <div className="hero-stat">
-              <span className="hero-stat-number">100%</span>
-              <span className="hero-stat-label">Authentic Luxury</span>
-            </div>
-            <div className="hero-stat">
-              <span className="hero-stat-number">10K+</span>
-              <span className="hero-stat-label">Elite Clients</span>
-            </div>
-            <div className="hero-stat">
-              <span className="hero-stat-number">4.95★</span>
-              <span className="hero-stat-label">Excellence Rating</span>
-            </div>
-          </motion.div>
         </motion.div>
 
         <motion.div

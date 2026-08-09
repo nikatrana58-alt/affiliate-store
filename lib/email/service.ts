@@ -29,7 +29,7 @@ export type EmailDeliveryResult = {
  */
 export async function sendEmail(options: SendEmailOptions): Promise<EmailDeliveryResult> {
   const provider = (process.env.EMAIL_PROVIDER || "mock").toLowerCase();
-  const from = process.env.EMAIL_FROM || "Curated Finds <noreply@curatedfinds.store>";
+  const from = process.env.EMAIL_FROM || "RA2Z Luxury <noreply@ra2z.shop>";
   const supabase = createAdminSupabaseClient();
 
   // 1. Check Customer Preferences if enabled

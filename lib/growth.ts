@@ -280,7 +280,7 @@ export async function processAbandonedCartReminders(): Promise<{ countSent: numb
   let countSent = 0;
 
   for (const cart of pendingCarts) {
-    const recoveryUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://curatedfinds.store"}/checkout?recover=${cart.recovery_token}`;
+    const recoveryUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://ra2z.shop"}/checkout?recover=${cart.recovery_token}`;
 
     const bodyContentHtml = `
       <h2 style="margin: 0 0 8px; font-size: 22px; color: #FFFFFF;">You Left Something Special in Your Cart!</h2>
@@ -295,7 +295,7 @@ export async function processAbandonedCartReminders(): Promise<{ countSent: numb
     `;
 
     const html = renderBaseEmailTemplate({
-      title: "Complete Your Purchase - Curated Finds",
+      title: "Complete Your Purchase - RA2Z",
       preheader: "Items in your cart are waiting for you!",
       bodyContentHtml,
       customerEmail: cart.customer_email,

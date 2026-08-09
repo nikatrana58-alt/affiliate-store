@@ -7,23 +7,23 @@ import { MagneticButton } from "@/components/magnetic-button";
 const BRAND_PILLARS = [
   {
     icon: "💎",
-    title: "Carefully Curated Selection",
-    description: "Every item in our luxury line is hand-selected and verified to meet strict standards of quality and design.",
+    title: "Curated Selection",
+    description: "Handpicked items selected for quality, function, and modern design.",
   },
   {
     icon: "✨",
-    title: "Uncompromising Craftsmanship",
-    description: "Engineered using 450GSM French terry, aerospace titanium, Tuscan leather, and sapphire crystal.",
+    title: "Thoughtful Design",
+    description: "Crafted using selected materials for modern everyday style.",
   },
   {
     icon: "⚡",
-    title: "100% RA2Z Originals",
-    description: "In-house custom creations designed exclusively by RA2Z. Original designs unavailable anywhere else.",
+    title: "RA2Z Collections",
+    description: "Signature lines and curated catalog collections.",
   },
   {
     icon: "🛡️",
     title: "Seamless Client Experience",
-    description: "Encrypted 256-bit checkout, instant order tracking, and dedicated concierge customer support.",
+    description: "Encrypted checkout, real-time order tracking, and responsive support.",
   },
 ];
 
@@ -31,7 +31,7 @@ export function WhyRA2ZSection() {
   return (
     <SectionReveal>
       <section
-        aria-label="Why RA2Z Luxury"
+        aria-label="Why RA2Z"
         style={{
           borderRadius: "28px",
           padding: "64px 32px",
@@ -43,7 +43,7 @@ export function WhyRA2ZSection() {
       >
         <div style={{ maxWidth: "800px", margin: "0 auto 48px" }}>
           <p className="eyebrow" style={{ color: "var(--gold)", letterSpacing: "3px" }}>
-            THE BRAND STORY & PHILOSOPHY
+            BRAND PHILOSOPHY
           </p>
           <h2
             style={{
@@ -55,10 +55,10 @@ export function WhyRA2ZSection() {
               lineHeight: "1.15",
             }}
           >
-            Redefining Prestige & Modern Luxury
+            Design, Quality & Distinction
           </h2>
           <p style={{ color: "var(--muted)", fontSize: "16px", lineHeight: "1.7", margin: 0 }}>
-            Founded on the principle that true luxury is defined by substance, precision craftsmanship, and quiet confidence, RA2Z brings together hand-inspected masterpieces for discerning clients worldwide.
+            RA2Z is committed to modern design, quality materials, and a seamless client experience for discerning shoppers.
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export function WhyRA2ZSection() {
 
         <MagneticButton>
           <Link
-            href="/collections/luxury"
+            href="/categories"
             prefetch={true}
             style={{
               display: "inline-block",
@@ -109,7 +109,7 @@ export function WhyRA2ZSection() {
               boxShadow: "0 8px 30px rgba(212, 175, 55, 0.35)",
             }}
           >
-            Explore Luxury Curation →
+            Explore Catalog →
           </Link>
         </MagneticButton>
       </section>

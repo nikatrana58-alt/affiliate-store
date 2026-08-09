@@ -156,7 +156,7 @@ export function formatProductDetails(
     material,
     availableSizes: "Standard International Sizing (S, M, L, XL, XXL / One Size)",
     careInstructions: "Wipe clean with a soft dry cloth. Store in a cool, dry place away from direct sunlight.",
-    shipping: "Complimentary global trackable shipping on all orders. Express dispatch within 24-48 hours.",
-    returns: "30-day hassle-free returns & replacement guarantee on all RA2Z purchases.",
+    shipping: "Trackable shipping options available at checkout.",
+    returns: "Returns available in accordance with our return policy.",
   };
 }

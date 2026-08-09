@@ -58,16 +58,12 @@ export function ProductReviewsSection({ productId }: Props) {
       const res = await fetch(`/api/products/${productId}/reviews`);
       if (res.ok) {
         const data = await res.json();
-        if (data.reviews && data.reviews.length > 0) {
-          setReviews(data.reviews);
-        } else {
-          setReviews(SAMPLE_VERIFIED_REVIEWS);
-        }
+        setReviews(data.reviews || []);
       } else {
-        setReviews(SAMPLE_VERIFIED_REVIEWS);
+        setReviews([]);
       }
     } catch {
-      setReviews(SAMPLE_VERIFIED_REVIEWS);
+      setReviews([]);
     } finally {
       setLoading(false);
     }
@@ -219,6 +215,10 @@ export function ProductReviewsSection({ productId }: Props) {
       {/* Reviews List */}
       {loading ? (
         <p style={{ color: "var(--muted)", fontSize: "13px" }}>Loading verified reviews...</p>
+      ) : reviews.length === 0 ? (
+        <p style={{ color: "var(--muted)", fontSize: "13px", fontStyle: "italic" }}>
+          No reviews yet. Be the first to share your feedback!
+        </p>
       ) : (
         <div style={{ display: "grid", gap: "16px" }}>
           {reviews.map((r) => (

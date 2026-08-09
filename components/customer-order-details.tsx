@@ -254,7 +254,7 @@ export function CustomerOrderDetails({ order, history = [] }: Props) {
             fontSize: "14px",
           }}
         >
-          📦 Tracking number will be assigned as soon as supplier dispatch is complete.
+          📦 Tracking number will be assigned as soon as order dispatch is complete.
         </div>
       )}
 

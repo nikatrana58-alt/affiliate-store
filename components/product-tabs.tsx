@@ -171,7 +171,7 @@ export function ProductTabs({ product }: ProductTabsProps) {
 
             <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "16px" }}>
               <h3 style={{ color: "#FFFFFF", fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
-                Returns & Exchange Guarantee
+                Returns & Exchange Policy
               </h3>
               <p style={{ margin: 0 }}>{details.returns}</p>
             </div>

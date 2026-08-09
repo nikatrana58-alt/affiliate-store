@@ -26,11 +26,9 @@ export function Footer() {
         }}>
           {[
             { icon: "🔒", text: "Secure Payments" },
-            { icon: "🚀", text: "Fast Delivery" },
-            { icon: "💎", text: "Premium Quality" },
-            { icon: "✅", text: "Verified Products" },
-            { icon: "🌍", text: "Worldwide Shipping" },
-            { icon: "↩️", text: "Easy Returns" },
+            { icon: "📦", text: "Order Tracking" },
+            { icon: "💬", text: "Customer Support" },
+            { icon: "↩️", text: "Returns Policy" },
           ].map(({ icon, text }) => (
             <div
               key={text}

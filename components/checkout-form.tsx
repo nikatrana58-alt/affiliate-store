@@ -159,7 +159,6 @@ function OrderSuccess({ orderRef }: { orderRef: string }) {
       <p className="co-success-ref">Reference: <strong>{orderRef}</strong></p>
       <p className="co-success-note">
         Thank you for your purchase. We&apos;ll send you a confirmation email shortly.
-        As an affiliate store, your order will be fulfilled by the respective merchant.
       </p>
       <Link href="/" className="co-empty-cta" style={{ marginTop: "8px" }}>
         Back to Home
@@ -755,9 +754,9 @@ export function CheckoutForm() {
               <span>Bank-Grade 256-Bit SSL Encrypted Checkout</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--muted)", fontSize: "11px" }}>
-              <span>📦 Direct Global Fulfillment</span>
+              <span>📦 Order Tracking Available</span>
               <span>•</span>
-              <span>🛡️ 30-Day Money Back Guarantee</span>
+              <span>🛡️ 30-Day Return Policy</span>
             </div>
           </div>
         </div>
