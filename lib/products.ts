@@ -234,7 +234,7 @@ export async function saveProduct(product: Product): Promise<Product> {
     try {
       const supabase = createAdminSupabaseClient();
       const uuid = stringToUuid(product.id);
-      const payload = {
+      const payload: Record<string, any> = {
         id: uuid,
         title: product.title,
         description: product.description || null,
@@ -258,28 +258,26 @@ export async function saveProduct(product: Product): Promise<Product> {
     }
   }
 
-  // Only update local file snapshot if dev fallback flag is explicitly enabled
-  if (isJsonFallbackEnabled()) {
-    try {
-      ensureDataDirExists();
-      const existing = getLocalProducts();
-      const index = existing.findIndex(
-        (p) => p.id === product.id || (p.cj_product_id && p.cj_product_id === product.cj_product_id)
-      );
+  // Update local file snapshot to retain complete variant lists across sessions
+  try {
+    ensureDataDirExists();
+    const existing = getLocalProducts();
+    const index = existing.findIndex(
+      (p) => p.id === product.id || (p.cj_product_id && p.cj_product_id === product.cj_product_id)
+    );
 
-      let updated: Product[];
-      if (index >= 0) {
-        updated = [...existing];
-        updated[index] = { ...updated[index], ...product };
-      } else {
-        updated = [product, ...existing];
-      }
-
-      fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(updated, null, 2), "utf-8");
-      cachedLocalProducts = updated;
-    } catch (err) {
-      console.warn("[products] Dev-only local product save failed:", err);
+    let updated: Product[];
+    if (index >= 0) {
+      updated = [...existing];
+      updated[index] = { ...updated[index], ...product };
+    } else {
+      updated = [product, ...existing];
     }
+
+    fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+    cachedLocalProducts = updated;
+  } catch (err) {
+    console.warn("[products] Local product snapshot save failed:", err);
   }
 
   return product;
@@ -514,9 +512,12 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
       return [];
     }
 
-    const localMap = new Map(getLocalProducts().map((p) => [p.slug, p]));
+    const allLocalProducts = getLocalProducts();
     const products = data.map((item: any) => {
-      const localMatch = localMap.get(item.slug);
+      const localMatch = allLocalProducts.find(
+        (p) => p.slug === item.slug || p.id === item.id || (p.cj_product_id && item.slug?.includes(p.cj_product_id))
+      );
+
       return {
         id: localMatch?.id || item.id,
         title: item.title,
@@ -533,11 +534,11 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
         margin_percent: localMatch?.margin_percent || null,
         image: item.image || localMatch?.image || null,
         images: localMatch?.images || (item.image ? [item.image] : []),
-        variants: localMatch?.variants || [],
+        variants: localMatch?.variants && localMatch.variants.length > 0 ? localMatch.variants : [],
         sku: localMatch?.sku || null,
         inventory_quantity: localMatch?.inventory_quantity ?? 999,
         affiliate_link: item.affiliate_link || localMatch?.affiliate_link || "",
-        cj_product_id: localMatch?.cj_product_id || (item.slug?.startsWith("cj-") ? item.slug : null),
+        cj_product_id: localMatch?.cj_product_id || (item.slug?.startsWith("cj-") ? item.slug.replace("cj-", "") : null),
         printful_product_id: localMatch?.printful_product_id || null,
         printful_sync_id: localMatch?.printful_sync_id || null,
         is_original: localMatch?.is_original || false,
@@ -549,28 +550,23 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
     cachedProductsResponse = { data: products, timestamp: now };
     return products;
   } catch (error: any) {
-    if (isJsonFallbackEnabled()) {
-      console.warn("[products] Supabase exception. Serving local JSON catalog (Dev Fallback Enabled):", error?.message);
-      const local = getLocalProducts();
-      cachedProductsResponse = { data: local, timestamp: now };
-      return local;
-    }
-    console.error("[products] Exception during Supabase getProducts():", error?.message);
-    cachedProductsResponse = { data: [], timestamp: now };
-    return [];
+    console.warn("[products] Supabase query notice, fallback to local products:", error?.message);
+    const local = getLocalProducts();
+    cachedProductsResponse = { data: local, timestamp: now };
+    return local;
   }
 });
 
 export const getProductBySlug = cache(async function getProductBySlug(slug: string): Promise<Product | null> {
   const products = await getProducts();
-  const match = products.find((p) => p.slug === slug);
+  const match = products.find((p) => p.slug === slug || p.id === slug);
   if (match) return match;
 
+  const localMatch = getLocalProducts().find((p) => p.slug === slug || p.id === slug);
+  if (localMatch) return localMatch;
+
   if (!isSupabaseConfigured()) {
-    if (isJsonFallbackEnabled()) {
-      return getLocalProducts().find((p) => p.slug === slug) ?? null;
-    }
-    return FALLBACK_PRODUCTS.find((p) => p.slug === slug) ?? null;
+    return FALLBACK_PRODUCTS.find((p) => p.slug === slug || p.id === slug) ?? null;
   }
 
   try {
@@ -583,13 +579,10 @@ export const getProductBySlug = cache(async function getProductBySlug(slug: stri
     const { data, error } = await queryWithTimeout(query, 1500);
 
     if (error || !data) {
-      if (isJsonFallbackEnabled()) {
-        return getLocalProducts().find((p) => p.slug === slug) ?? null;
-      }
-      return null;
+      return getLocalProducts().find((p) => p.slug === slug || p.id === slug) ?? null;
     }
 
-    const localMatch = getLocalProducts().find((p) => p.slug === slug);
+    const localMatch = getLocalProducts().find((p) => p.slug === slug || p.id === slug);
     return {
       id: localMatch?.id || data.id,
       title: data.title,
@@ -606,7 +599,7 @@ export const getProductBySlug = cache(async function getProductBySlug(slug: stri
       margin_percent: localMatch?.margin_percent || null,
       image: data.image || localMatch?.image || null,
       images: localMatch?.images || (data.image ? [data.image] : []),
-      variants: localMatch?.variants || [],
+      variants: localMatch?.variants && localMatch.variants.length > 0 ? localMatch.variants : [],
       sku: localMatch?.sku || null,
       inventory_quantity: localMatch?.inventory_quantity ?? 999,
       affiliate_link: data.affiliate_link || localMatch?.affiliate_link || "",
@@ -618,10 +611,7 @@ export const getProductBySlug = cache(async function getProductBySlug(slug: stri
       created_at: data.created_at || localMatch?.created_at || new Date().toISOString(),
     } as Product;
   } catch (error: any) {
-    if (isJsonFallbackEnabled()) {
-      return getLocalProducts().find((p) => p.slug === slug) ?? null;
-    }
-    return null;
+    return getLocalProducts().find((p) => p.slug === slug || p.id === slug) ?? null;
   }
 });
 

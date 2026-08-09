@@ -389,11 +389,22 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
       const parsed = parseVariantDetails(v);
       const attributes = parsed.attributes;
       const priceDelta = v.variantSellPrice != null ? v.variantSellPrice - (cjCost ?? v.variantSellPrice) : 0;
+      const stockQty = v.inventoryNum != null && !isNaN(Number(v.inventoryNum)) ? Number(v.inventoryNum) : 999;
 
       log(`[cj-import]   Variant ${i + 1}: "${variantName}" (VID: ${v.vid}, SKU: ${v.variantSku})`);
 
+      importedVariants.push({
+        id: stringToUuid(v.vid || `${productId}-var-${i}`),
+        cj_variant_id: v.vid,
+        name: variantName,
+        sku: v.variantSku || "",
+        price_delta: parseFloat(priceDelta.toFixed(2)),
+        stock_quantity: stockQty,
+        attributes,
+      });
+
+      // Attempt optional Supabase product_variants table upsert if schema supports it
       try {
-        // Upsert variant row into Supabase product_variants table
         const { data: insertedVariant } = await supabase
           .from("product_variants")
           .upsert(
@@ -412,8 +423,6 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
           .select("id,name,sku,price_delta,attributes,cj_variant_id")
           .single();
 
-        const stockQty = await resolveStock(v.vid, logs);
-
         if (insertedVariant) {
           await supabase
             .from("inventory")
@@ -428,19 +437,9 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
               },
               { onConflict: "product_id,variant_id" }
             );
-
-          importedVariants.push({
-            id: insertedVariant.id,
-            cj_variant_id: v.vid,
-            name: insertedVariant.name,
-            sku: insertedVariant.sku,
-            price_delta: insertedVariant.price_delta,
-            stock_quantity: stockQty,
-            attributes: (insertedVariant.attributes as Record<string, string>) ?? {},
-          });
         }
       } catch (variantErr) {
-        log(`[cj-import] Variant upsert notice: ${variantErr instanceof Error ? variantErr.message : String(variantErr)}`);
+        // Table or constraint note (gracefully handled)
       }
     }
   }

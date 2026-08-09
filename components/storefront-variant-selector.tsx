@@ -15,10 +15,11 @@ type StorefrontVariantSelectorProps = {
 export function StorefrontVariantSelector({ product }: StorefrontVariantSelectorProps) {
   const variants = useMemo(() => product.variants || [], [product.variants]);
 
-  // Extract unique Colors and Sizes across variants
-  const { colors, sizes } = useMemo(() => {
+  // Extract unique Colors, Sizes, and Option Styles across variants
+  const { colors, sizes, styles } = useMemo(() => {
     const colorSet = new Set<string>();
     const sizeSet = new Set<string>();
+    const styleSet = new Set<string>();
 
     for (const v of variants) {
       if (v.color?.trim()) {
@@ -31,41 +32,50 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
         if (v.attributes["Color"]?.trim()) colorSet.add(v.attributes["Color"].trim());
         if (v.attributes["Size"]?.trim()) sizeSet.add(v.attributes["Size"].trim());
       }
+      if (!v.color && !v.size && (!v.attributes || Object.keys(v.attributes).length === 0)) {
+        if (v.name?.trim()) styleSet.add(v.name.trim());
+      }
     }
 
     return {
       colors: Array.from(colorSet),
       sizes: Array.from(sizeSet),
+      styles: colorSet.size === 0 && sizeSet.size === 0 ? Array.from(styleSet) : [],
     };
   }, [variants]);
 
   const isColorRequired = colors.length > 0;
   const isSizeRequired = sizes.length > 0;
+  const isStyleRequired = styles.length > 0;
 
   // Selected Option States (defaults to first available options for 100% SSR/Hydration match)
   const [selectedColor, setSelectedColor] = useState<string | null>(() => colors[0] || null);
   const [selectedSize, setSelectedSize] = useState<string | null>(() => sizes[0] || null);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(() => styles[0] || null);
 
   const isSelectionComplete = useMemo(() => {
     if (isColorRequired && !selectedColor) return false;
     if (isSizeRequired && !selectedSize) return false;
+    if (isStyleRequired && !selectedStyle) return false;
     return true;
-  }, [isColorRequired, selectedColor, isSizeRequired, selectedSize]);
+  }, [isColorRequired, selectedColor, isSizeRequired, selectedSize, isStyleRequired, selectedStyle]);
 
   // Find exact matching variant
   const selectedVariant = useMemo<ProductVariantItem | null>(() => {
     if (variants.length === 0) return null;
     if (isColorRequired && !selectedColor) return null;
     if (isSizeRequired && !selectedSize) return null;
+    if (isStyleRequired && !selectedStyle) return null;
 
     return (
       variants.find(
         (v) =>
           (!selectedColor || v.color === selectedColor || v.attributes?.["Color"] === selectedColor) &&
-          (!selectedSize || v.size === selectedSize || v.attributes?.["Size"] === selectedSize)
-      ) || null
+          (!selectedSize || v.size === selectedSize || v.attributes?.["Size"] === selectedSize) &&
+          (!selectedStyle || v.name === selectedStyle)
+      ) || variants[0] || null
     );
-  }, [variants, selectedColor, selectedSize, isColorRequired, isSizeRequired]);
+  }, [variants, selectedColor, selectedSize, selectedStyle, isColorRequired, isSizeRequired, isStyleRequired]);
 
   // Availability & Stock status
   const isAvailable = useMemo(() => {
@@ -258,6 +268,45 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
                       }}
                     >
                       {size} {!hasStock && <span style={{ fontSize: "10px", marginLeft: "4px" }}>(Out of stock)</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Style / Option Selection Pills */}
+          {styles.length > 0 && (
+            <div className="variant-option-group" style={{ margin: "14px 0 20px" }}>
+              <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "8px", color: "var(--muted)" }}>
+                Option: <strong style={{ color: selectedStyle ? "var(--gold)" : "var(--foreground)" }}>{selectedStyle || "Select Option (Required)"}</strong>
+              </label>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {styles.map((style) => {
+                  const isActive = selectedStyle === style;
+                  const matchingVar = variants.find((v) => v.name === style);
+                  const hasStock = matchingVar ? matchingVar.stock > 0 : true;
+
+                  return (
+                    <button
+                      key={style}
+                      type="button"
+                      onClick={() => setSelectedStyle(style)}
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: "8px",
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        border: isActive ? "2px solid var(--gold)" : "1px solid rgba(255,255,255,0.15)",
+                        background: isActive ? "rgba(201,168,76,0.15)" : "rgba(255,255,255,0.03)",
+                        color: isActive ? "var(--gold)" : hasStock ? "var(--foreground)" : "var(--muted)",
+                        opacity: hasStock ? 1 : 0.45,
+                        textDecoration: hasStock ? "none" : "line-through",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {style} {!hasStock && <span style={{ fontSize: "10px", marginLeft: "4px" }}>(Out of stock)</span>}
                     </button>
                   );
                 })}
