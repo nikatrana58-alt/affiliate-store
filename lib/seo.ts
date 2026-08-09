@@ -41,6 +41,9 @@ export function constructMetadata({
   return {
     title: title ? title : { default: SITE_CONFIG.defaultTitle, template: SITE_CONFIG.titleTemplate },
     description: metaDescription,
+    verification: {
+      google: "AlLuVyHM5_NoT8afJlU5-YTYB0F-he3sMm_w5yc0vEM",
+    },
     alternates: {
       canonical: canonicalUrl,
     },
