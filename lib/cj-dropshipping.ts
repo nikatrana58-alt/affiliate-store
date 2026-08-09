@@ -404,7 +404,7 @@ class CJDropshippingService {
     pageSizeArg = 10
   ): Promise<{ list: CJProductDetail[]; total: number; searchTypeDetected?: CJSearchType }> {
     if (!this.isConfigured()) {
-      return { list: [], total: 0 };
+      throw new Error("CJ_API_KEY is not configured on server.");
     }
 
     let pageNum = 1;
@@ -541,7 +541,7 @@ class CJDropshippingService {
    */
   async getProductDetail(pid: string): Promise<CJProductDetail | null> {
     if (!this.isConfigured()) {
-      return null;
+      throw new Error("CJ_API_KEY is not configured on server.");
     }
 
     const cacheKey = `detail:${pid}`;

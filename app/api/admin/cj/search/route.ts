@@ -134,14 +134,14 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    const isAuthError =
-      error instanceof Error &&
-      (error.message === "Unauthorized" || error.message.toLowerCase().includes("admin"));
+    const message = error instanceof Error ? error.message : "Failed to search CJ products.";
+    const isAuthError = message === "Unauthorized" || message.toLowerCase().includes("admin");
+    const isConfigError = message.includes("not configured");
 
     console.error("[api/admin/cj/search] Failed:", error);
     return Response.json(
-      { error: error instanceof Error ? error.message : "Failed to search CJ products." },
-      { status: isAuthError ? 401 : 500 }
+      { error: message },
+      { status: isAuthError ? 401 : isConfigError ? 502 : 500 }
     );
   }
 }

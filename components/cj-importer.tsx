@@ -27,14 +27,17 @@ type ModalDetailData = {
 
 const CATEGORY_OPTIONS = [
   { label: "All Categories", value: "" },
-  { label: "Phones & Accessories", value: "Phones & Accessories" },
-  { label: "Computer & Office", value: "Computer & Office" },
-  { label: "Consumer Electronics", value: "Consumer Electronics" },
-  { label: "Home & Garden", value: "Home & Garden" },
-  { label: "Sports & Outdoors", value: "Sports & Outdoors" },
-  { label: "Beauty & Health", value: "Beauty & Health" },
-  { label: "Jewelry & Watches", value: "Jewelry & Watches" },
-  { label: "Automobiles & Motorcycles", value: "Automobiles & Motorcycles" },
+  { label: "Phones & Accessories", value: "E9FDC79A-8365-4CA6-AC23-64D971F08B8B" },
+  { label: "Computer & Office", value: "1126E280-CB7D-418A-90AB-7118E2D97CCC" },
+  { label: "Consumer Electronics", value: "D9E66BF8-4E81-4CAB-A425-AEDEC5FBFBF2" },
+  { label: "Home, Garden & Furniture", value: "52FC6CA5-669B-4D0B-B1AC-415675931399" },
+  { label: "Sports & Outdoors", value: "4B397425-26C1-4D0E-B6D2-96B0B03689DB" },
+  { label: "Health, Beauty & Hair", value: "2C7D4A0B-1AB2-41EC-8F9E-13DC31B1C902" },
+  { label: "Jewelry & Watches", value: "2837816E-2FEA-4455-845C-6F40C6D70D1E" },
+  { label: "Automobiles & Motorcycles", value: "A2F799BE-FB59-428E-A953-296AA2673FCF" },
+  { label: "Bags & Shoes", value: "2415A90C-5D7B-4CC7-BA8C-C0949F9FF5D8" },
+  { label: "Women's Clothing", value: "2FE8A083-5E7B-4179-896D-561EA116F730" },
+  { label: "Men's Clothing", value: "B8302697-CF47-4211-9BD0-DFE8995AEB30" },
 ];
 
 /** Extract unique image URLs from CJ product fields and variants */
@@ -205,7 +208,7 @@ export function CJImporter({ onProductImported }: CJImporterProps) {
         const res = await fetch(`/api/admin/cj/search?${query.toString()}`);
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || "Failed to search CJ products.");
+          throw new Error(errData.error || "Unable to search CJ products. Please check the CJ API configuration.");
         }
 
         const data = await res.json();
