@@ -103,14 +103,33 @@ export async function fulfillOrderWithCJ(orderId: string): Promise<FulfillmentRe
 
   const cjOrderId = cjResult.supplierOrderId;
 
-  // 5. Update Order in Supabase Database
+  // 5. Automatically Pay CJ Order using CJ Account Balance
+  console.info(`[fulfillment] Automatically paying CJ Order ${cjOrderId} using CJ account balance...`);
+  const paymentResult = await cjDropshipping.payOrderWithBalance(cjOrderId);
+
   const now = new Date().toISOString();
+  const fulfillmentStatus = paymentResult.success ? "processing" : "manual_payment_required";
+  const statusNote = paymentResult.success
+    ? `Submitted and paid via CJ Account Balance. CJ Order ID: ${cjOrderId}`
+    : `CJ Order created (${cjOrderId}), but CJ balance payment failed: ${paymentResult.message || "Insufficient balance"}. Manual payment required in CJ Portal.`;
+
+  if (!paymentResult.success) {
+    console.warn(`[fulfillment] CJ balance payment notice for order ${order.id} (CJ ID ${cjOrderId}): ${paymentResult.message}`);
+    await notifyAdmin({
+      type: "cj_failed",
+      title: "CJ Balance Payment Failed",
+      message: `Order #${order.id.slice(0, 8)} created at CJ (${cjOrderId}), but balance payment failed: ${paymentResult.message || "Check CJ Wallet Balance"}. Manual payment required in CJ Portal.`,
+      metadata: { orderId: order.id, cjOrderId, customerEmail: order.customer_email, error: paymentResult.message },
+    });
+  }
+
+  // 6. Update Order in Supabase Database
   const { data: _updatedOrder, error: updateError } = await supabase
     .from("orders")
     .update({
       cj_order_id: cjOrderId,
       fulfillment_ref: cjOrderId,
-      fulfillment_status: "processing",
+      fulfillment_status: fulfillmentStatus,
       synced_at: now,
       status: "processing",
     })
@@ -127,13 +146,13 @@ export async function fulfillOrderWithCJ(orderId: string): Promise<FulfillmentRe
     order_id: order.id,
     old_status: order.status,
     new_status: "processing",
-    note: `Submitted to CJ Dropshipping. CJ Order ID: ${cjOrderId}`,
+    note: statusNote,
     changed_by: "cj_dropshipping_system",
   });
 
   const refreshedOrder = await getOrderById(order.id);
 
-  console.info(`[fulfillment] Successfully fulfilled order ${order.id} with CJ Order ID ${cjOrderId}`);
+  console.info(`[fulfillment] Successfully processed CJ order ${order.id} (CJ ID: ${cjOrderId}, Paid: ${paymentResult.success})`);
   return {
     success: true,
     cjOrderId,

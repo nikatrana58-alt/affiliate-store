@@ -342,6 +342,14 @@ class CJDropshippingService {
         }
 
         if (!res.ok) {
+          try {
+            const errJson = (await res.json()) as CJApiResponse<T>;
+            if (errJson && typeof errJson.code === "number") {
+              return errJson;
+            }
+          } catch {
+            // Not JSON response
+          }
           throw new Error(`CJ API HTTP Error ${res.status}: ${res.statusText}`);
         }
 
@@ -822,6 +830,64 @@ class CJDropshippingService {
       return {
         success: false,
         error: msg,
+      };
+    }
+  }
+
+  /**
+   * Pays a submitted CJ Order using the CJ Account Balance.
+   * Endpoint: POST /shopping/pay/payBalance
+   * Body: { orderId: string }
+   */
+  async payOrderWithBalance(cjOrderId: string): Promise<{
+    success: boolean;
+    message?: string;
+    rawResponse?: unknown;
+  }> {
+    console.info(`[cj-dropshipping] Executing CJ balance payment for CJ Order ${cjOrderId}...`);
+
+    if (!this.isConfigured()) {
+      console.info(`[cj-dropshipping] Mock CJ Balance Payment Succeeded for ${cjOrderId}`);
+      return {
+        success: true,
+        message: "Mock balance payment succeeded",
+        rawResponse: { mode: "mock", cjOrderId },
+      };
+    }
+
+    try {
+      const res = await this.request<{
+        result?: boolean;
+        message?: string;
+      }>("/shopping/pay/payBalance", {
+        method: "POST",
+        body: JSON.stringify({ orderId: cjOrderId }),
+      });
+
+      const isSuccess = res.code === 200 && (res.result === true || res.result === undefined);
+
+      if (isSuccess) {
+        console.info(`[cj-dropshipping] CJ Balance payment successfully executed for CJ Order ${cjOrderId}`);
+        return {
+          success: true,
+          message: res.message || "CJ balance payment completed successfully.",
+          rawResponse: res,
+        };
+      }
+
+      const errMsg = res.message || `CJ balance payment failed with code ${res.code}`;
+      console.warn(`[cj-dropshipping] CJ Balance payment rejected for ${cjOrderId}: ${errMsg}`);
+      return {
+        success: false,
+        message: errMsg,
+        rawResponse: res,
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown CJ balance payment failure";
+      console.error(`[cj-dropshipping] CJ Balance payment error for ${cjOrderId}:`, msg);
+      return {
+        success: false,
+        message: msg,
       };
     }
   }

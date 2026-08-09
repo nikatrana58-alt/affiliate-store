@@ -21,6 +21,7 @@ import {
 } from "@/lib/orders";
 import { emitShipmentNotification } from "@/lib/notifications";
 import { notifyAdmin } from "@/lib/notifications/admin";
+import { routeOrderFulfillment } from "@/lib/supplier-router";
 
 export const runtime = "nodejs";
 
@@ -114,6 +115,11 @@ export async function POST(request: NextRequest) {
               orderId: order.id,
               customerEmail: order.customer_email,
             });
+
+            // Automatically trigger upstream CJ order creation & balance payment
+            routeOrderFulfillment(order.id).catch((err) => {
+              console.error(`[stripe-webhook] Background fulfillment routing error for order ${order.id}:`, err);
+            });
           }
         }
         break;
@@ -143,6 +149,11 @@ export async function POST(request: NextRequest) {
               type: "order_placed",
               orderId: order.id,
               customerEmail: order.customer_email,
+            });
+
+            // Automatically trigger upstream CJ order creation & balance payment
+            routeOrderFulfillment(order.id).catch((err) => {
+              console.error(`[stripe-webhook] Background fulfillment routing error for order ${order.id}:`, err);
             });
           }
         }
