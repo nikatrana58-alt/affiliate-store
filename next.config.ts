@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "**.cjdropshipping.com" },
+      { protocol: "https", hostname: "**.aliyuncs.com" },
+      { protocol: "https", hostname: "**.alicdn.com" },
       { protocol: "https", hostname: "**.stripe.com" },
       { protocol: "https", hostname: "**.printful.com" },
       { protocol: "https", hostname: "files.printful.com" },
