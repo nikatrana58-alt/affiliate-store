@@ -132,6 +132,7 @@ export function validateCJCredentials(): { valid: boolean; missing: string[] } {
 class CJDropshippingService {
   private cachedToken: string | null = null;
   private tokenExpiresAt: number = 0;
+  private inflightTokenPromise: Promise<string> | null = null;
   private responseCache = new Map<string, { data: any; expiresAt: number }>();
   private cacheTTL = 10 * 60 * 1000; // 10 minutes TTL
 
@@ -174,11 +175,7 @@ class CJDropshippingService {
   /**
    * Fetches an access token from CJ Dropshipping API using the CJ_API_KEY.
    * Caches the token in memory until it is within 60 s of expiration.
-   *
-   * Latest CJ Open API 2.0 authentication:
-   *   POST /authentication/getAccessToken
-   *   Body: { apiKey: string }
-   *   Response: { code, message, data: { accessToken, accessTokenExpiryDate, ... } }
+   * Deduplicates concurrent inflight requests.
    */
   async getAccessToken(): Promise<string> {
     const now = Date.now();
@@ -193,41 +190,55 @@ class CJDropshippingService {
       return "mock_cj_access_token";
     }
 
-    const apiKey = this.getApiKey();
-
-    try {
-      const res = await fetch(`${CJ_BASE_URL}/authentication/getAccessToken`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Authentication HTTP Error ${res.status}: ${res.statusText}`);
-      }
-
-      const data = (await res.json()) as CJAuthTokenResponse;
-      const token = data.data?.accessToken;
-
-      if (data.code !== 200 || !token) {
-        throw new Error(
-          `CJ Auth Failed (code ${data.code}): ${data.message ?? "Invalid API key"}`
-        );
-      }
-
-      this.cachedToken = token;
-
-      const expiryStr = data.data?.accessTokenExpiryDate;
-      this.tokenExpiresAt = expiryStr
-        ? new Date(expiryStr).getTime()
-        : now + 23 * 60 * 60 * 1000;
-
-      console.info("[cj-dropshipping] Access token successfully acquired.");
-      return this.cachedToken;
-    } catch (err) {
-      console.error("[cj-dropshipping] Failed to acquire access token:", err);
-      throw err;
+    if (this.inflightTokenPromise) {
+      return this.inflightTokenPromise;
     }
+
+    this.inflightTokenPromise = (async () => {
+      const apiKey = this.getApiKey();
+
+      try {
+        const res = await fetch(`${CJ_BASE_URL}/authentication/getAccessToken`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apiKey }),
+        });
+
+        if (res.status === 429) {
+          throw new Error("CJ API authentication rate limit reached (HTTP 429). Please retry in a moment.");
+        }
+
+        if (!res.ok) {
+          throw new Error(`Authentication HTTP Error ${res.status}: ${res.statusText}`);
+        }
+
+        const data = (await res.json()) as CJAuthTokenResponse;
+        const token = data.data?.accessToken;
+
+        if (data.code !== 200 || !token) {
+          throw new Error(
+            `CJ Auth Failed (code ${data.code}): ${data.message ?? "Invalid API key"}`
+          );
+        }
+
+        this.cachedToken = token;
+
+        const expiryStr = data.data?.accessTokenExpiryDate;
+        this.tokenExpiresAt = expiryStr
+          ? new Date(expiryStr).getTime()
+          : now + 23 * 60 * 60 * 1000;
+
+        console.info("[cj-dropshipping] Access token successfully acquired.");
+        return this.cachedToken;
+      } catch (err) {
+        console.error("[cj-dropshipping] Failed to acquire access token:", err instanceof Error ? err.message : String(err));
+        throw err;
+      } finally {
+        this.inflightTokenPromise = null;
+      }
+    })();
+
+    return this.inflightTokenPromise;
   }
 
   // ---------------------------------------------------------------------------
@@ -500,6 +511,15 @@ class CJDropshippingService {
 
     try {
       let res = await this.request<{ list: CJProductDetail[]; total: number }>(endpointUrl);
+
+      // Verify CJ response status code (Do not convert non-200 / 1600200 error responses into empty arrays)
+      if (res.code !== 200) {
+        if (res.code === 1600200 || (res.message && res.message.toLowerCase().includes("too many requests"))) {
+          throw new Error("CJ API rate limit reached (1 req/sec QPS limit). Please wait a moment and try again.");
+        }
+        throw new Error(`CJ API Error (code ${res.code}): ${res.message || "Failed to fetch products from CJ Dropshipping"}`);
+      }
+
       let dataPayload = res.data ?? (typeof res.result === "object" ? (res.result as { list: CJProductDetail[]; total: number }) : undefined);
       let items = dataPayload?.list || [];
 

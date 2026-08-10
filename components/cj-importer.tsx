@@ -228,13 +228,13 @@ export function CJImporter({ onProductImported }: CJImporterProps) {
     [activeKeyword, category]
   );
 
-  // 300ms Input Debounce Effect
+  // 700ms Input Debounce Effect (Paced for CJ 1 QPS Rate Limit)
   useEffect(() => {
     const timer = setTimeout(() => {
       if (keywordInput.trim() !== activeKeyword) {
         setActiveKeyword(keywordInput.trim());
       }
-    }, 300);
+    }, 700);
     return () => clearTimeout(timer);
   }, [keywordInput, activeKeyword]);
 
@@ -562,7 +562,7 @@ export function CJImporter({ onProductImported }: CJImporterProps) {
               )}
             </div>
             <h3 style={{ margin: "4px 0 0", color: "var(--foreground)", fontSize: "18px" }}>
-              {total > 0 ? `Found ${total} Products` : loading ? "Loading products..." : "No Products Found"}
+              {total > 0 ? `Found ${total} Products` : loading ? "Loading products..." : error ? "Search Error" : "No Products Found"}
             </h3>
           </div>
         </div>
@@ -644,6 +644,11 @@ export function CJImporter({ onProductImported }: CJImporterProps) {
                 </div>
               );
             })}
+          </div>
+        ) : error ? (
+          <div className="panel empty-state" style={{ textAlign: "center", padding: "48px" }}>
+            <p style={{ color: "#ef4444", fontWeight: 600, marginBottom: "8px" }}>CJ API Search Request Failed</p>
+            <p className="muted" style={{ margin: 0 }}>{error}</p>
           </div>
         ) : (
           <div className="panel empty-state" style={{ textAlign: "center", padding: "48px" }}>

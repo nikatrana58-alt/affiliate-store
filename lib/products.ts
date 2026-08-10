@@ -262,8 +262,13 @@ export async function saveProduct(product: Product): Promise<Product> {
   try {
     ensureDataDirExists();
     const existing = getLocalProducts();
+    const uuid = stringToUuid(product.id);
     const index = existing.findIndex(
-      (p) => p.id === product.id || (p.cj_product_id && p.cj_product_id === product.cj_product_id)
+      (p) =>
+        p.id === product.id ||
+        stringToUuid(p.id) === uuid ||
+        p.slug === product.slug ||
+        (p.cj_product_id && product.cj_product_id && p.cj_product_id === product.cj_product_id)
     );
 
     let updated: Product[];
@@ -276,6 +281,7 @@ export async function saveProduct(product: Product): Promise<Product> {
 
     fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(updated, null, 2), "utf-8");
     cachedLocalProducts = updated;
+    invalidateProductsCache();
   } catch (err) {
     console.warn("[products] Local product snapshot save failed:", err);
   }
@@ -513,10 +519,26 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
     }
 
     const allLocalProducts = getLocalProducts();
+    const matchedLocalIds = new Set<string>();
+
     const products = data.map((item: any) => {
       const localMatch = allLocalProducts.find(
-        (p) => p.slug === item.slug || p.id === item.id || (p.cj_product_id && item.slug?.includes(p.cj_product_id))
+        (p) =>
+          p.id === item.id ||
+          stringToUuid(p.id) === item.id ||
+          p.slug === item.slug ||
+          (p.slug && item.slug && (item.slug.startsWith(p.slug) || p.slug.startsWith(item.slug))) ||
+          (p.cj_product_id && (
+            p.cj_product_id === item.cj_product_id ||
+            item.slug?.includes(p.cj_product_id) ||
+            item.id === stringToUuid(`cj-${p.cj_product_id}`)
+          ))
       );
+
+      if (localMatch) {
+        matchedLocalIds.add(localMatch.id);
+        if (localMatch.cj_product_id) matchedLocalIds.add(localMatch.cj_product_id);
+      }
 
       return {
         id: localMatch?.id || item.id,
@@ -547,6 +569,13 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
       } as Product;
     });
 
+    // Merge any local products that weren't returned by Supabase query
+    for (const localP of allLocalProducts) {
+      if (!matchedLocalIds.has(localP.id) && !products.some((p) => p.id === localP.id || p.slug === localP.slug)) {
+        products.push(localP);
+      }
+    }
+
     cachedProductsResponse = { data: products, timestamp: now };
     return products;
   } catch (error: any) {
@@ -559,10 +588,22 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
 
 export const getProductBySlug = cache(async function getProductBySlug(slug: string): Promise<Product | null> {
   const products = await getProducts();
-  const match = products.find((p) => p.slug === slug || p.id === slug);
+  const match = products.find(
+    (p) =>
+      p.slug === slug ||
+      p.id === slug ||
+      (p.slug && (slug.startsWith(p.slug) || p.slug.startsWith(slug))) ||
+      (p.cj_product_id && (p.cj_product_id === slug || slug.includes(p.cj_product_id)))
+  );
   if (match) return match;
 
-  const localMatch = getLocalProducts().find((p) => p.slug === slug || p.id === slug);
+  const localMatch = getLocalProducts().find(
+    (p) =>
+      p.slug === slug ||
+      p.id === slug ||
+      (p.slug && (slug.startsWith(p.slug) || p.slug.startsWith(slug))) ||
+      (p.cj_product_id && (p.cj_product_id === slug || slug.includes(p.cj_product_id)))
+  );
   if (localMatch) return localMatch;
 
   if (!isSupabaseConfigured()) {
@@ -582,7 +623,7 @@ export const getProductBySlug = cache(async function getProductBySlug(slug: stri
       return getLocalProducts().find((p) => p.slug === slug || p.id === slug) ?? null;
     }
 
-    const localMatch = getLocalProducts().find((p) => p.slug === slug || p.id === slug);
+    const localMatch = getLocalProducts().find((p) => p.slug === data.slug || p.id === data.id || stringToUuid(p.id) === data.id);
     return {
       id: localMatch?.id || data.id,
       title: data.title,

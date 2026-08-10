@@ -28,14 +28,18 @@ export async function notifyAdmin(options: AdminNotificationOptions): Promise<vo
 
   try {
     // 1. Insert In-App Admin Notification
-    await supabase.from("admin_notifications").insert({
-      type: options.type,
-      title: options.title,
-      message: options.message,
-      link: options.link || "/admin",
-      metadata: options.metadata || null,
-      is_read: false,
-    });
+    try {
+      await supabase.from("admin_notifications").insert({
+        type: options.type,
+        title: options.title,
+        message: options.message,
+        link: options.link || "/admin",
+        metadata: options.metadata || null,
+        is_read: false,
+      });
+    } catch {
+      // ignore
+    }
 
     // 2. Dispatch Email Alert to Admin
     const html = renderAdminAlertEmail(options.type, options.title, options.message, options.metadata);

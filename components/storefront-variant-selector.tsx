@@ -48,10 +48,15 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
   const isSizeRequired = sizes.length > 0;
   const isStyleRequired = styles.length > 0;
 
-  // Selected Option States (defaults to first available options for 100% SSR/Hydration match)
-  const [selectedColor, setSelectedColor] = useState<string | null>(() => colors[0] || null);
-  const [selectedSize, setSelectedSize] = useState<string | null>(() => sizes[0] || null);
-  const [selectedStyle, setSelectedStyle] = useState<string | null>(() => styles[0] || null);
+  // Initial default option selection (defaults to first VALID variant combination for 100% hydration match)
+  const defaultVariant = variants[0] || null;
+  const defaultColor = defaultVariant?.color || defaultVariant?.attributes?.["Color"] || colors[0] || null;
+  const defaultSize = defaultVariant?.size || defaultVariant?.attributes?.["Size"] || sizes[0] || null;
+  const defaultStyle = defaultVariant?.name || styles[0] || null;
+
+  const [selectedColor, setSelectedColor] = useState<string | null>(() => defaultColor);
+  const [selectedSize, setSelectedSize] = useState<string | null>(() => defaultSize);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(() => defaultStyle);
 
   const isSelectionComplete = useMemo(() => {
     if (isColorRequired && !selectedColor) return false;
@@ -60,21 +65,21 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
     return true;
   }, [isColorRequired, selectedColor, isSizeRequired, selectedSize, isStyleRequired, selectedStyle]);
 
-  // Find exact matching variant
+  // Find exact matching variant - NEVER fall back to variants[0]!
   const selectedVariant = useMemo<ProductVariantItem | null>(() => {
     if (variants.length === 0) return null;
     if (isColorRequired && !selectedColor) return null;
     if (isSizeRequired && !selectedSize) return null;
     if (isStyleRequired && !selectedStyle) return null;
 
-    return (
-      variants.find(
-        (v) =>
-          (!selectedColor || v.color === selectedColor || v.attributes?.["Color"] === selectedColor) &&
-          (!selectedSize || v.size === selectedSize || v.attributes?.["Size"] === selectedSize) &&
-          (!selectedStyle || v.name === selectedStyle)
-      ) || variants[0] || null
+    const matched = variants.find(
+      (v) =>
+        (!isColorRequired || v.color === selectedColor || v.attributes?.["Color"] === selectedColor) &&
+        (!isSizeRequired || v.size === selectedSize || v.attributes?.["Size"] === selectedSize) &&
+        (!isStyleRequired || v.name === selectedStyle)
     );
+
+    return matched || null; // ABSOLUTELY NO FALLBACK TO variants[0]
   }, [variants, selectedColor, selectedSize, selectedStyle, isColorRequired, isSizeRequired, isStyleRequired]);
 
   // Availability & Stock status
@@ -380,7 +385,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             <MagneticButton className="buy-button-wrapper">
               <AddToCartButton
                 product={product}
-                disabled={!isSelectionComplete || !isAvailable}
+                disabled={!isSelectionComplete || !isAvailable || !selectedVariant}
                 disabledText={disabledText}
                 variant={{
                   variant_id: selectedVariant?.cj_variant_id || selectedVariant?.id || null,
@@ -388,6 +393,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
                   color: selectedColor || selectedVariant?.color || null,
                   size: selectedSize || selectedVariant?.size || null,
                   price: activePrice || product.price || 0,
+                  image: selectedVariant?.image || null,
                 }}
               />
             </MagneticButton>

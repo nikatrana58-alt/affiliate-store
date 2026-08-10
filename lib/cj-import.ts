@@ -109,7 +109,11 @@ function parseProductImage(imgRaw: string | undefined | null): string | null {
 }
 
 /** Parse variant keys/names into color, size, and custom attribute object. */
-export function parseVariantDetails(variant: CJVariant): {
+export function parseVariantDetails(
+  variant: CJVariant,
+  productKeyEnSet?: string[] | null,
+  productKeyEn?: string | null
+): {
   color: string | null;
   size: string | null;
   attributes: Record<string, string>;
@@ -119,26 +123,63 @@ export function parseVariantDetails(variant: CJVariant): {
   let size: string | null = null;
 
   const knownSizes = new Set([
-    "XXS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL",
+    "XXS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL",
     "ONE SIZE", "FREE SIZE", "SMALL", "MEDIUM", "LARGE", "EXTRA LARGE"
   ]);
 
+  const isSizeString = (str: string): boolean => {
+    if (!str) return false;
+    const clean = str.trim().toUpperCase();
+    if (knownSizes.has(clean)) return true;
+    if (/^\d+(\.\d+)?$/.test(clean)) return true;
+    if (/^(EU|US|UK)?\s*\d+/i.test(clean)) return true;
+    if (/^(XXS|XS|S|M|L|XL|[2-6]XL)$/i.test(clean)) return true;
+    return false;
+  };
+
+  // Derive explicit option key names if CJ provided them
+  let optionKeys: string[] = [];
+  if (Array.isArray(productKeyEnSet) && productKeyEnSet.length > 0) {
+    optionKeys = productKeyEnSet.map((k) => String(k).trim()).filter(Boolean);
+  } else if (productKeyEn && typeof productKeyEn === "string") {
+    optionKeys = productKeyEn.split("-").map((k) => k.trim()).filter(Boolean);
+  }
+
   const rawKey = variant.variantKey || variant.variantNameEn || variant.variantName || "";
+
   if (rawKey) {
     const parts = rawKey.split("-").map((p) => p.trim());
-    if (parts.length >= 2) {
-      const p1 = parts[0];
-      const p2 = parts.slice(1).join("-").trim();
 
-      if (knownSizes.has(p2.toUpperCase()) || /^\d+(\.\d+)?$/.test(p2) || /^(EU|US|UK)?\s*\d+/i.test(p2)) {
-        color = p1;
-        size = p2;
+    if (optionKeys.length > 0 && optionKeys.length === parts.length) {
+      // Map option key to value by explicit CJ schema position
+      optionKeys.forEach((keyName, idx) => {
+        const val = parts[idx];
+        attrs[keyName] = val;
+        const lowerKey = keyName.toLowerCase();
+        if (lowerKey.includes("color") || lowerKey.includes("style") || lowerKey.includes("pattern")) {
+          if (!color) color = val;
+        } else if (lowerKey.includes("size")) {
+          if (!size) size = val;
+        }
+      });
+      if (!color && parts.length >= 1) color = parts[0];
+      if (!size && parts.length >= 2) size = parts[1];
+    } else if (parts.length >= 2) {
+      const lastPart = parts[parts.length - 1];
+      const firstPart = parts[0];
+
+      if (isSizeString(lastPart)) {
+        size = lastPart;
+        color = parts.slice(0, parts.length - 1).join("-").trim();
+      } else if (isSizeString(firstPart)) {
+        size = firstPart;
+        color = parts.slice(1).join("-").trim();
       } else {
-        color = p1;
-        size = p2;
+        color = parts[0];
+        size = parts.slice(1).join("-").trim();
       }
     } else if (parts.length === 1 && parts[0]) {
-      if (knownSizes.has(parts[0].toUpperCase()) || /^\d+$/.test(parts[0])) {
+      if (isSizeString(parts[0])) {
         size = parts[0];
       } else {
         color = parts[0];
@@ -146,8 +187,8 @@ export function parseVariantDetails(variant: CJVariant): {
     }
   }
 
-  if (color) attrs["Color"] = color;
-  if (size) attrs["Size"] = size;
+  if (color && !attrs["Color"]) attrs["Color"] = color;
+  if (size && !attrs["Size"]) attrs["Size"] = size;
   if (variant.variantWeight) attrs["Weight (g)"] = String(variant.variantWeight);
 
   return { color, size, attributes: attrs };
@@ -277,6 +318,10 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
   const affiliateLink = buildAffiliateLink(targetPid);
   const primaryImage = parseProductImage(product.productImage);
 
+  // Extract option keys if CJ provides them
+  const productKeyEnSet = (product as any).productKeyEnSet as string[] | undefined;
+  const productKeyEn = (product as any).productKeyEn as string | undefined;
+
   // Apply Automated Pricing Engine Rules
   const pricing = calculateProductPricing(cjCost, categoryName);
 
@@ -299,7 +344,7 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
   // Also collect any unique variant images not in product gallery
   if (product.variants && Array.isArray(product.variants)) {
     for (const v of product.variants) {
-      if (v.variantImage && !allImages.includes(v.variantImage)) {
+      if (v.variantImage && typeof v.variantImage === "string" && !allImages.includes(v.variantImage)) {
         allImages.push(v.variantImage);
       }
     }
@@ -309,7 +354,7 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
 
   // Pre-format variants list with full metadata preservation
   const mappedVariants = (product.variants || []).map((v) => {
-    const parsed = parseVariantDetails(v);
+    const parsed = parseVariantDetails(v, productKeyEnSet, productKeyEn);
     const vCost = v.variantSellPrice != null ? Number(v.variantSellPrice) : cjCost;
     const vPricing = calculateProductPricing(vCost, categoryName);
     const priceDelta = vPricing.sellingPrice - pricing.sellingPrice;
@@ -324,7 +369,7 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
       price: vPricing.sellingPrice,
       cost_price: vCost,
       price_delta: parseFloat(priceDelta.toFixed(2)),
-      stock: v.inventoryNum ?? 999,
+      stock: v.inventoryNum != null && !isNaN(Number(v.inventoryNum)) ? Number(v.inventoryNum) : 999,
       weight: v.variantWeight ? `${v.variantWeight}g` : null,
       image: v.variantImage || null,
       attributes: parsed.attributes,
@@ -386,7 +431,7 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
       const v = variants[i];
       const variantName =
         v.variantNameEn || v.variantKey || v.variantSku || `Variant ${i + 1}`;
-      const parsed = parseVariantDetails(v);
+      const parsed = parseVariantDetails(v, productKeyEnSet, productKeyEn);
       const attributes = parsed.attributes;
       const priceDelta = v.variantSellPrice != null ? v.variantSellPrice - (cjCost ?? v.variantSellPrice) : 0;
       const stockQty = v.inventoryNum != null && !isNaN(Number(v.inventoryNum)) ? Number(v.inventoryNum) : 999;

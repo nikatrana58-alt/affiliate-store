@@ -642,8 +642,8 @@ export function CheckoutForm() {
                   <span className="co-review-block-label">Items ({items.reduce((s, i) => s + i.quantity, 0)})</span>
                 </div>
                 <div className="co-review-items">
-                  {items.map((item) => (
-                    <OrderItem key={item.product.id} item={item} />
+                  {items.map((item, idx) => (
+                    <OrderItem key={`${item.product.id}-${item.variant?.variant_id || idx}`} item={item} />
                   ))}
                 </div>
               </div>
@@ -700,8 +700,8 @@ export function CheckoutForm() {
 
           {/* Items list */}
           <div className="co-summary-items">
-            {items.map((item) => (
-              <OrderItem key={item.product.id} item={item} />
+            {items.map((item, idx) => (
+              <OrderItem key={`${item.product.id}-${item.variant?.variant_id || idx}`} item={item} />
             ))}
           </div>
 

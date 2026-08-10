@@ -19,6 +19,7 @@ export type CartVariantSelection = {
   color?: string | null;
   size?: string | null;
   price?: number | null;
+  image?: string | null;
 };
 
 export type CartItem = {

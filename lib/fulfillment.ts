@@ -6,7 +6,8 @@
  */
 
 import { cjDropshipping } from "@/lib/cj-dropshipping";
-import { getOrderById } from "@/lib/orders";
+import { getOrderById, saveLocalOrder } from "@/lib/orders";
+import { getProducts } from "@/lib/products";
 import { createAdminSupabaseClient } from "@/lib/supabase";
 import { notifyAdmin } from "@/lib/notifications/admin";
 import type { OrderWithItems } from "@/lib/db/types";
@@ -36,17 +37,28 @@ export async function fulfillOrderWithCJ(orderId: string): Promise<FulfillmentRe
   const supabase = createAdminSupabaseClient();
   const productIds = order.order_items.map((i) => i.product_id);
 
-  const { data: productsData } = await supabase
-    .from("products")
-    .select("id, cj_product_id, title")
-    .in("id", productIds);
+  let productsData: any[] | null = null;
+  try {
+    const res = await supabase
+      .from("products")
+      .select("id, cj_product_id, title")
+      .in("id", productIds);
+    productsData = res.data;
+  } catch {
+    // fallback to local catalog
+  }
 
-  const productMap = new Map((productsData || []).map((p) => [p.id, p]));
+  const productMap = new Map((productsData || []).map((p: any) => [p.id, p]));
+  const allCatalogProducts = await getProducts();
+  const localProductMap = new Map(allCatalogProducts.map((p) => [p.id, p]));
 
   const supplierItems = order.order_items.map((item) => {
-    const p = productMap.get(item.product_id);
+    const dbP = productMap.get(item.product_id);
+    const localP = localProductMap.get(item.product_id);
+    const cjPid = dbP?.cj_product_id || localP?.cj_product_id || (item.product_id.startsWith("cj-") ? item.product_id.replace("cj-", "") : item.product_id);
+
     return {
-      supplierProductId: p?.cj_product_id || item.product_id,
+      supplierProductId: cjPid,
       supplierVariantId: item.variant_id || undefined,
       quantity: item.quantity,
       title: item.product_title,
@@ -123,32 +135,50 @@ export async function fulfillOrderWithCJ(orderId: string): Promise<FulfillmentRe
     });
   }
 
-  // 6. Update Order in Supabase Database
-  const { data: _updatedOrder, error: updateError } = await supabase
-    .from("orders")
-    .update({
-      cj_order_id: cjOrderId,
-      fulfillment_ref: cjOrderId,
-      fulfillment_status: fulfillmentStatus,
-      synced_at: now,
-      status: "processing",
-    })
-    .eq("id", order.id)
-    .select()
-    .single();
+  // 6. Update Order in Supabase Database / Local Repository
+  try {
+    const { error: updateError } = await supabase
+      .from("orders")
+      .update({
+        cj_order_id: cjOrderId,
+        fulfillment_ref: cjOrderId,
+        fulfillment_status: fulfillmentStatus,
+        synced_at: now,
+        status: "processing",
+      })
+      .eq("id", order.id);
 
-  if (updateError) {
-    console.error(`[fulfillment] DB update failed for order ${order.id}:`, updateError);
+    if (updateError) {
+      console.warn(`[fulfillment] DB update notice for order ${order.id}:`, updateError.message);
+    }
+  } catch (dbErr) {
+    console.warn(`[fulfillment] Supabase order update notice:`, dbErr);
   }
 
-  // Record Timeline Status Entry
-  await supabase.from("order_status_history").insert({
-    order_id: order.id,
-    old_status: order.status,
-    new_status: "processing",
-    note: statusNote,
-    changed_by: "cj_dropshipping_system",
-  });
+  // Always update local repository snapshot
+  const updatedLocalOrder: OrderWithItems = {
+    ...order,
+    cj_order_id: cjOrderId,
+    fulfillment_ref: cjOrderId,
+    fulfillment_status: fulfillmentStatus as any,
+    status: "processing",
+    synced_at: now,
+    updated_at: now,
+  };
+  saveLocalOrder(updatedLocalOrder);
+
+  // Record Timeline Status Entry (Optional DB Log)
+  try {
+    await supabase.from("order_status_history").insert({
+      order_id: order.id,
+      old_status: order.status,
+      new_status: "processing",
+      note: statusNote,
+      changed_by: "cj_dropshipping_system",
+    });
+  } catch {
+    // optional timeline log
+  }
 
   const refreshedOrder = await getOrderById(order.id);
 

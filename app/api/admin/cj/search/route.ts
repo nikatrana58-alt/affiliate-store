@@ -137,11 +137,12 @@ export async function GET(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Failed to search CJ products.";
     const isAuthError = message === "Unauthorized" || message.toLowerCase().includes("admin");
     const isConfigError = message.includes("not configured");
+    const isRateLimit = message.toLowerCase().includes("rate limit") || message.includes("429") || message.includes("1600200") || message.toLowerCase().includes("qps limit");
 
     console.error("[api/admin/cj/search] Failed:", error);
     return Response.json(
       { error: message },
-      { status: isAuthError ? 401 : isConfigError ? 502 : 500 }
+      { status: isAuthError ? 401 : isRateLimit ? 429 : isConfigError ? 502 : 500 }
     );
   }
 }

@@ -1,5 +1,1866 @@
 [
   {
+    "id": "cj-2608100300001637200",
+    "title": "Womens Draped, Relaxed-fit High-waisted Pleated Suit Pants",
+    "slug": "womens-draped-relaxed-fit-high-waisted-pleated-suit-pants",
+    "short_description": "Womens Draped, Relaxed-fit High-waisted Pleated Suit Pants",
+    "description": "Product information: Color: c0032 White Stretch: No stretch Pants Length: Full length Waist Style: High waist Sizes: XS, S, M, L Thickness: Regular Fabric Name: Woven fabric Main Fabric Composition: Polyester fiber Gender: Women’s Pants Style: Straight leg Size: Note: 1. Asian sizes are 1 to 2 sizes smaller than European and American people. Choose the larger size if your size between two sizes. Please allow 2-3cm differences due to manual measurement. 2. Please check the size chart carefully before you buy the item, if you don't know how to choose size, please contact our customer service. 3.As you know, the different computers display colors differently, the color of the actual item may vary slightly from the following images. Packing list: 1*Pants Product Image:",
+    "category": "Women's Clothing",
+    "brand": "Women's Clothing",
+    "badge": "CJ Imported",
+    "price": 19.99,
+    "compare_at_price": 29.99,
+    "cost_price": 5.45,
+    "profit": 14.54,
+    "margin_percent": 72.74,
+    "price_manually_overridden": false,
+    "image": "https://cf.cjdropshipping.com/quick/product/09e7845d-1c44-45c5-b5a8-d8d31a871043.jpg",
+    "images": [
+      "https://cf.cjdropshipping.com/quick/product/09e7845d-1c44-45c5-b5a8-d8d31a871043.jpg",
+      "https://cf.cjdropshipping.com/quick/product/5b4783c2-eb99-4bf4-a113-5bd76612ba79.jpg",
+      "https://cf.cjdropshipping.com/quick/product/54245700-834e-4be0-b3c4-fc919800b6a6.jpg",
+      "https://cf.cjdropshipping.com/quick/product/1a6d5ffe-e143-4cfd-9737-a677436d42f9.jpg",
+      "https://cf.cjdropshipping.com/quick/product/e57f8733-e26c-4f4f-9455-322ed1b621ea.jpg"
+    ],
+    "variants": [
+      {
+        "id": "2608100300001639200",
+        "cj_variant_id": "2608100300001639200",
+        "name": "Womens Draped, Relaxed-fit High-waisted Pleated Suit Pants C0032 White XS",
+        "sku": "CJKT304772301AZ",
+        "color": "XS",
+        "size": "C0032 White",
+        "price": 19.99,
+        "cost_price": 5.45,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "281g",
+        "image": "https://cf.cjdropshipping.com/quick/product/e57f8733-e26c-4f4f-9455-322ed1b621ea.jpg",
+        "attributes": {
+          "Size": "C0032 White",
+          "Color": "XS",
+          "Weight (g)": "281"
+        }
+      },
+      {
+        "id": "2608100300011630600",
+        "cj_variant_id": "2608100300011630600",
+        "name": "Womens Draped, Relaxed-fit High-waisted Pleated Suit Pants C0032 White S",
+        "sku": "CJKT304772302BY",
+        "color": "S",
+        "size": "C0032 White",
+        "price": 19.99,
+        "cost_price": 5.45,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "284g",
+        "image": "https://cf.cjdropshipping.com/quick/product/e57f8733-e26c-4f4f-9455-322ed1b621ea.jpg",
+        "attributes": {
+          "Size": "C0032 White",
+          "Color": "S",
+          "Weight (g)": "284"
+        }
+      },
+      {
+        "id": "2608100300011631400",
+        "cj_variant_id": "2608100300011631400",
+        "name": "Womens Draped, Relaxed-fit High-waisted Pleated Suit Pants C0032 White M",
+        "sku": "CJKT304772303CX",
+        "color": "M",
+        "size": "C0032 White",
+        "price": 19.99,
+        "cost_price": 5.45,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "289g",
+        "image": "https://cf.cjdropshipping.com/quick/product/e57f8733-e26c-4f4f-9455-322ed1b621ea.jpg",
+        "attributes": {
+          "Size": "C0032 White",
+          "Color": "M",
+          "Weight (g)": "289"
+        }
+      },
+      {
+        "id": "2608100300011632100",
+        "cj_variant_id": "2608100300011632100",
+        "name": "Womens Draped, Relaxed-fit High-waisted Pleated Suit Pants C0032 White L",
+        "sku": "CJKT304772304DW",
+        "color": "L",
+        "size": "C0032 White",
+        "price": 19.99,
+        "cost_price": 5.45,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "294g",
+        "image": "https://cf.cjdropshipping.com/quick/product/e57f8733-e26c-4f4f-9455-322ed1b621ea.jpg",
+        "attributes": {
+          "Size": "C0032 White",
+          "Color": "L",
+          "Weight (g)": "294"
+        }
+      }
+    ],
+    "sku": "CJKT3047723",
+    "inventory_quantity": 999,
+    "weight": "261.00-274.00",
+    "seo_title": "Womens Draped, Relaxed-fit High-waisted Pleated Suit Pants",
+    "seo_description": "Product information: Color: c0032 White Stretch: No stretch Pants Length: Full length Waist Style: High waist Sizes: XS, S, M, L Thickness: Regular Fabric Name:",
+    "status": "published",
+    "affiliate_link": "https://www.cjdropshipping.com/product/detail.html?id=2608100300001637200",
+    "cj_product_id": "2608100300001637200",
+    "created_at": "2026-08-10T03:22:02.107"
+  },
+  {
+    "id": "cj-2608100259531620100",
+    "title": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress",
+    "slug": "solid-color-satin-sexy-off-shoulder-pleated-asymmetrical-dress",
+    "short_description": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress",
+    "description": "Product information: Pattern: Solid color Skirt style: Asymmetric Colors: Apricot, black, wine red, navy blue Waistline: Mid-rise Sizes: S, M, L, XL, 2XL Fit: Slim-fit Style category: Casual at home, socialite Trendy element: Off-shoulder Design: Asymmetric cut Fabric name: Satin Sleeve style: Flared sleeve Main fabric composition: Polyester fiber Style: Femme fatale Craftsmanship: Patchwork Note: 1. Asian sizes are 1 to 2 sizes smaller than European and American people. Choose the larger size if your size between two sizes. Please allow 2-3cm differences due to manual measurement. 2. Please check the size chart carefully before you buy the item, if you don't know how to choose size, please contact our customer service. 3.As you know, the different computers display colors differently, the color of the actual item may vary slightly from the following images. Packing list: Dress*1 Product Image:",
+    "category": "Women's Clothing",
+    "brand": "Women's Clothing",
+    "badge": "CJ Imported",
+    "price": 29.99,
+    "compare_at_price": 44.99,
+    "cost_price": 9.17,
+    "profit": 20.82,
+    "margin_percent": 69.42,
+    "price_manually_overridden": false,
+    "image": "https://cf.cjdropshipping.com/quick/product/6659fea7-f012-40b8-b3ef-390d3b5ff786.jpg",
+    "images": [
+      "https://cf.cjdropshipping.com/quick/product/6659fea7-f012-40b8-b3ef-390d3b5ff786.jpg",
+      "https://cf.cjdropshipping.com/quick/product/f12c0819-b03f-4457-bd36-75c5b1bab8f8.jpg",
+      "https://cf.cjdropshipping.com/quick/product/216d85a9-5a0c-4b72-be7e-3981736e2975.jpg",
+      "https://cf.cjdropshipping.com/quick/product/50ebb9a2-a116-4ca9-bfb4-4297d2342ef7.jpg",
+      "https://cf.cjdropshipping.com/quick/product/10947f0f-f59f-4667-90f2-89b8401e695e.jpg",
+      "https://cf.cjdropshipping.com/quick/product/e44f9a04-14da-46ef-9fb6-dc8daf4ded97.jpg",
+      "https://cf.cjdropshipping.com/quick/product/33a84f42-8456-4f3d-be52-8a23cb4df607.jpg",
+      "https://cf.cjdropshipping.com/quick/product/9717296f-4368-4081-a7f7-612218589f8f.jpg",
+      "https://cf.cjdropshipping.com/quick/product/15ef103a-f890-429b-9d48-7398bdb32635.jpg"
+    ],
+    "variants": [
+      {
+        "id": "2608100259531620900",
+        "cj_variant_id": "2608100259531620900",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Apricot S",
+        "sku": "CJLY304772701AZ",
+        "color": "S",
+        "size": "Apricot",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "420g",
+        "image": "https://cf.cjdropshipping.com/quick/product/e44f9a04-14da-46ef-9fb6-dc8daf4ded97.jpg",
+        "attributes": {
+          "Size": "Apricot",
+          "Color": "S",
+          "Weight (g)": "420"
+        }
+      },
+      {
+        "id": "2608100259531621500",
+        "cj_variant_id": "2608100259531621500",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Apricot M",
+        "sku": "CJLY304772702BY",
+        "color": "M",
+        "size": "Apricot",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/e44f9a04-14da-46ef-9fb6-dc8daf4ded97.jpg",
+        "attributes": {
+          "Size": "Apricot",
+          "Color": "M",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100259531622100",
+        "cj_variant_id": "2608100259531622100",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Apricot L",
+        "sku": "CJLY304772703CX",
+        "color": "L",
+        "size": "Apricot",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "440g",
+        "image": "https://cf.cjdropshipping.com/quick/product/e44f9a04-14da-46ef-9fb6-dc8daf4ded97.jpg",
+        "attributes": {
+          "Size": "Apricot",
+          "Color": "L",
+          "Weight (g)": "440"
+        }
+      },
+      {
+        "id": "2608100259531622800",
+        "cj_variant_id": "2608100259531622800",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Apricot XL",
+        "sku": "CJLY304772704DW",
+        "color": "XL",
+        "size": "Apricot",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/e44f9a04-14da-46ef-9fb6-dc8daf4ded97.jpg",
+        "attributes": {
+          "Size": "Apricot",
+          "Color": "XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100259531623400",
+        "cj_variant_id": "2608100259531623400",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Apricot 2XL",
+        "sku": "CJLY304772705EV",
+        "color": "2XL",
+        "size": "Apricot",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "460g",
+        "image": "https://cf.cjdropshipping.com/quick/product/e44f9a04-14da-46ef-9fb6-dc8daf4ded97.jpg",
+        "attributes": {
+          "Size": "Apricot",
+          "Color": "2XL",
+          "Weight (g)": "460"
+        }
+      },
+      {
+        "id": "2608100259531623900",
+        "cj_variant_id": "2608100259531623900",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Black S",
+        "sku": "CJLY304772706FU",
+        "color": "S",
+        "size": "Black",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "420g",
+        "image": "https://cf.cjdropshipping.com/quick/product/33a84f42-8456-4f3d-be52-8a23cb4df607.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "S",
+          "Weight (g)": "420"
+        }
+      },
+      {
+        "id": "2608100259531624400",
+        "cj_variant_id": "2608100259531624400",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Black M",
+        "sku": "CJLY304772707GT",
+        "color": "M",
+        "size": "Black",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/33a84f42-8456-4f3d-be52-8a23cb4df607.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "M",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100259531625000",
+        "cj_variant_id": "2608100259531625000",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Black L",
+        "sku": "CJLY304772708HS",
+        "color": "L",
+        "size": "Black",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "440g",
+        "image": "https://cf.cjdropshipping.com/quick/product/33a84f42-8456-4f3d-be52-8a23cb4df607.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "L",
+          "Weight (g)": "440"
+        }
+      },
+      {
+        "id": "2608100259531625600",
+        "cj_variant_id": "2608100259531625600",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Black XL",
+        "sku": "CJLY304772709IR",
+        "color": "XL",
+        "size": "Black",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/33a84f42-8456-4f3d-be52-8a23cb4df607.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100259531626100",
+        "cj_variant_id": "2608100259531626100",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Black 2XL",
+        "sku": "CJLY304772710JQ",
+        "color": "2XL",
+        "size": "Black",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "460g",
+        "image": "https://cf.cjdropshipping.com/quick/product/33a84f42-8456-4f3d-be52-8a23cb4df607.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "2XL",
+          "Weight (g)": "460"
+        }
+      },
+      {
+        "id": "2608100259531626600",
+        "cj_variant_id": "2608100259531626600",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Wine Red S",
+        "sku": "CJLY304772711KP",
+        "color": "S",
+        "size": "Wine Red",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "420g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9717296f-4368-4081-a7f7-612218589f8f.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "S",
+          "Weight (g)": "420"
+        }
+      },
+      {
+        "id": "2608100259531627200",
+        "cj_variant_id": "2608100259531627200",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Wine Red M",
+        "sku": "CJLY304772712LO",
+        "color": "M",
+        "size": "Wine Red",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9717296f-4368-4081-a7f7-612218589f8f.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "M",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100259531627700",
+        "cj_variant_id": "2608100259531627700",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Wine Red L",
+        "sku": "CJLY304772713MN",
+        "color": "L",
+        "size": "Wine Red",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "440g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9717296f-4368-4081-a7f7-612218589f8f.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "L",
+          "Weight (g)": "440"
+        }
+      },
+      {
+        "id": "2608100259531628300",
+        "cj_variant_id": "2608100259531628300",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Wine Red XL",
+        "sku": "CJLY304772714NM",
+        "color": "XL",
+        "size": "Wine Red",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9717296f-4368-4081-a7f7-612218589f8f.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100259531628800",
+        "cj_variant_id": "2608100259531628800",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Wine Red 2XL",
+        "sku": "CJLY304772715OL",
+        "color": "2XL",
+        "size": "Wine Red",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "460g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9717296f-4368-4081-a7f7-612218589f8f.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "2XL",
+          "Weight (g)": "460"
+        }
+      },
+      {
+        "id": "2608100259531629400",
+        "cj_variant_id": "2608100259531629400",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Dark Blue S",
+        "sku": "CJLY304772716PK",
+        "color": "S",
+        "size": "Dark Blue",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "420g",
+        "image": "https://cf.cjdropshipping.com/quick/product/15ef103a-f890-429b-9d48-7398bdb32635.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "S",
+          "Weight (g)": "420"
+        }
+      },
+      {
+        "id": "2608100259541620000",
+        "cj_variant_id": "2608100259541620000",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Dark Blue M",
+        "sku": "CJLY304772717QJ",
+        "color": "M",
+        "size": "Dark Blue",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/15ef103a-f890-429b-9d48-7398bdb32635.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "M",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100259541620500",
+        "cj_variant_id": "2608100259541620500",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Dark Blue L",
+        "sku": "CJLY304772718RI",
+        "color": "L",
+        "size": "Dark Blue",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "440g",
+        "image": "https://cf.cjdropshipping.com/quick/product/15ef103a-f890-429b-9d48-7398bdb32635.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "L",
+          "Weight (g)": "440"
+        }
+      },
+      {
+        "id": "2608100259541621200",
+        "cj_variant_id": "2608100259541621200",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Dark Blue XL",
+        "sku": "CJLY304772719SH",
+        "color": "XL",
+        "size": "Dark Blue",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/15ef103a-f890-429b-9d48-7398bdb32635.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100259541621700",
+        "cj_variant_id": "2608100259541621700",
+        "name": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dress Dark Blue 2XL",
+        "sku": "CJLY304772720TG",
+        "color": "2XL",
+        "size": "Dark Blue",
+        "price": 29.99,
+        "cost_price": 9.17,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "460g",
+        "image": "https://cf.cjdropshipping.com/quick/product/15ef103a-f890-429b-9d48-7398bdb32635.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "2XL",
+          "Weight (g)": "460"
+        }
+      }
+    ],
+    "sku": "CJLY3047727",
+    "inventory_quantity": 999,
+    "weight": "400.00-440.00",
+    "seo_title": "Solid-color Satin Sexy Off-shoulder Pleated Asymmetrical Dre",
+    "seo_description": "Product information: Pattern: Solid color Skirt style: Asymmetric Colors: Apricot, black, wine red, navy blue Waistline: Mid-rise Sizes: S, M, L, XL, 2XL Fit: S",
+    "status": "published",
+    "affiliate_link": "https://www.cjdropshipping.com/product/detail.html?id=2608100259531620100",
+    "cj_product_id": "2608100259531620100",
+    "created_at": "2026-08-10T03:21:20.585"
+  },
+  {
+    "id": "cj-2608100304161620300",
+    "title": "Mens Hooded Long-sleeve T-shirt Sports Top",
+    "slug": "mens-hooded-long-sleeve-t-shirt-sports-top",
+    "short_description": "Mens Hooded Long-sleeve T-shirt Sports Top",
+    "description": "Product information: Colors: White, Black, Dark Gray, Wine Red, Blue, Green, Khaki, Light Blue, Navy Blue, Purplish Red, Army Green Sizes: S, M, L, XL, XXL, XXXL Style: Pullover Thickness: Regular Fabric: Polyester Main Fabric Composition: Polyester Gender: Men’s Hooded: With hood Sleeve Length: Long sleeve Size: Note: 1. Asian sizes are 1 to 2 sizes smaller than European and American people. Choose the larger size if your size between two sizes. Please allow 2-3cm differences due to manual measurement. 2. Please check the size chart carefully before you buy the item, if you don't know how to choose size, please contact our customer service. 3.As you know, the different computers display colors differently, the color of the actual item may vary slightly from the following images. Packing list: 1*T-shirt Product Image:",
+    "category": "Men's Clothing",
+    "brand": "Men's Clothing",
+    "badge": "CJ Imported",
+    "price": 19.99,
+    "compare_at_price": 29.99,
+    "cost_price": 6.42,
+    "profit": 13.57,
+    "margin_percent": 67.88,
+    "price_manually_overridden": false,
+    "image": "https://cf.cjdropshipping.com/quick/product/b99f062a-be9a-45f5-aad0-434acc57863d.jpg",
+    "images": [
+      "https://cf.cjdropshipping.com/quick/product/b99f062a-be9a-45f5-aad0-434acc57863d.jpg",
+      "https://cf.cjdropshipping.com/quick/product/a20f3eb2-5c1e-4ad2-9456-070bacbd46d9.jpg",
+      "https://cf.cjdropshipping.com/quick/product/79f27d6e-37a7-4c70-bd90-b965522b34ff.jpg",
+      "https://cf.cjdropshipping.com/quick/product/08d67eca-3e2f-4991-a222-db0f720bfa13.jpg",
+      "https://cf.cjdropshipping.com/quick/product/7764e1e5-8881-49dd-8164-218b2e06361b.jpg",
+      "https://cf.cjdropshipping.com/quick/product/31e240c3-13d5-4eea-bce4-c93f34dad3d6.jpg",
+      "https://cf.cjdropshipping.com/quick/product/dd438684-700b-46a4-992b-151346e62015.jpg",
+      "https://cf.cjdropshipping.com/quick/product/266aa0c4-e449-483b-9164-0212080fc49e.jpg",
+      "https://cf.cjdropshipping.com/quick/product/230572d9-4fc6-44b7-bc5f-05add713e988.jpg",
+      "https://cf.cjdropshipping.com/quick/product/92f855a6-2589-43e1-ae01-7e904edba9de.jpg",
+      "https://cf.cjdropshipping.com/quick/product/248b08e6-ffc6-4ac3-86cf-88fb733c0fa5.jpg",
+      "https://cf.cjdropshipping.com/quick/product/dab57157-c6a5-41d9-bf1d-32654eb6184c.jpg",
+      "https://cf.cjdropshipping.com/quick/product/9a407b5e-7b5b-4c7f-b550-d6c2c501c041.jpg",
+      "https://cf.cjdropshipping.com/quick/product/3402c5ce-4e68-4c13-a619-c8381146b5d2.jpg"
+    ],
+    "variants": [
+      {
+        "id": "2608100304161621000",
+        "cj_variant_id": "2608100304161621000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top White S",
+        "sku": "CJYH304773601AZ",
+        "color": "S",
+        "size": "White",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/7764e1e5-8881-49dd-8164-218b2e06361b.jpg",
+        "attributes": {
+          "Size": "White",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304161622500",
+        "cj_variant_id": "2608100304161622500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top White M",
+        "sku": "CJYH304773602BY",
+        "color": "M",
+        "size": "White",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/7764e1e5-8881-49dd-8164-218b2e06361b.jpg",
+        "attributes": {
+          "Size": "White",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304161624000",
+        "cj_variant_id": "2608100304161624000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top White L",
+        "sku": "CJYH304773603CX",
+        "color": "L",
+        "size": "White",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/7764e1e5-8881-49dd-8164-218b2e06361b.jpg",
+        "attributes": {
+          "Size": "White",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304161624500",
+        "cj_variant_id": "2608100304161624500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top White XL",
+        "sku": "CJYH304773604DW",
+        "color": "XL",
+        "size": "White",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/7764e1e5-8881-49dd-8164-218b2e06361b.jpg",
+        "attributes": {
+          "Size": "White",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304161626200",
+        "cj_variant_id": "2608100304161626200",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top White 2XL",
+        "sku": "CJYH304773605EV",
+        "color": "2XL",
+        "size": "White",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/7764e1e5-8881-49dd-8164-218b2e06361b.jpg",
+        "attributes": {
+          "Size": "White",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304161627600",
+        "cj_variant_id": "2608100304161627600",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top White 3XL",
+        "sku": "CJYH304773606FU",
+        "color": "3XL",
+        "size": "White",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/7764e1e5-8881-49dd-8164-218b2e06361b.jpg",
+        "attributes": {
+          "Size": "White",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304161628100",
+        "cj_variant_id": "2608100304161628100",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Black S",
+        "sku": "CJYH304773607GT",
+        "color": "S",
+        "size": "Black",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/31e240c3-13d5-4eea-bce4-c93f34dad3d6.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304161628600",
+        "cj_variant_id": "2608100304161628600",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Black M",
+        "sku": "CJYH304773608HS",
+        "color": "M",
+        "size": "Black",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/31e240c3-13d5-4eea-bce4-c93f34dad3d6.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304161629000",
+        "cj_variant_id": "2608100304161629000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Black L",
+        "sku": "CJYH304773609IR",
+        "color": "L",
+        "size": "Black",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/31e240c3-13d5-4eea-bce4-c93f34dad3d6.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304161629500",
+        "cj_variant_id": "2608100304161629500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Black XL",
+        "sku": "CJYH304773610JQ",
+        "color": "XL",
+        "size": "Black",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/31e240c3-13d5-4eea-bce4-c93f34dad3d6.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304161629900",
+        "cj_variant_id": "2608100304161629900",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Black 2XL",
+        "sku": "CJYH304773611KP",
+        "color": "2XL",
+        "size": "Black",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/31e240c3-13d5-4eea-bce4-c93f34dad3d6.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304171620400",
+        "cj_variant_id": "2608100304171620400",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Black 3XL",
+        "sku": "CJYH304773612LO",
+        "color": "3XL",
+        "size": "Black",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/31e240c3-13d5-4eea-bce4-c93f34dad3d6.jpg",
+        "attributes": {
+          "Size": "Black",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304171621000",
+        "cj_variant_id": "2608100304171621000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Gray S",
+        "sku": "CJYH304773613MN",
+        "color": "S",
+        "size": "Dark Gray",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dd438684-700b-46a4-992b-151346e62015.jpg",
+        "attributes": {
+          "Size": "Dark Gray",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304171621500",
+        "cj_variant_id": "2608100304171621500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Gray M",
+        "sku": "CJYH304773614NM",
+        "color": "M",
+        "size": "Dark Gray",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dd438684-700b-46a4-992b-151346e62015.jpg",
+        "attributes": {
+          "Size": "Dark Gray",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304171622000",
+        "cj_variant_id": "2608100304171622000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Gray L",
+        "sku": "CJYH304773615OL",
+        "color": "L",
+        "size": "Dark Gray",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dd438684-700b-46a4-992b-151346e62015.jpg",
+        "attributes": {
+          "Size": "Dark Gray",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304171622500",
+        "cj_variant_id": "2608100304171622500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Gray XL",
+        "sku": "CJYH304773616PK",
+        "color": "XL",
+        "size": "Dark Gray",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dd438684-700b-46a4-992b-151346e62015.jpg",
+        "attributes": {
+          "Size": "Dark Gray",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304171623200",
+        "cj_variant_id": "2608100304171623200",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Gray 2XL",
+        "sku": "CJYH304773617QJ",
+        "color": "2XL",
+        "size": "Dark Gray",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dd438684-700b-46a4-992b-151346e62015.jpg",
+        "attributes": {
+          "Size": "Dark Gray",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304171623700",
+        "cj_variant_id": "2608100304171623700",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Gray 3XL",
+        "sku": "CJYH304773618RI",
+        "color": "3XL",
+        "size": "Dark Gray",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dd438684-700b-46a4-992b-151346e62015.jpg",
+        "attributes": {
+          "Size": "Dark Gray",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304171624100",
+        "cj_variant_id": "2608100304171624100",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Wine Red S",
+        "sku": "CJYH304773619SH",
+        "color": "S",
+        "size": "Wine Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/266aa0c4-e449-483b-9164-0212080fc49e.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304171624600",
+        "cj_variant_id": "2608100304171624600",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Wine Red M",
+        "sku": "CJYH304773620TG",
+        "color": "M",
+        "size": "Wine Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/266aa0c4-e449-483b-9164-0212080fc49e.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304171625000",
+        "cj_variant_id": "2608100304171625000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Wine Red L",
+        "sku": "CJYH304773621UF",
+        "color": "L",
+        "size": "Wine Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/266aa0c4-e449-483b-9164-0212080fc49e.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304171625400",
+        "cj_variant_id": "2608100304171625400",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Wine Red XL",
+        "sku": "CJYH304773622VE",
+        "color": "XL",
+        "size": "Wine Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/266aa0c4-e449-483b-9164-0212080fc49e.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304171625900",
+        "cj_variant_id": "2608100304171625900",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Wine Red 2XL",
+        "sku": "CJYH304773623WD",
+        "color": "2XL",
+        "size": "Wine Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/266aa0c4-e449-483b-9164-0212080fc49e.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304171626300",
+        "cj_variant_id": "2608100304171626300",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Wine Red 3XL",
+        "sku": "CJYH304773624XC",
+        "color": "3XL",
+        "size": "Wine Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/266aa0c4-e449-483b-9164-0212080fc49e.jpg",
+        "attributes": {
+          "Size": "Wine Red",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304171626800",
+        "cj_variant_id": "2608100304171626800",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Blue S",
+        "sku": "CJYH304773625YB",
+        "color": "S",
+        "size": "Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/230572d9-4fc6-44b7-bc5f-05add713e988.jpg",
+        "attributes": {
+          "Size": "Blue",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304171627200",
+        "cj_variant_id": "2608100304171627200",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Blue M",
+        "sku": "CJYH304773626ZA",
+        "color": "M",
+        "size": "Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/230572d9-4fc6-44b7-bc5f-05add713e988.jpg",
+        "attributes": {
+          "Size": "Blue",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304171627700",
+        "cj_variant_id": "2608100304171627700",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Blue L",
+        "sku": "CJYH304773627AZ",
+        "color": "L",
+        "size": "Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/230572d9-4fc6-44b7-bc5f-05add713e988.jpg",
+        "attributes": {
+          "Size": "Blue",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304171628300",
+        "cj_variant_id": "2608100304171628300",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Blue XL",
+        "sku": "CJYH304773628BY",
+        "color": "XL",
+        "size": "Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/230572d9-4fc6-44b7-bc5f-05add713e988.jpg",
+        "attributes": {
+          "Size": "Blue",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304171628700",
+        "cj_variant_id": "2608100304171628700",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Blue 2XL",
+        "sku": "CJYH304773629CX",
+        "color": "2XL",
+        "size": "Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/230572d9-4fc6-44b7-bc5f-05add713e988.jpg",
+        "attributes": {
+          "Size": "Blue",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304171629200",
+        "cj_variant_id": "2608100304171629200",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Blue 3XL",
+        "sku": "CJYH304773630DW",
+        "color": "3XL",
+        "size": "Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/230572d9-4fc6-44b7-bc5f-05add713e988.jpg",
+        "attributes": {
+          "Size": "Blue",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304171629700",
+        "cj_variant_id": "2608100304171629700",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Green S",
+        "sku": "CJYH304773631EV",
+        "color": "S",
+        "size": "Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/92f855a6-2589-43e1-ae01-7e904edba9de.jpg",
+        "attributes": {
+          "Size": "Green",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304181620100",
+        "cj_variant_id": "2608100304181620100",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Green M",
+        "sku": "CJYH304773632FU",
+        "color": "M",
+        "size": "Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/92f855a6-2589-43e1-ae01-7e904edba9de.jpg",
+        "attributes": {
+          "Size": "Green",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304181621100",
+        "cj_variant_id": "2608100304181621100",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Green L",
+        "sku": "CJYH304773633GT",
+        "color": "L",
+        "size": "Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/92f855a6-2589-43e1-ae01-7e904edba9de.jpg",
+        "attributes": {
+          "Size": "Green",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304181621600",
+        "cj_variant_id": "2608100304181621600",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Green XL",
+        "sku": "CJYH304773634HS",
+        "color": "XL",
+        "size": "Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/92f855a6-2589-43e1-ae01-7e904edba9de.jpg",
+        "attributes": {
+          "Size": "Green",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304181622000",
+        "cj_variant_id": "2608100304181622000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Green 2XL",
+        "sku": "CJYH304773635IR",
+        "color": "2XL",
+        "size": "Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/92f855a6-2589-43e1-ae01-7e904edba9de.jpg",
+        "attributes": {
+          "Size": "Green",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304181622502",
+        "cj_variant_id": "2608100304181622502",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Green 3XL",
+        "sku": "CJYH304773636JQ",
+        "color": "3XL",
+        "size": "Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/92f855a6-2589-43e1-ae01-7e904edba9de.jpg",
+        "attributes": {
+          "Size": "Green",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304181623100",
+        "cj_variant_id": "2608100304181623100",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Khaki S",
+        "sku": "CJYH304773637KP",
+        "color": "S",
+        "size": "Khaki",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/b99f062a-be9a-45f5-aad0-434acc57863d.jpg",
+        "attributes": {
+          "Size": "Khaki",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304181623500",
+        "cj_variant_id": "2608100304181623500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Khaki M",
+        "sku": "CJYH304773638LO",
+        "color": "M",
+        "size": "Khaki",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/b99f062a-be9a-45f5-aad0-434acc57863d.jpg",
+        "attributes": {
+          "Size": "Khaki",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304181624000",
+        "cj_variant_id": "2608100304181624000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Khaki L",
+        "sku": "CJYH304773639MN",
+        "color": "L",
+        "size": "Khaki",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/b99f062a-be9a-45f5-aad0-434acc57863d.jpg",
+        "attributes": {
+          "Size": "Khaki",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304181624600",
+        "cj_variant_id": "2608100304181624600",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Khaki XL",
+        "sku": "CJYH304773640NM",
+        "color": "XL",
+        "size": "Khaki",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/b99f062a-be9a-45f5-aad0-434acc57863d.jpg",
+        "attributes": {
+          "Size": "Khaki",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304181625400",
+        "cj_variant_id": "2608100304181625400",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Khaki 2XL",
+        "sku": "CJYH304773641OL",
+        "color": "2XL",
+        "size": "Khaki",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/b99f062a-be9a-45f5-aad0-434acc57863d.jpg",
+        "attributes": {
+          "Size": "Khaki",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304181626300",
+        "cj_variant_id": "2608100304181626300",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Khaki 3XL",
+        "sku": "CJYH304773642PK",
+        "color": "3XL",
+        "size": "Khaki",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/b99f062a-be9a-45f5-aad0-434acc57863d.jpg",
+        "attributes": {
+          "Size": "Khaki",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304181626800",
+        "cj_variant_id": "2608100304181626800",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Light Blue S",
+        "sku": "CJYH304773643QJ",
+        "color": "S",
+        "size": "Light Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/248b08e6-ffc6-4ac3-86cf-88fb733c0fa5.jpg",
+        "attributes": {
+          "Size": "Light Blue",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304181627500",
+        "cj_variant_id": "2608100304181627500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Light Blue M",
+        "sku": "CJYH304773644RI",
+        "color": "M",
+        "size": "Light Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/248b08e6-ffc6-4ac3-86cf-88fb733c0fa5.jpg",
+        "attributes": {
+          "Size": "Light Blue",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304181628300",
+        "cj_variant_id": "2608100304181628300",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Light Blue L",
+        "sku": "CJYH304773645SH",
+        "color": "L",
+        "size": "Light Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/248b08e6-ffc6-4ac3-86cf-88fb733c0fa5.jpg",
+        "attributes": {
+          "Size": "Light Blue",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304181628800",
+        "cj_variant_id": "2608100304181628800",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Light Blue XL",
+        "sku": "CJYH304773646TG",
+        "color": "XL",
+        "size": "Light Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/248b08e6-ffc6-4ac3-86cf-88fb733c0fa5.jpg",
+        "attributes": {
+          "Size": "Light Blue",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304181629500",
+        "cj_variant_id": "2608100304181629500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Light Blue 2XL",
+        "sku": "CJYH304773647UF",
+        "color": "2XL",
+        "size": "Light Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/248b08e6-ffc6-4ac3-86cf-88fb733c0fa5.jpg",
+        "attributes": {
+          "Size": "Light Blue",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304181629900",
+        "cj_variant_id": "2608100304181629900",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Light Blue 3XL",
+        "sku": "CJYH304773648VE",
+        "color": "3XL",
+        "size": "Light Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/248b08e6-ffc6-4ac3-86cf-88fb733c0fa5.jpg",
+        "attributes": {
+          "Size": "Light Blue",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304191620500",
+        "cj_variant_id": "2608100304191620500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Blue S",
+        "sku": "CJYH304773649WD",
+        "color": "S",
+        "size": "Dark Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dab57157-c6a5-41d9-bf1d-32654eb6184c.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304191621000",
+        "cj_variant_id": "2608100304191621000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Blue M",
+        "sku": "CJYH304773650XC",
+        "color": "M",
+        "size": "Dark Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dab57157-c6a5-41d9-bf1d-32654eb6184c.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304191621400",
+        "cj_variant_id": "2608100304191621400",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Blue L",
+        "sku": "CJYH304773651YB",
+        "color": "L",
+        "size": "Dark Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dab57157-c6a5-41d9-bf1d-32654eb6184c.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304191621900",
+        "cj_variant_id": "2608100304191621900",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Blue XL",
+        "sku": "CJYH304773652ZA",
+        "color": "XL",
+        "size": "Dark Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dab57157-c6a5-41d9-bf1d-32654eb6184c.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304191622500",
+        "cj_variant_id": "2608100304191622500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Blue 2XL",
+        "sku": "CJYH304773653AZ",
+        "color": "2XL",
+        "size": "Dark Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dab57157-c6a5-41d9-bf1d-32654eb6184c.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304191623000",
+        "cj_variant_id": "2608100304191623000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Dark Blue 3XL",
+        "sku": "CJYH304773654BY",
+        "color": "3XL",
+        "size": "Dark Blue",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/dab57157-c6a5-41d9-bf1d-32654eb6184c.jpg",
+        "attributes": {
+          "Size": "Dark Blue",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304191623500",
+        "cj_variant_id": "2608100304191623500",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Purplish Red S",
+        "sku": "CJYH304773655CX",
+        "color": "S",
+        "size": "Purplish Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9a407b5e-7b5b-4c7f-b550-d6c2c501c041.jpg",
+        "attributes": {
+          "Size": "Purplish Red",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304191624000",
+        "cj_variant_id": "2608100304191624000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Purplish Red M",
+        "sku": "CJYH304773656DW",
+        "color": "M",
+        "size": "Purplish Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9a407b5e-7b5b-4c7f-b550-d6c2c501c041.jpg",
+        "attributes": {
+          "Size": "Purplish Red",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304191624700",
+        "cj_variant_id": "2608100304191624700",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Purplish Red L",
+        "sku": "CJYH304773657EV",
+        "color": "L",
+        "size": "Purplish Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9a407b5e-7b5b-4c7f-b550-d6c2c501c041.jpg",
+        "attributes": {
+          "Size": "Purplish Red",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304191625300",
+        "cj_variant_id": "2608100304191625300",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Purplish Red XL",
+        "sku": "CJYH304773658FU",
+        "color": "XL",
+        "size": "Purplish Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9a407b5e-7b5b-4c7f-b550-d6c2c501c041.jpg",
+        "attributes": {
+          "Size": "Purplish Red",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304191625800",
+        "cj_variant_id": "2608100304191625800",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Purplish Red 2XL",
+        "sku": "CJYH304773659GT",
+        "color": "2XL",
+        "size": "Purplish Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9a407b5e-7b5b-4c7f-b550-d6c2c501c041.jpg",
+        "attributes": {
+          "Size": "Purplish Red",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304191626400",
+        "cj_variant_id": "2608100304191626400",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Purplish Red 3XL",
+        "sku": "CJYH304773660HS",
+        "color": "3XL",
+        "size": "Purplish Red",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/9a407b5e-7b5b-4c7f-b550-d6c2c501c041.jpg",
+        "attributes": {
+          "Size": "Purplish Red",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      },
+      {
+        "id": "2608100304191626900",
+        "cj_variant_id": "2608100304191626900",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Army Green S",
+        "sku": "CJYH304773661IR",
+        "color": "S",
+        "size": "Army Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "350g",
+        "image": "https://cf.cjdropshipping.com/quick/product/3402c5ce-4e68-4c13-a619-c8381146b5d2.jpg",
+        "attributes": {
+          "Size": "Army Green",
+          "Color": "S",
+          "Weight (g)": "350"
+        }
+      },
+      {
+        "id": "2608100304191627300",
+        "cj_variant_id": "2608100304191627300",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Army Green M",
+        "sku": "CJYH304773662JQ",
+        "color": "M",
+        "size": "Army Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "370g",
+        "image": "https://cf.cjdropshipping.com/quick/product/3402c5ce-4e68-4c13-a619-c8381146b5d2.jpg",
+        "attributes": {
+          "Size": "Army Green",
+          "Color": "M",
+          "Weight (g)": "370"
+        }
+      },
+      {
+        "id": "2608100304191627900",
+        "cj_variant_id": "2608100304191627900",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Army Green L",
+        "sku": "CJYH304773663KP",
+        "color": "L",
+        "size": "Army Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "390g",
+        "image": "https://cf.cjdropshipping.com/quick/product/3402c5ce-4e68-4c13-a619-c8381146b5d2.jpg",
+        "attributes": {
+          "Size": "Army Green",
+          "Color": "L",
+          "Weight (g)": "390"
+        }
+      },
+      {
+        "id": "2608100304191628400",
+        "cj_variant_id": "2608100304191628400",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Army Green XL",
+        "sku": "CJYH304773664LO",
+        "color": "XL",
+        "size": "Army Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "410g",
+        "image": "https://cf.cjdropshipping.com/quick/product/3402c5ce-4e68-4c13-a619-c8381146b5d2.jpg",
+        "attributes": {
+          "Size": "Army Green",
+          "Color": "XL",
+          "Weight (g)": "410"
+        }
+      },
+      {
+        "id": "2608100304191629000",
+        "cj_variant_id": "2608100304191629000",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Army Green 2XL",
+        "sku": "CJYH304773665MN",
+        "color": "2XL",
+        "size": "Army Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "430g",
+        "image": "https://cf.cjdropshipping.com/quick/product/3402c5ce-4e68-4c13-a619-c8381146b5d2.jpg",
+        "attributes": {
+          "Size": "Army Green",
+          "Color": "2XL",
+          "Weight (g)": "430"
+        }
+      },
+      {
+        "id": "2608100304191629600",
+        "cj_variant_id": "2608100304191629600",
+        "name": "Mens Hooded Long-sleeve T-shirt Sports Top Army Green 3XL",
+        "sku": "CJYH304773666NM",
+        "color": "3XL",
+        "size": "Army Green",
+        "price": 19.99,
+        "cost_price": 6.42,
+        "price_delta": 0,
+        "stock": 999,
+        "weight": "450g",
+        "image": "https://cf.cjdropshipping.com/quick/product/3402c5ce-4e68-4c13-a619-c8381146b5d2.jpg",
+        "attributes": {
+          "Size": "Army Green",
+          "Color": "3XL",
+          "Weight (g)": "450"
+        }
+      }
+    ],
+    "sku": "CJYH3047736",
+    "inventory_quantity": 999,
+    "weight": "330.00-430.00",
+    "seo_title": "Mens Hooded Long-sleeve T-shirt Sports Top",
+    "seo_description": "Product information: Colors: White, Black, Dark Gray, Wine Red, Blue, Green, Khaki, Light Blue, Navy Blue, Purplish Red, Army Green Sizes: S, M, L, XL, XXL, XXX",
+    "status": "published",
+    "affiliate_link": "https://www.cjdropshipping.com/product/detail.html?id=2608100304161620300",
+    "cj_product_id": "2608100304161620300",
+    "created_at": "2026-08-10T03:21:05.836"
+  },
+  {
+    "id": "cj-2608090846171628300",
+    "title": "Womens V-neck Draped Maxi Dress",
+    "slug": "womens-v-neck-draped-maxi-dress-2",
+    "short_description": null,
+    "description": "Product information: Colors: Red, navy blue, black, wine red, khaki, blue, green; Waist Style: High waist Sizes: S, M, L, XL, XXL, XXXL Fit: Slim-fit Skirt Length: Long skirt Fabric: Cotton blend Occasions: Business, dancing, banquets, dates, parties, stage performances, weddings Sleeve Style: Regular sleeve Sleeve Length: Long sleeve Size: Note: 1. Asian sizes are 1 to 2 sizes smaller than European and American people. Choose the larger size if your size between two sizes. Please allow 2-3cm differences due to manual measurement. 2. Please check the size chart carefully before you buy the item, if you don't know how to choose size, please contact our customer service. 3.As you know, the different computers display colors differently, the color of the actual item may vary slightly from the following images. Packing list: 1*Dress Product Image:",
+    "category": "Women's Clothing",
+    "brand": null,
+    "badge": null,
+    "price": 29.99,
+    "compare_at_price": null,
+    "cost_price": 29.99,
+    "profit": 0,
+    "margin_percent": 0,
+    "price_manually_overridden": false,
+    "image": "https://cf.cjdropshipping.com/quick/product/6c7c7937-faa8-4d31-a91c-b87334485f7e.jpg",
+    "images": [
+      "https://cf.cjdropshipping.com/quick/product/6c7c7937-faa8-4d31-a91c-b87334485f7e.jpg"
+    ],
+    "variants": [],
+    "sku": null,
+    "inventory_quantity": 999,
+    "weight": null,
+    "seo_title": "Womens V-neck Draped Maxi Dress",
+    "seo_description": null,
+    "status": "published",
+    "affiliate_link": "https://www.cjdropshipping.com/product/detail.html?id=2608090846171628300",
+    "cj_product_id": "2608090846171628300",
+    "created_at": "2026-08-09T14:02:38.475Z",
+    "collections": null,
+    "tags": null,
+    "dimensions": null
+  },
+  {
     "id": "76bbe834-2a5f-498d-a7db-724fee44529d",
     "title": "Love Hug Necklace Unisex Men Women Couple Jewelry Simple Temperament Clavicle Chain Valentines Day Lover Gift",
     "slug": "love-hug-couple-necklace",

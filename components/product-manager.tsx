@@ -1213,6 +1213,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                         <th style={{ width: "100px" }}>Color</th>
                         <th style={{ width: "90px" }}>Size</th>
                         <th>SKU</th>
+                        <th style={{ width: "140px" }}>CJ VID</th>
                         <th style={{ width: "90px" }}>Price ($)</th>
                         <th style={{ width: "80px" }}>Stock</th>
                         <th style={{ width: "60px" }}>Action</th>
@@ -1263,6 +1264,25 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                               onChange={(e) => updateVariantField(vIdx, "sku", e.target.value)}
                               style={{ padding: "4px 8px", fontSize: "12px" }}
                             />
+                          </td>
+                          <td>
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontFamily: "monospace",
+                                color: "var(--gold)",
+                                background: "rgba(255,255,255,0.05)",
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                                display: "inline-block",
+                                maxWidth: "130px",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                              title={v.cj_variant_id || v.id || ""}
+                            >
+                              {v.cj_variant_id || v.id || "N/A"}
+                            </span>
                           </td>
                           <td>
                             <input
