@@ -789,13 +789,24 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
       } as Product;
     });
 
-    // Merge any local products that weren't returned by Supabase query.
-    // GUARD: skip any product that is in the deleted-products manifest —
-    // this is the primary resurrection prevention for the local-JSON merge path.
-    for (const localP of allLocalProducts) {
-      if (isProductDeleted(deletedIds, localP)) continue; // permanently deleted — never resurface
-      if (!matchedLocalIds.has(localP.id) && !products.some((p) => p.id === localP.id || p.slug === localP.slug)) {
-        products.push(localP);
+    // LOCAL JSON IS ENRICHMENT-ONLY IN PRODUCTION.
+    // When Supabase is configured and has returned data, local JSON is used ONLY to hydrate
+    // Supabase records with extra fields (variants, images, etc.). We do NOT add products that
+    // exist only in local JSON to the Supabase result set.
+    //
+    // This is the production-safe rule: Supabase is authoritative for product existence.
+    // A product deleted from Supabase must NOT reappear just because it is still present
+    // in the static bundled data/products.json (which is read-only on Vercel and cannot
+    // be mutated at runtime).
+    //
+    // EXCEPTION: In local development with ENABLE_JSON_FALLBACK=true, local-only products
+    // ARE added (e.g. seed data not yet imported to Supabase).
+    if (isJsonFallbackEnabled()) {
+      for (const localP of allLocalProducts) {
+        if (isProductDeleted(deletedIds, localP)) continue; // deleted manifest guard (localhost)
+        if (!matchedLocalIds.has(localP.id) && !products.some((p) => p.id === localP.id || p.slug === localP.slug)) {
+          products.push(localP);
+        }
       }
     }
 
@@ -833,16 +844,21 @@ export const getProductBySlug = cache(async function getProductBySlug(slug: stri
   // getProducts() already filters deleted products (via getLocalProducts() + merge guard)
   if (match) return match;
 
-  // Direct local-JSON fallback — must also respect the deleted manifest
-  const localMatch = getLocalProducts().find(
-    (p) =>
-      p.slug === slug ||
-      p.id === slug ||
-      (p.slug && (slug.startsWith(p.slug) || p.slug.startsWith(slug) || slug.replace(/-\d+$/, "") === p.slug.replace(/-\d+$/, ""))) ||
-      (p.cj_product_id && (p.cj_product_id === slug || slug.includes(p.cj_product_id)))
-  );
-  // getLocalProducts() already filters deleted items, but apply guardDeleted as belt-and-suspenders
-  if (guardDeleted(localMatch)) return localMatch!;
+  // Direct local-JSON fallback — only in development/fallback mode.
+  // In production (Supabase configured, isJsonFallbackEnabled=false), we must NOT return a
+  // product that Supabase doesn't have just because it appears in the static bundled JSON.
+  // The bundled file is read-only on Vercel: any deletion from Supabase cannot be reflected
+  // there, so using it as a product-existence source would always resurrect deleted products.
+  if (isJsonFallbackEnabled()) {
+    const localMatch = getLocalProducts().find(
+      (p) =>
+        p.slug === slug ||
+        p.id === slug ||
+        (p.slug && (slug.startsWith(p.slug) || p.slug.startsWith(slug) || slug.replace(/-\d+$/, "") === p.slug.replace(/-\d+$/, ""))) ||
+        (p.cj_product_id && (p.cj_product_id === slug || slug.includes(p.cj_product_id)))
+    );
+    if (guardDeleted(localMatch)) return localMatch!;
+  }
 
   if (!isSupabaseConfigured()) {
     return FALLBACK_PRODUCTS.find((p) => p.slug === slug || p.id === slug) ?? null;
@@ -858,7 +874,10 @@ export const getProductBySlug = cache(async function getProductBySlug(slug: stri
     const { data, error } = await queryWithTimeout(query, 1500);
 
     if (error || !data) {
-      // Exception-path local fallback — filter deleted
+      // Supabase returned no row for this slug — product not found or deleted.
+      // In production, absence from Supabase IS the deletion state. Do not resurrect
+      // from local JSON. Only use local fallback in dev mode with JSON fallback enabled.
+      if (!isJsonFallbackEnabled()) return null;
       const fallback = getLocalProducts().find((p) => p.slug === slug || p.id === slug || (p.slug && slug.replace(/-\d+$/, "") === p.slug.replace(/-\d+$/, "")));
       return guardDeleted(fallback);
     }
@@ -929,7 +948,9 @@ export const getProductBySlug = cache(async function getProductBySlug(slug: stri
       created_at: data.created_at || enrichedLocalMatch?.created_at || new Date().toISOString(),
     } as Product;
   } catch (error: any) {
-    // Exception-path local fallback — filter deleted
+    // Supabase query threw an exception — only use local fallback in dev mode.
+    // In production, returning null is safer than resurrecting a deleted product.
+    if (!isJsonFallbackEnabled()) return null;
     const fallback = getLocalProducts().find((p) => p.slug === slug || p.id === slug);
     return guardDeleted(fallback);
   }
