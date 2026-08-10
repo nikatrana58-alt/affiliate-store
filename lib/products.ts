@@ -189,11 +189,130 @@ export const FALLBACK_PRODUCTS: Product[] = [
 ];
 
 const LOCAL_PRODUCTS_FILE = path.join(process.cwd(), "data", "products.json");
+const DELETED_PRODUCTS_FILE = path.join(process.cwd(), "data", "deleted-products.json");
 
 function ensureDataDirExists() {
   const dir = path.dirname(LOCAL_PRODUCTS_FILE);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Deleted-Products Manifest
+// Stores stable identifiers for every permanently deleted product so that NO
+// local-JSON fallback or merge path can resurrect them.
+// ─────────────────────────────────────────────────────────────────────────────
+
+type DeletedProductEntry = {
+  id: string;           // original product id (e.g. "cj-XXXXXX")
+  slug?: string;        // product slug at time of deletion
+  cj_product_id?: string; // CJ PID if applicable
+  deleted_at: string;   // ISO timestamp
+};
+
+/** All stable identifiers for a deleted product (id, slug, cjPid, derived uuid). */
+function buildDeletedSet(entry: DeletedProductEntry): Set<string> {
+  const s = new Set<string>();
+  s.add(entry.id);
+  s.add(stringToUuid(entry.id));
+  if (entry.slug) s.add(entry.slug);
+  if (entry.cj_product_id) {
+    s.add(entry.cj_product_id);
+    s.add(`cj-${entry.cj_product_id}`);
+    s.add(stringToUuid(`cj-${entry.cj_product_id}`));
+  }
+  return s;
+}
+
+/** Read the deleted-products manifest and return a Set of ALL known identifiers. */
+export function getDeletedProductIds(): Set<string> {
+  try {
+    ensureDataDirExists();
+    if (fs.existsSync(DELETED_PRODUCTS_FILE)) {
+      const content = fs.readFileSync(DELETED_PRODUCTS_FILE, "utf-8");
+      const entries: DeletedProductEntry[] = JSON.parse(content);
+      if (Array.isArray(entries)) {
+        const result = new Set<string>();
+        for (const entry of entries) {
+          for (const token of buildDeletedSet(entry)) result.add(token);
+        }
+        return result;
+      }
+    }
+  } catch {
+    // If the manifest is missing or corrupt, return empty set — safe default
+  }
+  return new Set<string>();
+}
+
+/** Return true if ANY of this product's stable identifiers appear in the deleted manifest. */
+function isProductDeleted(deletedIds: Set<string>, p: Product): boolean {
+  if (deletedIds.size === 0) return false;
+  if (deletedIds.has(p.id)) return true;
+  if (deletedIds.has(stringToUuid(p.id))) return true;
+  if (p.slug && deletedIds.has(p.slug)) return true;
+  if (p.cj_product_id) {
+    if (deletedIds.has(p.cj_product_id)) return true;
+    if (deletedIds.has(`cj-${p.cj_product_id}`)) return true;
+    if (deletedIds.has(stringToUuid(`cj-${p.cj_product_id}`))) return true;
+  }
+  return false;
+}
+
+/** Add a product's stable identifiers to the deleted-products manifest. */
+export function addToDeletedManifest(id: string, slug?: string | null, cjProductId?: string | null): void {
+  try {
+    ensureDataDirExists();
+    let entries: DeletedProductEntry[] = [];
+    if (fs.existsSync(DELETED_PRODUCTS_FILE)) {
+      try {
+        const content = fs.readFileSync(DELETED_PRODUCTS_FILE, "utf-8");
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed)) entries = parsed;
+      } catch {
+        entries = [];
+      }
+    }
+    // Avoid duplicates
+    const alreadyPresent = entries.some((e) => e.id === id);
+    if (!alreadyPresent) {
+      const entry: DeletedProductEntry = { id, deleted_at: new Date().toISOString() };
+      if (slug) entry.slug = slug;
+      if (cjProductId) entry.cj_product_id = cjProductId;
+      entries.unshift(entry);
+    }
+    fs.writeFileSync(DELETED_PRODUCTS_FILE, JSON.stringify(entries, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("[products] Failed to write deleted-products manifest:", err);
+  }
+}
+
+/**
+ * Remove a product's identifiers from the deleted-products manifest.
+ * Called when an admin explicitly re-imports the same product, intentionally
+ * creating it fresh. This clears the deletion marker so the product can
+ * appear in the catalog again.
+ */
+export function removeFromDeletedManifest(id: string, slug?: string | null, cjProductId?: string | null): void {
+  try {
+    if (!fs.existsSync(DELETED_PRODUCTS_FILE)) return;
+    const content = fs.readFileSync(DELETED_PRODUCTS_FILE, "utf-8");
+    let entries: DeletedProductEntry[] = JSON.parse(content);
+    if (!Array.isArray(entries)) return;
+
+    const tokensToRemove = buildDeletedSet({ id, slug: slug ?? undefined, cj_product_id: cjProductId ?? undefined, deleted_at: "" });
+
+    entries = entries.filter((e) => {
+      const entryTokens = buildDeletedSet(e);
+      for (const token of tokensToRemove) {
+        if (entryTokens.has(token)) return false; // remove this entry
+      }
+      return true;
+    });
+    fs.writeFileSync(DELETED_PRODUCTS_FILE, JSON.stringify(entries, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("[products] Failed to update deleted-products manifest on re-import:", err);
   }
 }
 
@@ -216,8 +335,13 @@ export function getLocalProducts(): Product[] {
       const content = fs.readFileSync(LOCAL_PRODUCTS_FILE, "utf-8");
       const list = JSON.parse(content);
       if (Array.isArray(list) && list.length > 0) {
-        cachedLocalProducts = list;
-        return list;
+        // Filter out any products that have been permanently deleted
+        const deletedIds = getDeletedProductIds();
+        const filtered = deletedIds.size > 0
+          ? (list as Product[]).filter((p) => !isProductDeleted(deletedIds, p))
+          : (list as Product[]);
+        cachedLocalProducts = filtered;
+        return filtered;
       }
     }
   } catch (err) {
@@ -229,6 +353,10 @@ export function getLocalProducts(): Product[] {
 
 export async function saveProduct(product: Product): Promise<Product> {
   invalidateProductsCache();
+
+  // If this product was previously permanently deleted, clear its deletion marker.
+  // An explicit admin save (fresh import / re-import) intentionally recreates it.
+  removeFromDeletedManifest(product.id, product.slug, product.cj_product_id);
 
   if (isSupabaseConfigured()) {
     try {
@@ -246,10 +374,23 @@ export async function saveProduct(product: Product): Promise<Product> {
         category: product.category || "General",
         badge: product.badge || null,
       };
+      if (product.cj_product_id) {
+        payload.cj_product_id = product.cj_product_id;
+      }
 
       const { error } = await supabase.from("products").upsert(payload, { onConflict: "id" });
       if (error) {
-        console.error("[products] Supabase product upsert failed:", error.message);
+        if (error.message.includes("cj_product_id")) {
+          delete payload.cj_product_id;
+          const { error: retryErr } = await supabase.from("products").upsert(payload, { onConflict: "id" });
+          if (retryErr) {
+            console.error("[products] Supabase product upsert failed on retry:", retryErr.message);
+          } else {
+            console.info(`[products] Successfully persisted product to Supabase (without cj_product_id col): ${product.id}`);
+          }
+        } else {
+          console.error("[products] Supabase product upsert failed:", error.message);
+        }
       } else {
         console.info(`[products] Successfully persisted product to Supabase: ${product.id}`);
       }
@@ -268,13 +409,30 @@ export async function saveProduct(product: Product): Promise<Product> {
         p.id === product.id ||
         stringToUuid(p.id) === uuid ||
         p.slug === product.slug ||
-        (p.cj_product_id && product.cj_product_id && p.cj_product_id === product.cj_product_id)
+        (product.slug && (p.slug.startsWith(product.slug) || product.slug.startsWith(p.slug) || p.slug.replace(/-\d+$/, "") === product.slug.replace(/-\d+$/, ""))) ||
+        (p.cj_product_id && product.cj_product_id && p.cj_product_id === product.cj_product_id) ||
+        (product.cj_product_id && (p.id === `cj-${product.cj_product_id}` || stringToUuid(p.id) === stringToUuid(`cj-${product.cj_product_id}`)))
     );
 
     let updated: Product[];
     if (index >= 0) {
       updated = [...existing];
-      updated[index] = { ...updated[index], ...product };
+      const mergedVariants =
+        product.variants && product.variants.length > 0
+          ? product.variants
+          : updated[index].variants || [];
+
+      const mergedImages =
+        product.images && product.images.length > 0
+          ? product.images
+          : updated[index].images || [];
+
+      updated[index] = {
+        ...updated[index],
+        ...product,
+        variants: mergedVariants,
+        images: mergedImages,
+      };
     } else {
       updated = [product, ...existing];
     }
@@ -301,6 +459,43 @@ export function saveLocalProduct(product: Product): Product {
 export async function deleteProduct(id: string): Promise<boolean> {
   invalidateProductsCache();
 
+  // ── Step 1: Collect product identifiers before deletion (for manifest) ──────
+  let productSlug: string | undefined;
+  let productCjId: string | undefined;
+
+  try {
+    // Attempt to find the product in local snapshot first (fast, no network)
+    const localSnapshot = (() => {
+      try {
+        if (fs.existsSync(LOCAL_PRODUCTS_FILE)) {
+          const raw = fs.readFileSync(LOCAL_PRODUCTS_FILE, "utf-8");
+          const list: Product[] = JSON.parse(raw);
+          if (Array.isArray(list)) {
+            const uuid = stringToUuid(id);
+            return list.find(
+              (p) =>
+                p.id === id ||
+                stringToUuid(p.id) === uuid ||
+                p.slug === id ||
+                p.cj_product_id === id
+            );
+          }
+        }
+      } catch {
+        // Ignore read errors
+      }
+      return undefined;
+    })();
+
+    if (localSnapshot) {
+      productSlug = localSnapshot.slug;
+      productCjId = localSnapshot.cj_product_id ?? undefined;
+    }
+  } catch {
+    // Non-fatal: manifest will still contain the raw id
+  }
+
+  // ── Step 2: Delete from Supabase ─────────────────────────────────────────
   if (isSupabaseConfigured()) {
     try {
       const supabase = createAdminSupabaseClient();
@@ -320,25 +515,44 @@ export async function deleteProduct(id: string): Promise<boolean> {
     }
   }
 
-  // Only delete from local file snapshot if dev fallback flag is explicitly enabled
-  if (isJsonFallbackEnabled()) {
-    try {
-      ensureDataDirExists();
-      const existing = getLocalProducts();
-      const filtered = existing.filter(
-        (p) =>
-          p.id !== id &&
-          p.cj_product_id !== id &&
-          String(p.printful_sync_id) !== id &&
-          String(p.printful_product_id) !== id &&
-          p.slug !== id
-      );
-      fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(filtered, null, 2), "utf-8");
-      cachedLocalProducts = filtered;
-    } catch (err) {
-      console.warn("[products] Dev-only local product delete failed:", err);
+  // ── Step 3: ALWAYS remove from data/products.json (prevents resurrection) ─
+  // This runs regardless of ENABLE_JSON_FALLBACK because saveProduct() always
+  // writes to the local snapshot. If we skip this, the deleted product will be
+  // merged back into the catalog on the next getProducts() call.
+  try {
+    ensureDataDirExists();
+    if (fs.existsSync(LOCAL_PRODUCTS_FILE)) {
+      const raw = fs.readFileSync(LOCAL_PRODUCTS_FILE, "utf-8");
+      const existing: Product[] = JSON.parse(raw);
+      if (Array.isArray(existing)) {
+        const uuid = stringToUuid(id);
+        const filtered = existing.filter(
+          (p) =>
+            p.id !== id &&
+            stringToUuid(p.id) !== uuid &&
+            p.slug !== id &&
+            p.cj_product_id !== id &&
+            String(p.printful_sync_id) !== id &&
+            String(p.printful_product_id) !== id &&
+            // Also catch the CJ-prefixed form of the id
+            p.id !== `cj-${id}` &&
+            stringToUuid(p.id) !== stringToUuid(`cj-${id}`)
+        );
+        fs.writeFileSync(LOCAL_PRODUCTS_FILE, JSON.stringify(filtered, null, 2), "utf-8");
+        cachedLocalProducts = filtered;
+        console.info(`[products] Removed product "${id}" from local JSON snapshot (${existing.length - filtered.length} record(s) removed).`);
+      }
     }
+  } catch (err) {
+    console.warn("[products] Local JSON snapshot cleanup failed:", err);
   }
+
+  // ── Step 4: Add to deleted-products manifest (prevents all resurrection) ──
+  // This is the permanent guard. Even if local JSON somehow retains the product
+  // (e.g. write failure above), getLocalProducts() and the getProducts() merge
+  // loop will filter it out using this manifest.
+  addToDeletedManifest(id, productSlug, productCjId);
+  console.info(`[products] Product "${id}" added to deleted-products manifest (slug: ${productSlug ?? "n/a"}, cjPid: ${productCjId ?? "n/a"}).`);
 
   return true;
 }
@@ -518,16 +732,22 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
       return [];
     }
 
+    // Read the deleted manifest once; used throughout this function
+    const deletedIds = getDeletedProductIds();
+
     const allLocalProducts = getLocalProducts();
     const matchedLocalIds = new Set<string>();
 
     const products = data.map((item: any) => {
+      const itemCjId = item.cj_product_id || (item.slug?.startsWith("cj-") ? item.slug.replace("cj-", "") : null);
+
       const localMatch = allLocalProducts.find(
         (p) =>
           p.id === item.id ||
           stringToUuid(p.id) === item.id ||
           p.slug === item.slug ||
-          (p.slug && item.slug && (item.slug.startsWith(p.slug) || p.slug.startsWith(item.slug))) ||
+          (item.slug && p.slug && (item.slug.startsWith(p.slug) || p.slug.startsWith(item.slug) || item.slug.replace(/-\d+$/, "") === p.slug.replace(/-\d+$/, ""))) ||
+          (itemCjId && (p.cj_product_id === itemCjId || p.id === `cj-${itemCjId}` || stringToUuid(p.id) === stringToUuid(`cj-${itemCjId}`))) ||
           (p.cj_product_id && (
             p.cj_product_id === item.cj_product_id ||
             item.slug?.includes(p.cj_product_id) ||
@@ -560,7 +780,7 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
         sku: localMatch?.sku || null,
         inventory_quantity: localMatch?.inventory_quantity ?? 999,
         affiliate_link: item.affiliate_link || localMatch?.affiliate_link || "",
-        cj_product_id: localMatch?.cj_product_id || (item.slug?.startsWith("cj-") ? item.slug.replace("cj-", "") : null),
+        cj_product_id: itemCjId || localMatch?.cj_product_id || null,
         printful_product_id: localMatch?.printful_product_id || null,
         printful_sync_id: localMatch?.printful_sync_id || null,
         is_original: localMatch?.is_original || false,
@@ -569,8 +789,11 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
       } as Product;
     });
 
-    // Merge any local products that weren't returned by Supabase query
+    // Merge any local products that weren't returned by Supabase query.
+    // GUARD: skip any product that is in the deleted-products manifest —
+    // this is the primary resurrection prevention for the local-JSON merge path.
     for (const localP of allLocalProducts) {
+      if (isProductDeleted(deletedIds, localP)) continue; // permanently deleted — never resurface
       if (!matchedLocalIds.has(localP.id) && !products.some((p) => p.id === localP.id || p.slug === localP.slug)) {
         products.push(localP);
       }
@@ -580,31 +803,46 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
     return products;
   } catch (error: any) {
     console.warn("[products] Supabase query notice, fallback to local products:", error?.message);
-    const local = getLocalProducts();
+    // Filter deleted products from the exception-path local fallback
+    const deletedIds = getDeletedProductIds();
+    const local = getLocalProducts().filter((p) => !isProductDeleted(deletedIds, p));
     cachedProductsResponse = { data: local, timestamp: now };
     return local;
   }
 });
 
 export const getProductBySlug = cache(async function getProductBySlug(slug: string): Promise<Product | null> {
+  // Read deleted manifest once for all fallback guards in this function
+  const deletedIds = getDeletedProductIds();
+
+  // Helper: return null if the product is permanently deleted
+  const guardDeleted = (p: Product | null | undefined): Product | null => {
+    if (!p) return null;
+    if (isProductDeleted(deletedIds, p)) return null;
+    return p;
+  };
+
   const products = await getProducts();
   const match = products.find(
     (p) =>
       p.slug === slug ||
       p.id === slug ||
-      (p.slug && (slug.startsWith(p.slug) || p.slug.startsWith(slug))) ||
+      (p.slug && (slug.startsWith(p.slug) || p.slug.startsWith(slug) || slug.replace(/-\d+$/, "") === p.slug.replace(/-\d+$/, ""))) ||
       (p.cj_product_id && (p.cj_product_id === slug || slug.includes(p.cj_product_id)))
   );
+  // getProducts() already filters deleted products (via getLocalProducts() + merge guard)
   if (match) return match;
 
+  // Direct local-JSON fallback — must also respect the deleted manifest
   const localMatch = getLocalProducts().find(
     (p) =>
       p.slug === slug ||
       p.id === slug ||
-      (p.slug && (slug.startsWith(p.slug) || p.slug.startsWith(slug))) ||
+      (p.slug && (slug.startsWith(p.slug) || p.slug.startsWith(slug) || slug.replace(/-\d+$/, "") === p.slug.replace(/-\d+$/, ""))) ||
       (p.cj_product_id && (p.cj_product_id === slug || slug.includes(p.cj_product_id)))
   );
-  if (localMatch) return localMatch;
+  // getLocalProducts() already filters deleted items, but apply guardDeleted as belt-and-suspenders
+  if (guardDeleted(localMatch)) return localMatch!;
 
   if (!isSupabaseConfigured()) {
     return FALLBACK_PRODUCTS.find((p) => p.slug === slug || p.id === slug) ?? null;
@@ -620,39 +858,80 @@ export const getProductBySlug = cache(async function getProductBySlug(slug: stri
     const { data, error } = await queryWithTimeout(query, 1500);
 
     if (error || !data) {
-      return getLocalProducts().find((p) => p.slug === slug || p.id === slug) ?? null;
+      // Exception-path local fallback — filter deleted
+      const fallback = getLocalProducts().find((p) => p.slug === slug || p.id === slug || (p.slug && slug.replace(/-\d+$/, "") === p.slug.replace(/-\d+$/, "")));
+      return guardDeleted(fallback);
     }
 
-    const localMatch = getLocalProducts().find((p) => p.slug === data.slug || p.id === data.id || stringToUuid(p.id) === data.id);
-    return {
-      id: localMatch?.id || data.id,
+    // Supabase returned a row — check if it's permanently deleted before returning
+    const dbProduct: Product = {
+      id: data.id,
       title: data.title,
       slug: data.slug || data.id,
-      description: data.description || localMatch?.description || null,
-      category: data.category || localMatch?.category || "General",
-      collections: localMatch?.collections || null,
-      tags: localMatch?.tags || null,
-      badge: data.badge || localMatch?.badge || null,
-      price: data.price ?? localMatch?.price ?? 0,
-      compare_at_price: localMatch?.compare_at_price || null,
-      cost_price: localMatch?.cost_price || null,
-      profit: localMatch?.profit || null,
-      margin_percent: localMatch?.margin_percent || null,
-      image: data.image || localMatch?.image || null,
-      images: localMatch?.images || (data.image ? [data.image] : []),
-      variants: localMatch?.variants && localMatch.variants.length > 0 ? localMatch.variants : [],
-      sku: localMatch?.sku || null,
-      inventory_quantity: localMatch?.inventory_quantity ?? 999,
-      affiliate_link: data.affiliate_link || localMatch?.affiliate_link || "",
-      cj_product_id: localMatch?.cj_product_id || null,
-      printful_product_id: localMatch?.printful_product_id || null,
-      printful_sync_id: localMatch?.printful_sync_id || null,
-      is_original: localMatch?.is_original || false,
-      supplier_type: localMatch?.supplier_type || null,
-      created_at: data.created_at || localMatch?.created_at || new Date().toISOString(),
+      description: data.description || null,
+      category: data.category || "General",
+      collections: null,
+      tags: null,
+      badge: data.badge || null,
+      price: data.price ?? 0,
+      compare_at_price: null,
+      cost_price: null,
+      profit: null,
+      margin_percent: null,
+      image: data.image || null,
+      images: data.image ? [data.image] : [],
+      variants: [],
+      sku: null,
+      inventory_quantity: 999,
+      affiliate_link: data.affiliate_link || "",
+      cj_product_id: data.cj_product_id || null,
+      printful_product_id: null,
+      printful_sync_id: null,
+      is_original: false,
+      supplier_type: null,
+      created_at: data.created_at || new Date().toISOString(),
+    };
+    if (isProductDeleted(deletedIds, dbProduct)) return null;
+
+    const enrichedLocalMatch = getLocalProducts().find(
+      (p) =>
+        p.slug === data.slug ||
+        p.id === data.id ||
+        stringToUuid(p.id) === data.id ||
+        (p.slug && data.slug && (data.slug.startsWith(p.slug) || p.slug.startsWith(data.slug) || data.slug.replace(/-\d+$/, "") === p.slug.replace(/-\d+$/, ""))) ||
+        (p.cj_product_id && data.cj_product_id && p.cj_product_id === data.cj_product_id)
+    );
+    return {
+      id: enrichedLocalMatch?.id || data.id,
+      title: data.title,
+      slug: data.slug || data.id,
+      description: data.description || enrichedLocalMatch?.description || null,
+      category: data.category || enrichedLocalMatch?.category || "General",
+      collections: enrichedLocalMatch?.collections || null,
+      tags: enrichedLocalMatch?.tags || null,
+      badge: data.badge || enrichedLocalMatch?.badge || null,
+      price: data.price ?? enrichedLocalMatch?.price ?? 0,
+      compare_at_price: enrichedLocalMatch?.compare_at_price || null,
+      cost_price: enrichedLocalMatch?.cost_price || null,
+      profit: enrichedLocalMatch?.profit || null,
+      margin_percent: enrichedLocalMatch?.margin_percent || null,
+      image: data.image || enrichedLocalMatch?.image || null,
+      images: enrichedLocalMatch?.images || (data.image ? [data.image] : []),
+      variants: enrichedLocalMatch?.variants && enrichedLocalMatch.variants.length > 0 ? enrichedLocalMatch.variants : [],
+      sku: enrichedLocalMatch?.sku || null,
+      inventory_quantity: enrichedLocalMatch?.inventory_quantity ?? 999,
+      affiliate_link: data.affiliate_link || enrichedLocalMatch?.affiliate_link || "",
+      cj_product_id: enrichedLocalMatch?.cj_product_id || null,
+      printful_product_id: enrichedLocalMatch?.printful_product_id || null,
+      printful_sync_id: enrichedLocalMatch?.printful_sync_id || null,
+      is_original: enrichedLocalMatch?.is_original || false,
+      supplier_type: enrichedLocalMatch?.supplier_type || null,
+      created_at: data.created_at || enrichedLocalMatch?.created_at || new Date().toISOString(),
     } as Product;
   } catch (error: any) {
-    return getLocalProducts().find((p) => p.slug === slug || p.id === slug) ?? null;
+    // Exception-path local fallback — filter deleted
+    const fallback = getLocalProducts().find((p) => p.slug === slug || p.id === slug);
+    return guardDeleted(fallback);
   }
 });
 

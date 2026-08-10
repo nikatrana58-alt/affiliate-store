@@ -10,7 +10,7 @@
 
 import { cjDropshipping, type CJProductDetail, type CJVariant } from "@/lib/cj-dropshipping";
 import { calculateProductPricing } from "@/lib/pricing-engine";
-import { getProducts, getUniqueSlug, saveProduct, stringToUuid } from "@/lib/products";
+import { getProducts, getProductBySlug, getUniqueSlug, saveProduct, stringToUuid } from "@/lib/products";
 import { createAdminSupabaseClient } from "@/lib/supabase";
 
 // ---------------------------------------------------------------------------
@@ -40,6 +40,8 @@ export type ImportReport = {
     cj_product_id: string;
     affiliate_link: string;
     description: string | null;
+    variants?: unknown[];
+    images?: string[];
   };
   variantsImported?: number;
   inventoryRowsCreated?: number;
@@ -123,7 +125,7 @@ export function parseVariantDetails(
   let size: string | null = null;
 
   const knownSizes = new Set([
-    "XXS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL",
+    "XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "2XL", "3XL", "4XL", "5XL", "6XL",
     "ONE SIZE", "FREE SIZE", "SMALL", "MEDIUM", "LARGE", "EXTRA LARGE"
   ]);
 
@@ -133,7 +135,7 @@ export function parseVariantDetails(
     if (knownSizes.has(clean)) return true;
     if (/^\d+(\.\d+)?$/.test(clean)) return true;
     if (/^(EU|US|UK)?\s*\d+/i.test(clean)) return true;
-    if (/^(XXS|XS|S|M|L|XL|[2-6]XL)$/i.test(clean)) return true;
+    if (/^(XXS|XS|S|M|L|XL|XXL|XXXL|[2-6]XL)$/i.test(clean)) return true;
     return false;
   };
 
@@ -158,7 +160,7 @@ export function parseVariantDetails(
         const lowerKey = keyName.toLowerCase();
         if (lowerKey.includes("color") || lowerKey.includes("style") || lowerKey.includes("pattern")) {
           if (!color) color = val;
-        } else if (lowerKey.includes("size")) {
+        } else if (lowerKey.includes("size") || lowerKey.includes("option") || lowerKey.includes("specification") || lowerKey.includes("model")) {
           if (!size) size = val;
         }
       });
@@ -184,6 +186,21 @@ export function parseVariantDetails(
       } else {
         color = parts[0];
       }
+    }
+  }
+
+  // Swap Correction Heuristic: if color is a size string (e.g. "S", "XXL") and size is not a size string (e.g. "White"), swap them
+  if (color && size && isSizeString(color) && !isSizeString(size)) {
+    const tmp = color;
+    color = size;
+    size = tmp;
+
+    const colorAttrKey = Object.keys(attrs).find((key) => key.toLowerCase() === "color");
+    const sizeAttrKey = Object.keys(attrs).find((key) => key.toLowerCase() === "size");
+    if (colorAttrKey && sizeAttrKey) {
+      const attrValue = attrs[colorAttrKey];
+      attrs[colorAttrKey] = attrs[sizeAttrKey];
+      attrs[sizeAttrKey] = attrValue;
     }
   }
 
@@ -509,6 +526,40 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
     log(`[cj-import] Inventory row notice: ${invErr instanceof Error ? invErr.message : String(invErr)}`);
   }
 
+  // ── 7. Post-import verification: retrieve product via getProductBySlug ─────
+  log("[cj-import] Executing post-import verification query via getProductBySlug...");
+  const retrievedProduct = await getProductBySlug(insertedProduct.slug);
+  const retrievedVariantCount = retrievedProduct?.variants?.length ?? 0;
+
+  log(`[cj-import] Verification summary: CJ variants=${variants.length}, Imported=${importedVariants.length}, Retrieved=${retrievedVariantCount}`);
+
+  if (variants.length > 0 && retrievedVariantCount === 0) {
+    const errorMsg = `IMPORT VERIFICATION FAILED: CJ product has ${variants.length} variants, but retrieved product has 0 variants.`;
+    log(`[cj-import] ERROR: ${errorMsg}`);
+    return {
+      status: "error",
+      cj_product_id: targetPid,
+      product: {
+        id: insertedProduct.id,
+        title: insertedProduct.title,
+        slug: insertedProduct.slug,
+        price: insertedProduct.price,
+        image: insertedProduct.image,
+        category: insertedProduct.category,
+        cj_product_id: targetPid,
+        affiliate_link: insertedProduct.affiliate_link,
+        description: insertedProduct.description,
+        variants: [],
+      },
+      variantsImported: importedVariants.length,
+      inventoryRowsCreated: importedVariants.length + 1,
+      variants: importedVariants,
+      message: errorMsg,
+      durationMs: Date.now() - startMs,
+      logs,
+    };
+  }
+
   const durationMs = Date.now() - startMs;
 
   log(`[cj-import] ========== IMPORT COMPLETE (${action.toUpperCase()}) ==========`);
@@ -537,6 +588,8 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
       cj_product_id: targetPid,
       affiliate_link: insertedProduct.affiliate_link,
       description: insertedProduct.description,
+      variants: retrievedProduct?.variants || mappedVariants,
+      images: retrievedProduct?.images || allImages,
     },
     variantsImported: importedVariants.length,
     inventoryRowsCreated: importedVariants.length + 1,

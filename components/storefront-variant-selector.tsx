@@ -29,8 +29,19 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
         sizeSet.add(v.size.trim());
       }
       if (v.attributes) {
-        if (v.attributes["Color"]?.trim()) colorSet.add(v.attributes["Color"].trim());
-        if (v.attributes["Size"]?.trim()) sizeSet.add(v.attributes["Size"].trim());
+        Object.entries(v.attributes).forEach(([k, val]) => {
+          if (!val || typeof val !== "string" || k.startsWith("Weight")) return;
+          const lowerK = k.toLowerCase();
+          const hasExplicitColor = Boolean(v.color?.trim());
+          const hasExplicitSize = Boolean(v.size?.trim());
+          if (!hasExplicitColor && (lowerK.includes("color") || lowerK.includes("style") || lowerK.includes("pattern"))) {
+            colorSet.add(val.trim());
+          } else if (!hasExplicitSize && (lowerK.includes("size") || lowerK.includes("option") || lowerK.includes("specification") || lowerK.includes("model"))) {
+            sizeSet.add(val.trim());
+          } else if (!hasExplicitColor && !hasExplicitSize) {
+            styleSet.add(val.trim());
+          }
+        });
       }
       if (!v.color && !v.size && (!v.attributes || Object.keys(v.attributes).length === 0)) {
         if (v.name?.trim()) styleSet.add(v.name.trim());
@@ -48,15 +59,87 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
   const isSizeRequired = sizes.length > 0;
   const isStyleRequired = styles.length > 0;
 
+  // Helper function for case-insensitive attribute value comparison
+  const matchAttrValue = (val1: string | null | undefined, val2: string | null | undefined): boolean => {
+    if (!val1 || !val2) return false;
+    return val1.trim().toLowerCase() === val2.trim().toLowerCase();
+  };
+
+  const matchesColor = (v: ProductVariantItem, targetColor: string | null): boolean => {
+    if (!targetColor) return false;
+    if (matchAttrValue(v.color, targetColor)) return true;
+    if (v.attributes) {
+      for (const [k, val] of Object.entries(v.attributes)) {
+        const lowerK = k.toLowerCase();
+        if (lowerK.includes("color") || lowerK.includes("style") || lowerK.includes("pattern")) {
+          if (matchAttrValue(val, targetColor)) return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  const matchesSize = (v: ProductVariantItem, targetSize: string | null): boolean => {
+    if (!targetSize) return false;
+    if (matchAttrValue(v.size, targetSize)) return true;
+    if (v.attributes) {
+      for (const [k, val] of Object.entries(v.attributes)) {
+        const lowerK = k.toLowerCase();
+        if (lowerK.includes("size") || lowerK.includes("option") || lowerK.includes("specification") || lowerK.includes("model")) {
+          if (matchAttrValue(val, targetSize)) return true;
+        }
+      }
+    }
+    return false;
+  };
+
   // Initial default option selection (defaults to first VALID variant combination for 100% hydration match)
   const defaultVariant = variants[0] || null;
-  const defaultColor = defaultVariant?.color || defaultVariant?.attributes?.["Color"] || colors[0] || null;
-  const defaultSize = defaultVariant?.size || defaultVariant?.attributes?.["Size"] || sizes[0] || null;
+  const defaultColor = defaultVariant?.color || defaultVariant?.attributes?.["Color"] || defaultVariant?.attributes?.["color"] || defaultVariant?.attributes?.["Style"] || colors[0] || null;
+  const defaultSize = defaultVariant?.size || defaultVariant?.attributes?.["Size"] || defaultVariant?.attributes?.["size"] || defaultVariant?.attributes?.["Option"] || sizes[0] || null;
   const defaultStyle = defaultVariant?.name || styles[0] || null;
 
   const [selectedColor, setSelectedColor] = useState<string | null>(() => defaultColor);
   const [selectedSize, setSelectedSize] = useState<string | null>(() => defaultSize);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(() => defaultStyle);
+
+  // Auto-adjust size when color changes if previous size is unavailable for newly selected color
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+
+    if (isSizeRequired && selectedSize) {
+      const isValid = variants.some(
+        (v) => matchesColor(v, color) && matchesSize(v, selectedSize)
+      );
+
+      if (!isValid) {
+        const firstValidForColor = variants.find((v) => matchesColor(v, color));
+        if (firstValidForColor) {
+          const newSize = firstValidForColor.size || firstValidForColor.attributes?.["Size"] || firstValidForColor.attributes?.["size"] || firstValidForColor.attributes?.["Option"] || null;
+          setSelectedSize(newSize);
+        }
+      }
+    }
+  };
+
+  // Auto-adjust color when size changes if previous color is unavailable for newly selected size
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+
+    if (isColorRequired && selectedColor) {
+      const isValid = variants.some(
+        (v) => matchesColor(v, selectedColor) && matchesSize(v, size)
+      );
+
+      if (!isValid) {
+        const firstValidForSize = variants.find((v) => matchesSize(v, size));
+        if (firstValidForSize) {
+          const newColor = firstValidForSize.color || firstValidForSize.attributes?.["Color"] || firstValidForSize.attributes?.["color"] || firstValidForSize.attributes?.["Style"] || null;
+          setSelectedColor(newColor);
+        }
+      }
+    }
+  };
 
   const isSelectionComplete = useMemo(() => {
     if (isColorRequired && !selectedColor) return false;
@@ -74,9 +157,9 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
 
     const matched = variants.find(
       (v) =>
-        (!isColorRequired || v.color === selectedColor || v.attributes?.["Color"] === selectedColor) &&
-        (!isSizeRequired || v.size === selectedSize || v.attributes?.["Size"] === selectedSize) &&
-        (!isStyleRequired || v.name === selectedStyle)
+        (!isColorRequired || matchesColor(v, selectedColor)) &&
+        (!isSizeRequired || matchesSize(v, selectedSize)) &&
+        (!isStyleRequired || matchAttrValue(v.name, selectedStyle) || Object.values(v.attributes || {}).some(val => matchAttrValue(val, selectedStyle)))
     );
 
     return matched || null; // ABSOLUTELY NO FALLBACK TO variants[0]
@@ -204,8 +287,8 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
                   // Check if color option has stock for current selectedSize
                   const hasStock = variants.some(
                     (v) =>
-                      (v.color === color || v.attributes?.["Color"] === color) &&
-                      (!selectedSize || v.size === selectedSize || v.attributes?.["Size"] === selectedSize) &&
+                      matchesColor(v, color) &&
+                      (!selectedSize || matchesSize(v, selectedSize)) &&
                       v.stock > 0
                   );
 
@@ -213,7 +296,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
                     <button
                       key={color}
                       type="button"
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => handleColorSelect(color)}
                       style={{
                         padding: "8px 16px",
                         borderRadius: "8px",
@@ -248,8 +331,8 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
                   // Check if size option has stock for current selectedColor
                   const hasStock = variants.some(
                     (v) =>
-                      (v.size === size || v.attributes?.["Size"] === size) &&
-                      (!selectedColor || v.color === selectedColor || v.attributes?.["Color"] === selectedColor) &&
+                      matchesSize(v, size) &&
+                      (!selectedColor || matchesColor(v, selectedColor)) &&
                       v.stock > 0
                   );
 
@@ -257,7 +340,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
                     <button
                       key={size}
                       type="button"
-                      onClick={() => setSelectedSize(size)}
+                      onClick={() => handleSizeSelect(size)}
                       style={{
                         padding: "8px 14px",
                         borderRadius: "8px",
@@ -289,7 +372,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 {styles.map((style) => {
                   const isActive = selectedStyle === style;
-                  const matchingVar = variants.find((v) => v.name === style);
+                  const matchingVar = variants.find((v) => matchAttrValue(v.name, style) || Object.values(v.attributes || {}).some(val => matchAttrValue(val, style)));
                   const hasStock = matchingVar ? matchingVar.stock > 0 : true;
 
                   return (

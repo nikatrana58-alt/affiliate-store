@@ -525,22 +525,54 @@ class CJDropshippingService {
 
       console.info(`[cj-search] Incoming CJ Response : Status=${res.code ?? 200}, RawCount=${items.length}`);
 
-      // 4. SKU Fallback: if variant SKU (e.g. CJNSSYTZ05449-Black-L) returned 0 items, retry with base SKU (CJNSSYTZ05449)
-      if (detectedType === "SKU" && items.length === 0 && productSku && productSku.includes("-")) {
-        const baseSku = productSku.split("-")[0].trim();
-        if (baseSku && baseSku !== productSku) {
-          console.info(`[cj-search] FALLBACK NOTICE: productSku search for variant SKU "${productSku}" returned 0 direct items. Retrying supported fallback to base SKU "${baseSku}"...`);
-          const fallbackQuery = new URLSearchParams();
-          fallbackQuery.set("pageNum", pageNum.toString());
-          fallbackQuery.set("pageSize", pageSize.toString());
-          fallbackQuery.set("productSku", baseSku);
-          if (categoryId?.trim()) fallbackQuery.set("categoryId", categoryId.trim());
+      // 4. Multi-tiered SKU Fallback Resolution for Variant SKUs & Base SKUs
+      if (detectedType === "SKU" && items.length === 0 && productSku) {
+        console.info(`[cj-search] SKU Lookup for "${productSku}" returned 0 items from /product/list. Executing multi-tiered SKU resolution...`);
 
-          const fallbackRes = await this.request<{ list: CJProductDetail[]; total: number }>(`/product/list?${fallbackQuery.toString()}`);
-          const fallbackPayload = fallbackRes.data ?? (typeof fallbackRes.result === "object" ? (fallbackRes.result as { list: CJProductDetail[]; total: number }) : undefined);
-          if (fallbackPayload?.list && fallbackPayload.list.length > 0) {
-            items = fallbackPayload.list;
-            console.info(`[cj-search] Base SKU "${baseSku}" fallback successful: ${items.length} product(s) returned.`);
+        // Tier 1: Query CJ Open API /product/query?variantSku= for Variant SKU resolution
+        try {
+          const varQueryRes = await this.request<{ pid: string; productName?: string; productNameEn?: string }>(
+            `/product/query?variantSku=${encodeURIComponent(productSku)}`
+          );
+
+          const matchedPid = varQueryRes.data?.pid;
+          if (varQueryRes.code === 200 && matchedPid) {
+            console.info(`[cj-search] Variant SKU "${productSku}" resolved to PID ${matchedPid}. Fetching full product record...`);
+            const pidQueryRes = await this.request<{ list: CJProductDetail[]; total: number }>(
+              `/product/list?pageNum=1&pageSize=10&pid=${encodeURIComponent(matchedPid)}`
+            );
+            const pidPayload = pidQueryRes.data ?? (typeof pidQueryRes.result === "object" ? (pidQueryRes.result as { list: CJProductDetail[]; total: number }) : undefined);
+            if (pidPayload?.list && pidPayload.list.length > 0) {
+              items = pidPayload.list;
+            }
+          }
+        } catch (variantErr) {
+          console.info(`[cj-search] Variant SKU query note:`, variantErr instanceof Error ? variantErr.message : variantErr);
+        }
+
+        // Tier 2: Base SKU Fallback (if variant SKU was concatenated like CJKT304772302BY or CJKT3047723-White-L)
+        if (items.length === 0) {
+          let baseSku: string | undefined;
+          if (productSku.includes("-")) {
+            baseSku = productSku.split("-")[0].trim();
+          } else if (productSku.length > 11 && /^CJ[A-Z]{2}\d{7}/i.test(productSku)) {
+            baseSku = productSku.slice(0, 11);
+          }
+
+          if (baseSku && baseSku !== productSku) {
+            console.info(`[cj-search] Retrying base SKU fallback "${baseSku}" for variant SKU "${productSku}"...`);
+            const fallbackQuery = new URLSearchParams();
+            fallbackQuery.set("pageNum", pageNum.toString());
+            fallbackQuery.set("pageSize", pageSize.toString());
+            fallbackQuery.set("productSku", baseSku);
+            if (categoryId?.trim()) fallbackQuery.set("categoryId", categoryId.trim());
+
+            const fallbackRes = await this.request<{ list: CJProductDetail[]; total: number }>(`/product/list?${fallbackQuery.toString()}`);
+            const fallbackPayload = fallbackRes.data ?? (typeof fallbackRes.result === "object" ? (fallbackRes.result as { list: CJProductDetail[]; total: number }) : undefined);
+            if (fallbackPayload?.list && fallbackPayload.list.length > 0) {
+              items = fallbackPayload.list;
+              console.info(`[cj-search] Base SKU "${baseSku}" fallback successful: ${items.length} product(s) returned.`);
+            }
           }
         }
       }

@@ -562,7 +562,15 @@ export function CJImporter({ onProductImported }: CJImporterProps) {
               )}
             </div>
             <h3 style={{ margin: "4px 0 0", color: "var(--foreground)", fontSize: "18px" }}>
-              {total > 0 ? `Found ${total} Products` : loading ? "Loading products..." : error ? "Search Error" : "No Products Found"}
+              {total > 0
+                ? `Found ${total} Products`
+                : loading
+                ? "Loading products..."
+                : error
+                ? "Search Error"
+                : detectedSearchType === "SKU"
+                ? "No Product Found for this SKU"
+                : "No Products Found"}
             </h3>
           </div>
         </div>
@@ -652,7 +660,11 @@ export function CJImporter({ onProductImported }: CJImporterProps) {
           </div>
         ) : (
           <div className="panel empty-state" style={{ textAlign: "center", padding: "48px" }}>
-            <p>No products match your search. Try different keywords or select a category.</p>
+            <p>
+              {detectedSearchType === "SKU"
+                ? `No CJ product found matching SKU "${activeKeyword}". Please verify the SKU.`
+                : "No products match your search. Try different keywords or select a category."}
+            </p>
           </div>
         )}
 
