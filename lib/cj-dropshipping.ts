@@ -113,8 +113,11 @@ export type CJInventoryItem = {
 
 export type CJShippingOption = {
   logisticName?: string;
-  logisticPrice?: number;
-  logisticAging?: string;
+  logisticPrice?: number;       // Shipping cost in USD (the field used for pricing)
+  logisticAging?: string;       // Delivery time estimate, e.g. "7-12"
+  totalPostageFee?: number;     // Total postage fee (confirmed present in live API response)
+  taxesFee?: number;            // Taxes fee (confirmed present; typically 0 for standard routes)
+  clearanceOperationFee?: number; // Clearance fee (confirmed present; typically 0)
   [key: string]: unknown;
 };
 

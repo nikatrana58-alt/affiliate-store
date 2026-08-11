@@ -95,13 +95,66 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
 
   // Initial default option selection (defaults to first VALID variant combination for 100% hydration match)
   const defaultVariant = variants[0] || null;
-  const defaultColor = defaultVariant?.color || defaultVariant?.attributes?.["Color"] || defaultVariant?.attributes?.["color"] || defaultVariant?.attributes?.["Style"] || colors[0] || null;
-  const defaultSize = defaultVariant?.size || defaultVariant?.attributes?.["Size"] || defaultVariant?.attributes?.["size"] || defaultVariant?.attributes?.["Option"] || sizes[0] || null;
-  const defaultStyle = defaultVariant?.name || styles[0] || null;
+
+  const defaultColor = useMemo(() => {
+    if (!defaultVariant) return colors[0] || null;
+    if (defaultVariant.color?.trim()) return defaultVariant.color.trim();
+    if (defaultVariant.attributes) {
+      for (const [k, val] of Object.entries(defaultVariant.attributes)) {
+        const lowerK = k.toLowerCase();
+        if ((lowerK.includes("color") || lowerK.includes("style") || lowerK.includes("pattern")) && typeof val === "string") {
+          return val.trim();
+        }
+      }
+    }
+    return colors[0] || null;
+  }, [defaultVariant, colors]);
+
+  const defaultSize = useMemo(() => {
+    if (!defaultVariant) return sizes[0] || null;
+    if (defaultVariant.size?.trim()) return defaultVariant.size.trim();
+    if (defaultVariant.attributes) {
+      for (const [k, val] of Object.entries(defaultVariant.attributes)) {
+        const lowerK = k.toLowerCase();
+        if ((lowerK.includes("size") || lowerK.includes("option") || lowerK.includes("specification") || lowerK.includes("model")) && typeof val === "string") {
+          return val.trim();
+        }
+      }
+    }
+    return sizes[0] || null;
+  }, [defaultVariant, sizes]);
+
+  const defaultStyle = useMemo(() => {
+    if (!defaultVariant) return styles[0] || null;
+    if (defaultVariant.name?.trim()) return defaultVariant.name.trim();
+    return styles[0] || null;
+  }, [defaultVariant, styles]);
 
   const [selectedColor, setSelectedColor] = useState<string | null>(() => defaultColor);
   const [selectedSize, setSelectedSize] = useState<string | null>(() => defaultSize);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(() => defaultStyle);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
+
+  // Derive short description preview vs full clean description
+  const { shortPreview, fullCleanDescription } = useMemo(() => {
+    const fullText = sanitizeProductDescription(product.description);
+    if (product.short_description?.trim()) {
+      return {
+        shortPreview: product.short_description.trim(),
+        fullCleanDescription: fullText,
+      };
+    }
+    // Extract first 2 sentences (or ~160 chars)
+    const sentences = fullText.split(/(?<=[.!?])\s+/);
+    let preview = sentences.slice(0, 2).join(" ");
+    if (preview.length > 220) {
+      preview = preview.slice(0, 217) + "...";
+    }
+    return {
+      shortPreview: preview || fullText,
+      fullCleanDescription: fullText,
+    };
+  }, [product.description, product.short_description]);
 
   // Auto-adjust size when color changes if previous size is unavailable for newly selected color
   const handleColorSelect = (color: string) => {
@@ -275,6 +328,43 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             </span>
           </div>
 
+          {/* Short Description Preview with Expandable See More / See Less Toggle */}
+          <div className="product-description-preview-container" style={{ margin: "14px 0 20px" }}>
+            <p
+              style={{
+                color: "var(--muted)",
+                fontSize: "14px",
+                lineHeight: "1.65",
+                margin: 0,
+                transition: "all 0.3s ease",
+              }}
+            >
+              {isDescriptionExpanded ? fullCleanDescription : shortPreview}
+            </p>
+
+            {fullCleanDescription.length > shortPreview.length && (
+              <button
+                type="button"
+                onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--gold)",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  padding: "6px 0 0",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  transition: "color 0.2s ease",
+                }}
+              >
+                {isDescriptionExpanded ? "See Less ▲" : "See More ▼"}
+              </button>
+            )}
+          </div>
+
           {/* Color Selection Pills */}
           {colors.length > 0 && (
             <div className="variant-option-group" style={{ margin: "20px 0 14px" }}>
@@ -411,9 +501,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             </div>
           )}
 
-          <p className="product-description">
-            {sanitizeProductDescription(product.description)}
-          </p>
+
 
           {/* Factual Dynamic Shipping Information Block */}
           <div

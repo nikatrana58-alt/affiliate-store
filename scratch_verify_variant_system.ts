@@ -25,7 +25,7 @@ async function verifyVariantSelectionEngine() {
   console.log("=== VERIFYING STOREFRONT VARIANT SELECTION ENGINE ===");
 
   const products = await getProducts();
-  const product = products.find((p) => p.variants && p.variants.length > 0) || products[0];
+  const product = products.find((p) => p.variants && p.variants.some(v => v.color) && p.variants.some(v => v.size)) || products.find((p) => p.variants && p.variants.length > 0) || products[0];
 
   if (!product) throw new Error("No products found for testing!");
 

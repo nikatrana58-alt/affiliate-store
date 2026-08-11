@@ -235,7 +235,7 @@ export function getProductDisplayPrice(product: any): {
 
 /**
  * Recomputes all variant final prices when Admin updates profit/margin.
- * Formula: finalPrice = baseCost + profit
+ * Formula: finalPrice = actualVariantCost + profit
  * Base supplier cost is NEVER overwritten.
  */
 export function recalculateAllVariantPrices(
@@ -251,7 +251,8 @@ export function recalculateAllVariantPrices(
     sku?: string;
     image?: string | null;
   }>,
-  profit: number
+  profit: number,
+  defaultCost: number = 0
 ): {
   updatedVariants: Array<{
     id?: string;
@@ -273,7 +274,8 @@ export function recalculateAllVariantPrices(
   }
 
   const computed = variants.map((v) => {
-    const cost = Math.max(0, v.cost_price != null ? Number(v.cost_price) : 0);
+    const rawCost = v.cost_price != null && !isNaN(Number(v.cost_price)) ? Number(v.cost_price) : defaultCost;
+    const cost = Math.max(0, rawCost);
     const finalPrice = parseFloat((cost + profit).toFixed(2));
     return {
       ...v,
@@ -297,3 +299,4 @@ export function recalculateAllVariantPrices(
     highestPrice,
   };
 }
+

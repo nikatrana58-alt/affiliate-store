@@ -10,7 +10,7 @@
 
 import { cjDropshipping, type CJProductDetail, type CJVariant } from "@/lib/cj-dropshipping";
 import { calculateProductPricing } from "@/lib/pricing-engine";
-import { getProducts, getProductBySlug, getUniqueSlug, saveProduct, stringToUuid } from "@/lib/products";
+import { getProducts, getUniqueSlug, saveProduct, stringToUuid } from "@/lib/products";
 import { createAdminSupabaseClient } from "@/lib/supabase";
 
 // ---------------------------------------------------------------------------
@@ -323,13 +323,15 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
   log(`[cj-import] Product received: "${product.productNameEn || product.productName}"`);
   log(`[cj-import]   SKU       : ${product.productSku}`);
   log(`[cj-import]   Category  : ${product.categoryName}`);
-  log(`[cj-import]   Price     : $${product.sellPrice}`);
+  log(`[cj-import]   CJ Price  : $${product.sellPrice}`);
   log(`[cj-import]   Image     : ${product.productImage}`);
   log(`[cj-import]   Variants  : ${product.variants?.length ?? 0}`);
 
   // ── 4. Build product row data ─────────────────────────────────────────────
   const title = (product.productNameEn || product.productName || "CJ Product").trim();
-  const cjCost = product.sellPrice ? parseFloat(product.sellPrice) : 0;
+  // cjBasePrice = raw CJ product/variant price (NOT the authoritative cost for pricing).
+  // The authoritative cost is computed below as: variantSellPrice + shippingCost.
+  const cjBasePrice = product.sellPrice ? parseFloat(product.sellPrice) : 0;
   const categoryName = product.categoryName?.split(">")?.[0]?.trim() || null;
   const description = product.description ? stripHtml(product.description) : null;
   const affiliateLink = buildAffiliateLink(targetPid);
@@ -339,8 +341,94 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
   const productKeyEnSet = (product as any).productKeyEnSet as string[] | undefined;
   const productKeyEn = (product as any).productKeyEn as string | undefined;
 
-  // Apply Automated Pricing Engine Rules
-  const pricing = calculateProductPricing(cjCost, categoryName);
+  // ── 4a. Fetch shipping per-variant to compute authoritative landed cost ────
+  //
+  // Target market: read from CJ_TARGET_MARKET env var (default "US").
+  // Shipping method: CJ composite-recommended option (first result when CJ
+  //   returns options sorted by compositeRecommendSort — this is the natural
+  //   order of the array returned by /logistic/freightCalculate).
+  //
+  // Formula: landedCost = variantSellPrice + logisticPrice (composite-recommended)
+  //
+  // We use logisticPrice only — confirmed in the forensic audit as the shipping cost
+  // field CJ uses to compose the "Total" on the product page.
+  // We do NOT add taxesFee or clearanceOperationFee (both were 0 in the audit,
+  // and they are only added by CJ when they apply to a specific route/product).
+
+  const targetMarket = (process.env.CJ_TARGET_MARKET || "US").trim().toUpperCase();
+  log(`[cj-import]   Target Market: ${targetMarket} (from CJ_TARGET_MARKET env var)`);
+
+  /**
+   * Resolves the landed cost for a single CJ variant.
+   * Returns { shippingCost, shippingMethod, landedCost }.
+   * If CJ returns no shipping options, shippingCost = 0 and a warning is logged.
+   */
+  async function resolveVariantLandedCost(
+    vid: string,
+    variantSellPrice: number,
+    variantLabel: string
+  ): Promise<{ shippingCost: number; shippingMethod: string; landedCost: number }> {
+    try {
+      const options = await cjDropshipping.getShippingInfo({
+        endCountryCode: targetMarket,
+        vid,
+        quantity: 1,
+      });
+
+      if (!options || options.length === 0) {
+        log(`[cj-import]   ⚠ No shipping options for VID ${vid} (${variantLabel}) → shipping cost = $0.00`);
+        return { shippingCost: 0, shippingMethod: "N/A (no options returned)", landedCost: variantSellPrice };
+      }
+
+      // Use the composite-recommended option: the first element returned by CJ
+      // (CJ returns options in compositeRecommendSort order by default).
+      const recommended = options[0];
+      const shippingCost = typeof recommended.logisticPrice === "number" ? recommended.logisticPrice : 0;
+      const shippingMethod = recommended.logisticName || "Unknown";
+      const landedCost = parseFloat((variantSellPrice + shippingCost).toFixed(2));
+
+      return { shippingCost, shippingMethod, landedCost };
+    } catch (err) {
+      log(`[cj-import]   ⚠ Shipping fetch failed for VID ${vid} (${variantLabel}): ${err instanceof Error ? err.message : String(err)} → shipping cost = $0.00`);
+      return { shippingCost: 0, shippingMethod: "Error (fetch failed)", landedCost: variantSellPrice };
+    }
+  }
+
+  // Resolve landed costs for all variants sequentially.
+  // (Sequential to stay within CJ QPS limits; each VID is cached for 10 min.)
+  const variantShippingMap = new Map<string, { shippingCost: number; shippingMethod: string; landedCost: number }>();
+  const cjVariants = product.variants || [];
+
+  if (cjVariants.length > 0) {
+    log(`[cj-import]   Resolving landed cost for ${cjVariants.length} variant(s) → ${targetMarket}...`);
+    for (const v of cjVariants) {
+      if (!v.vid) continue;
+      const vPrice = v.variantSellPrice != null ? Number(v.variantSellPrice) : cjBasePrice;
+      const vLabel = v.variantNameEn || v.variantKey || v.variantSku || v.vid;
+      const result = await resolveVariantLandedCost(v.vid, vPrice, vLabel);
+      variantShippingMap.set(v.vid, result);
+
+      // ── REQUIRED PRICING TRACE (Rule 13) ──────────────────────────────────
+      log(`[cj-import]   ┌─ Variant: ${vLabel} (VID: ${v.vid})`);
+      log(`[cj-import]   │  CJ Price:       $${vPrice.toFixed(2)}`);
+      log(`[cj-import]   │  Shipping via:   ${result.shippingMethod}`);
+      log(`[cj-import]   │  Shipping cost:  $${result.shippingCost.toFixed(2)}`);
+      log(`[cj-import]   └─ Landed cost:    $${result.landedCost.toFixed(2)}`);
+    }
+  } else {
+    // No variants — resolve for the product-level VID if any, or skip.
+    log(`[cj-import]   Product has no variants — product-level cost basis: $${cjBasePrice.toFixed(2)}`);
+  }
+
+  // Compute product-level landed cost = minimum across all variant landed costs
+  // (matches the "From" price convention used by the storefront).
+  const allLandedCosts = Array.from(variantShippingMap.values()).map((r) => r.landedCost);
+  const productLandedCost = allLandedCosts.length > 0
+    ? Math.min(...allLandedCosts)
+    : cjBasePrice; // fallback: no variants → use base price only
+
+  // Apply Automated Pricing Engine Rules using the authoritative landed cost.
+  const pricing = calculateProductPricing(productLandedCost, categoryName);
 
   // Extract all gallery images from product & variants preserving CJ order
   let allImages: string[] = [];
@@ -369,12 +457,26 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
 
   const primaryCoverImage = allImages[0] || primaryImage || null;
 
-  // Pre-format variants list with full metadata preservation
+  // Pre-format variants list with full metadata preservation.
+  // cost_price on each variant is now the AUTHORITATIVE LANDED COST:
+  //   cj_product_price (variantSellPrice) + cj_shipping_cost (logisticPrice)
+  // The full audit trail is stored in cj_product_price, cj_shipping_cost,
+  // cj_shipping_method, cj_shipping_country — no schema change needed (JSONB).
   const mappedVariants = (product.variants || []).map((v) => {
     const parsed = parseVariantDetails(v, productKeyEnSet, productKeyEn);
-    const vCost = v.variantSellPrice != null ? Number(v.variantSellPrice) : cjCost;
-    const vPricing = calculateProductPricing(vCost, categoryName);
-    const priceDelta = vPricing.sellingPrice - pricing.sellingPrice;
+
+    // Raw CJ variant price (product/variant price only, NOT the landed cost).
+    const cjProductPrice = v.variantSellPrice != null ? Number(v.variantSellPrice) : cjBasePrice;
+
+    // Authoritative landed cost for this specific variant.
+    const shipping = variantShippingMap.get(v.vid || "");
+    const cjShippingCost = shipping?.shippingCost ?? 0;
+    const cjShippingMethod = shipping?.shippingMethod ?? "N/A";
+    const authoritativeLandedCost = shipping?.landedCost ?? cjProductPrice;
+
+    // Initial selling price: Auto-Price from authoritative landed cost.
+    const vPricing = calculateProductPricing(authoritativeLandedCost, categoryName);
+    const priceDelta = parseFloat((vPricing.sellingPrice - pricing.sellingPrice).toFixed(2));
 
     return {
       id: v.vid,
@@ -384,12 +486,18 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
       color: parsed.color,
       size: parsed.size,
       price: vPricing.sellingPrice,
-      cost_price: vCost,
-      price_delta: parseFloat(priceDelta.toFixed(2)),
+      // ── AUTHORITATIVE COST (landed cost = CJ variant price + shipping) ──
+      cost_price: authoritativeLandedCost,
+      price_delta: priceDelta,
       stock: v.inventoryNum != null && !isNaN(Number(v.inventoryNum)) ? Number(v.inventoryNum) : 999,
       weight: v.variantWeight ? `${v.variantWeight}g` : null,
       image: v.variantImage || null,
       attributes: parsed.attributes,
+      // ── AUDIT TRAIL (stored in variant JSONB, no schema change needed) ──
+      cj_product_price: cjProductPrice,         // Raw CJ variantSellPrice
+      cj_shipping_cost: cjShippingCost,         // logisticPrice of selected method
+      cj_shipping_method: cjShippingMethod,     // Name of selected shipping method
+      cj_shipping_country: targetMarket,        // Destination country used
     };
   });
 
@@ -405,6 +513,14 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
     }
   }
 
+  // ── PRODUCT-LEVEL PRICING TRACE (Rule 13 summary) ────────────────────────
+  log(`[cj-import] ── PRODUCT PRICING SUMMARY ──────────────────────────────`);
+  log(`[cj-import]   CJ Base Price:   $${cjBasePrice.toFixed(2)}`);
+  log(`[cj-import]   Landed Cost:     $${productLandedCost.toFixed(2)} (min across ${variantShippingMap.size} variant(s))`);
+  log(`[cj-import]   Auto Selling:    $${pricing.sellingPrice.toFixed(2)} (${pricing.markupMultiplier}x markup from landed cost)`);
+  log(`[cj-import]   Target Market:   ${targetMarket}`);
+  log(`[cj-import] ───────────────────────────────────────────────────────────`);
+
   const productPayload = {
     id: productId,
     title,
@@ -416,7 +532,8 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
     badge: "CJ Imported",
     price: pricing.sellingPrice,
     compare_at_price: pricing.compareAtPrice,
-    cost_price: pricing.costPrice,
+    // AUTHORITATIVE COST: minimum variant landed cost (matches storefront "From" convention)
+    cost_price: productLandedCost,
     profit: pricing.profit,
     margin_percent: pricing.marginPercent,
     price_manually_overridden: false,
@@ -435,9 +552,22 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
   };
 
   log(`[cj-import] Persisting product "${title}" to Supabase primary database...`);
-  const insertedProduct = await saveProduct(productPayload as any);
+  let insertedProduct: any;
+  try {
+    insertedProduct = await saveProduct(productPayload as any);
+  } catch (saveErr) {
+    const errorMsg = `Product database persistence failed: ${saveErr instanceof Error ? saveErr.message : String(saveErr)}`;
+    log(`[cj-import] ERROR: ${errorMsg}`);
+    return {
+      status: "error",
+      cj_product_id: targetPid,
+      message: errorMsg,
+      durationMs: Date.now() - startMs,
+      logs,
+    };
+  }
 
-  // ── 6. Process product_variants rows ──────────────────────────────────────
+  // ── 6. Process product_variants objects ───────────────────────────────────
   const importedVariants: ImportedVariant[] = [];
   const variants: CJVariant[] = product.variants ?? [];
 
@@ -450,7 +580,7 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
         v.variantNameEn || v.variantKey || v.variantSku || `Variant ${i + 1}`;
       const parsed = parseVariantDetails(v, productKeyEnSet, productKeyEn);
       const attributes = parsed.attributes;
-      const priceDelta = v.variantSellPrice != null ? v.variantSellPrice - (cjCost ?? v.variantSellPrice) : 0;
+      const priceDelta = v.variantSellPrice != null ? v.variantSellPrice - (cjBasePrice ?? v.variantSellPrice) : 0;
       const stockQty = v.inventoryNum != null && !isNaN(Number(v.inventoryNum)) ? Number(v.inventoryNum) : 999;
 
       log(`[cj-import]   Variant ${i + 1}: "${variantName}" (VID: ${v.vid}, SKU: ${v.variantSku})`);
@@ -464,45 +594,6 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
         stock_quantity: stockQty,
         attributes,
       });
-
-      // Attempt optional Supabase product_variants table upsert if schema supports it
-      try {
-        const { data: insertedVariant } = await supabase
-          .from("product_variants")
-          .upsert(
-            {
-              product_id: stringToUuid(productId),
-              name: variantName,
-              sku: v.variantSku || null,
-              price_delta: parseFloat(priceDelta.toFixed(2)),
-              is_active: true,
-              sort_order: i,
-              attributes,
-              cj_variant_id: v.vid,
-            },
-            { onConflict: "sku" }
-          )
-          .select("id,name,sku,price_delta,attributes,cj_variant_id")
-          .single();
-
-        if (insertedVariant) {
-          await supabase
-            .from("inventory")
-            .upsert(
-              {
-                product_id: stringToUuid(productId),
-                variant_id: insertedVariant.id,
-                stock_quantity: stockQty,
-                reserved_quantity: 0,
-                allow_backorder: false,
-                low_stock_threshold: 5,
-              },
-              { onConflict: "product_id,variant_id" }
-            );
-        }
-      } catch (variantErr) {
-        // Table or constraint note (gracefully handled)
-      }
     }
   }
 
@@ -526,10 +617,24 @@ export async function importCJProduct(pidOrOptions?: string | ImportOptions): Pr
     log(`[cj-import] Inventory row notice: ${invErr instanceof Error ? invErr.message : String(invErr)}`);
   }
 
-  // ── 7. Post-import verification: retrieve product via getProductBySlug ─────
-  log("[cj-import] Executing post-import verification query via getProductBySlug...");
-  const retrievedProduct = await getProductBySlug(insertedProduct.slug);
-  const retrievedVariantCount = retrievedProduct?.variants?.length ?? 0;
+  // ── 7. Post-import verification ──────────────────────────────────────────
+  // IMPORTANT: Do NOT call getProductBySlug() here.
+  //
+  // Both getProducts() and getProductBySlug() are wrapped with React's cache(),
+  // which memoizes results for the lifetime of the current request. The duplicate-
+  // detection step above (Step 2) already called getProducts() within this same
+  // API request. Any subsequent call to getProductBySlug() within the same request
+  // will hit React's memoized snapshot — the pre-import result where the product
+  // did not yet exist — and will return null regardless of what saveProduct() wrote
+  // to Supabase. This caused a false "IMPORT VERIFICATION FAILED: 0 variants" error
+  // whenever a previously-deleted product was explicitly re-imported.
+  //
+  // Solution: use the data we already have in memory from this import run.
+  // importedVariants holds every variant we just inserted; mappedVariants holds
+  // the full variant objects; allImages holds the gallery. No re-query needed.
+  log("[cj-import] Post-import verification (using in-memory import results — avoids stale React cache)...");
+  const retrievedProduct = { ...insertedProduct, variants: mappedVariants, images: allImages };
+  const retrievedVariantCount = importedVariants.length;
 
   log(`[cj-import] Verification summary: CJ variants=${variants.length}, Imported=${importedVariants.length}, Retrieved=${retrievedVariantCount}`);
 

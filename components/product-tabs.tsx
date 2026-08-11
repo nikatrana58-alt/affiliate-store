@@ -137,11 +137,29 @@ export function ProductTabs({ product }: ProductTabsProps) {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px" }}>
               <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
                 <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Category</span>
-                <strong style={{ color: "#FFFFFF" }}>{product.category || "Luxury"}</strong>
+                <strong style={{ color: "#FFFFFF" }}>{product.category || "General"}</strong>
               </div>
+              {product.brand && (
+                <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
+                  <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Brand</span>
+                  <strong style={{ color: "#FFFFFF" }}>{product.brand}</strong>
+                </div>
+              )}
+              {product.sku && (
+                <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
+                  <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>SKU</span>
+                  <strong style={{ color: "#FFFFFF" }}>{product.sku}</strong>
+                </div>
+              )}
+              {product.dimensions && (
+                <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
+                  <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Dimensions</span>
+                  <strong style={{ color: "#FFFFFF" }}>{product.dimensions}</strong>
+                </div>
+              )}
               <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
                 <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Weight</span>
-                <strong style={{ color: "#FFFFFF" }}>{product.weight || "Standard Luxury Weight"}</strong>
+                <strong style={{ color: "#FFFFFF" }}>{product.weight || "Standard Weight"}</strong>
               </div>
               <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
                 <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Authenticity</span>

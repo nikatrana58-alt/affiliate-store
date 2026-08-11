@@ -373,29 +373,35 @@ export async function saveProduct(product: Product): Promise<Product> {
         slug: product.slug || product.id,
         category: product.category || "General",
         badge: product.badge || null,
+        variants: Array.isArray(product.variants) ? product.variants : [],
+        images: Array.isArray(product.images) && product.images.length > 0 ? product.images : (product.image ? [product.image] : []),
       };
       if (product.cj_product_id) {
         payload.cj_product_id = product.cj_product_id;
       }
 
-      const { error } = await supabase.from("products").upsert(payload, { onConflict: "id" });
+      let { error } = await supabase.from("products").upsert(payload, { onConflict: "id" });
+
+      let attempt = 0;
+      while (error && error.message.includes("column") && attempt < 5) {
+        attempt++;
+        console.warn(`[products] Notice: Missing column in Supabase products table ("${error.message}"). Stripping column and retrying attempt ${attempt}...`);
+        if (error.message.includes("cj_product_id")) delete payload.cj_product_id;
+        if (error.message.includes("variants")) delete payload.variants;
+        if (error.message.includes("images")) delete payload.images;
+        const retry = await supabase.from("products").upsert(payload, { onConflict: "id" });
+        error = retry.error;
+      }
+
       if (error) {
-        if (error.message.includes("cj_product_id")) {
-          delete payload.cj_product_id;
-          const { error: retryErr } = await supabase.from("products").upsert(payload, { onConflict: "id" });
-          if (retryErr) {
-            console.error("[products] Supabase product upsert failed on retry:", retryErr.message);
-          } else {
-            console.info(`[products] Successfully persisted product to Supabase (without cj_product_id col): ${product.id}`);
-          }
-        } else {
-          console.error("[products] Supabase product upsert failed:", error.message);
-        }
+        console.error("[products] Supabase product upsert failed:", error.message);
+        throw new Error(`Supabase persistence failed: ${error.message}`);
       } else {
-        console.info(`[products] Successfully persisted product to Supabase: ${product.id}`);
+        console.info(`[products] Successfully persisted product metadata to Supabase: ${product.id}`);
       }
     } catch (err) {
       console.error("[products] Exception during Supabase product upsert:", err);
+      throw err;
     }
   }
 
@@ -760,6 +766,16 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
         if (localMatch.cj_product_id) matchedLocalIds.add(localMatch.cj_product_id);
       }
 
+      const dbVariants = Array.isArray(item.variants) && item.variants.length > 0 ? item.variants : null;
+      const dbImages = Array.isArray(item.images) && item.images.length > 0 ? item.images : null;
+
+      const finalVariants = dbVariants || (localMatch?.variants && localMatch.variants.length > 0 ? localMatch.variants : []);
+      let finalImages = dbImages || (localMatch?.images && localMatch.images.length > 0 ? localMatch.images : []);
+
+      if (finalImages.length === 0 && item.image) {
+        finalImages = [item.image];
+      }
+
       return {
         id: localMatch?.id || item.id,
         title: item.title,
@@ -775,10 +791,10 @@ export const getProducts = cache(async function getProducts(): Promise<Product[]
         profit: localMatch?.profit || null,
         margin_percent: localMatch?.margin_percent || null,
         image: item.image || localMatch?.image || null,
-        images: localMatch?.images || (item.image ? [item.image] : []),
-        variants: localMatch?.variants && localMatch.variants.length > 0 ? localMatch.variants : [],
+        images: finalImages,
+        variants: finalVariants,
         sku: localMatch?.sku || null,
-        inventory_quantity: localMatch?.inventory_quantity ?? 999,
+        inventory_quantity: localMatch?.inventory_quantity ?? (finalVariants.reduce((sum: number, v: any) => sum + (v.stock || 0), 0) || 999),
         affiliate_link: item.affiliate_link || localMatch?.affiliate_link || "",
         cj_product_id: itemCjId || localMatch?.cj_product_id || null,
         printful_product_id: localMatch?.printful_product_id || null,

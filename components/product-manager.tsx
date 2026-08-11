@@ -28,6 +28,7 @@ import {
   recalculateAllVariantPrices,
 } from "@/lib/pricing-engine";
 import type { Product, ProductInput, ProductVariantItem } from "@/lib/products";
+import type { GeminiOptimizationOutput } from "@/lib/gemini";
 
 type ProductManagerProps = {
   initialProducts: Product[];
@@ -133,6 +134,102 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
   const [isWorking, setIsWorking] = useState(false);
   const [activeTab, setActiveTab] = useState<"inventory" | "orders" | "analytics" | "cj-import" | "printful-import">("inventory");
   const [newImageUrl, setNewImageUrl] = useState("");
+
+  // Gemini Assistant State
+  const [showGeminiModal, setShowGeminiModal] = useState(false);
+  const [geminiRecommendations, setGeminiRecommendations] = useState<GeminiOptimizationOutput | null>(null);
+  const [isGeminiWorking, setIsGeminiWorking] = useState(false);
+  const [applyGeminiCategory, setApplyGeminiCategory] = useState(false);
+  const [hasOptimizedOnce, setHasOptimizedOnce] = useState(false);
+
+  async function handleGeminiAssist() {
+    if (!form.title.trim()) {
+      setNotification({ kind: "error", message: "Enter a product title first before running Gemini Assist." });
+      return;
+    }
+
+    if (hasOptimizedOnce && !window.confirm("This product has already been analyzed by Gemini. Re-run analysis?")) {
+      return;
+    }
+
+    setIsGeminiWorking(true);
+    setStatus("Analyzing product with Gemini...");
+    setNotification(null);
+
+    try {
+      const response = await fetch("/api/admin/gemini/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: form.title,
+          short_description: form.short_description,
+          description: form.description,
+          category: form.category,
+          brand: form.brand,
+          tags: form.tags,
+          variants: form.variants,
+          seo_title: form.seo_title,
+          seo_description: form.seo_description,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        if (data.error === "Gemini is not configured") {
+          setNotification({ kind: "error", message: "Gemini is not configured" });
+        } else {
+          setNotification({ kind: "error", message: data.error || "Gemini optimization failed." });
+        }
+        return;
+      }
+
+      setGeminiRecommendations(data.recommendations);
+      setApplyGeminiCategory(false);
+      setHasOptimizedOnce(true);
+      setShowGeminiModal(true);
+    } catch (err) {
+      console.error("Gemini assist error:", err);
+      setNotification({ kind: "error", message: "Failed to connect to Gemini service." });
+    } finally {
+      setIsGeminiWorking(false);
+      setStatus("");
+    }
+  }
+
+  function applyGeminiRecommendations() {
+    if (!geminiRecommendations) return;
+
+    setIsDirty(true);
+    setForm((c) => {
+      let updatedDesc = geminiRecommendations.description;
+      if (Array.isArray(geminiRecommendations.bullet_points) && geminiRecommendations.bullet_points.length > 0) {
+        const bulletText = "\n\nKey Highlights:\n" + geminiRecommendations.bullet_points.map((b) => `• ${b}`).join("\n");
+        if (!updatedDesc.includes("Key Highlights:")) {
+          updatedDesc = updatedDesc + bulletText;
+        }
+      }
+
+      return {
+        ...c,
+        title: geminiRecommendations.title,
+        short_description: geminiRecommendations.short_description,
+        description: updatedDesc,
+        tags: Array.isArray(geminiRecommendations.tags) ? geminiRecommendations.tags.join(", ") : c.tags,
+        seo_title: geminiRecommendations.seo_title,
+        seo_description: geminiRecommendations.seo_description,
+        ...(applyGeminiCategory && geminiRecommendations.category_suggestion
+          ? { category: geminiRecommendations.category_suggestion }
+          : {}),
+      };
+    });
+
+    setShowGeminiModal(false);
+    setNotification({
+      kind: "success",
+      message: "Gemini recommendations applied to form! Click Save Draft or Publish Product to save changes.",
+    });
+  }
 
   function makeCoverImage(index: number) {
     if (index <= 0 || index >= form.images.length) return;
@@ -252,6 +349,8 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
     setSlugWasEdited(false);
     setIsDirty(false);
     setStatus("");
+    setGeminiRecommendations(null);
+    setHasOptimizedOnce(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -263,6 +362,21 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
       galleryImages = product.images;
     } else if (product.image) {
       galleryImages = [product.image];
+    }
+
+    // Derive profit from persisted price + cost so variant prices can be
+    // synchronized on load. Always compute from the authoritative source values.
+    const loadedCost = Number(product.cost_price) || 0;
+    const loadedPrice = Number(product.price) || 0;
+    const loadedProfit = parseFloat((loadedPrice - loadedCost).toFixed(2));
+
+    // Synchronize variant prices from per-variant CJ costs + derived profit.
+    // This ensures the variant table is correct immediately on edit-load,
+    // not only after the first profit-field interaction.
+    let loadedVariants = Array.isArray(product.variants) ? product.variants : [];
+    if (loadedVariants.length > 0 && loadedCost > 0) {
+      const syncResult = recalculateAllVariantPrices(loadedVariants, loadedProfit, loadedCost);
+      loadedVariants = syncResult.updatedVariants as ProductVariantItem[];
     }
 
     setForm({
@@ -282,7 +396,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
       price_manually_overridden: Boolean(product.price_manually_overridden),
       image: product.image || "",
       images: galleryImages,
-      variants: Array.isArray(product.variants) ? product.variants : [],
+      variants: loadedVariants,
       sku: product.sku || "",
       inventory_quantity: product.inventory_quantity?.toString() || "999",
       weight: product.weight || "",
@@ -299,6 +413,8 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
     setIsDirty(false);
     setNotification(null);
     setStatus("");
+    setGeminiRecommendations(null);
+    setHasOptimizedOnce(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
     window.scrollTo({ behavior: "smooth", top: 0 });
   }
@@ -313,13 +429,21 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
 
     const pricing = calculateProductPricing(cost, form.category);
     setIsDirty(true);
-    setForm((current) => ({
-      ...current,
-      price: pricing.sellingPrice.toString(),
-      compare_at_price: pricing.compareAtPrice.toString(),
-      price_manually_overridden: false,
-      last_modified_pricing_field: "auto",
-    }));
+    setForm((current) => {
+      let updatedVariants = current.variants;
+      if (current.variants && current.variants.length > 0) {
+        const result = recalculateAllVariantPrices(current.variants, pricing.profit, cost);
+        updatedVariants = result.updatedVariants as ProductVariantItem[];
+      }
+      return {
+        ...current,
+        price: pricing.sellingPrice.toString(),
+        compare_at_price: pricing.compareAtPrice.toString(),
+        variants: updatedVariants,
+        price_manually_overridden: false,
+        last_modified_pricing_field: "auto",
+      };
+    });
     setNotification({
       kind: "success",
       message: `Price recalculated automatically ($${pricing.sellingPrice}, Profit: $${pricing.profit}, Margin: ${pricing.marginPercent}%).`,
@@ -761,6 +885,23 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                 <button
                   className="button secondary"
                   type="button"
+                  disabled={isWorking || isGeminiWorking}
+                  onClick={handleGeminiAssist}
+                  style={{
+                    padding: "8px 14px",
+                    fontSize: "12px",
+                    background: "linear-gradient(135deg, rgba(201, 168, 76, 0.25) 0%, rgba(120, 80, 220, 0.25) 100%)",
+                    borderColor: "rgba(201, 168, 76, 0.5)",
+                    color: "var(--foreground)",
+                    fontWeight: 700,
+                  }}
+                  title="Optimize product title, description, tags & SEO with Gemini AI"
+                >
+                  {isGeminiWorking ? "✨ Analyzing..." : "✨ Gemini Assist"}
+                </button>
+                <button
+                  className="button secondary"
+                  type="button"
                   onClick={() => setShowPreviewModal(true)}
                   style={{ padding: "8px 14px", fontSize: "12px" }}
                 >
@@ -880,9 +1021,9 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
 
               return (
                 <div className="form-grid" style={{ marginTop: "12px" }}>
-                  {/* Field 1: Cost Price ($) */}
+                  {/* Field 1: Landed Cost ($) */}
                   <label>
-                    Cost Price ($) {form.cj_product_id ? "(CJ Fixed Base)" : ""}
+                    Landed Cost ($) {form.cj_product_id ? "— CJ Total" : ""}
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                       <input
                         min="0"
@@ -892,10 +1033,24 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                           const newCost = parseFloat(e.target.value) || 0;
                           if (activeSource === "margin" && liveMetrics.marginPercent) {
                             const res = recalculateFromMargin(newCost, liveMetrics.marginPercent);
-                            setForm((c) => ({ ...c, price: res.sellingPrice.toString() }));
+                            setForm((c) => {
+                              let updatedVariants = c.variants;
+                              if (c.variants && c.variants.length > 0) {
+                                const result = recalculateAllVariantPrices(c.variants, res.profit, newCost);
+                                updatedVariants = result.updatedVariants as ProductVariantItem[];
+                              }
+                              return { ...c, price: res.sellingPrice.toString(), variants: updatedVariants };
+                            });
                           } else if (activeSource === "profit" && liveMetrics.profit) {
                             const res = recalculateFromProfit(newCost, liveMetrics.profit);
-                            setForm((c) => ({ ...c, price: res.sellingPrice.toString() }));
+                            setForm((c) => {
+                              let updatedVariants = c.variants;
+                              if (c.variants && c.variants.length > 0) {
+                                const result = recalculateAllVariantPrices(c.variants, liveMetrics.profit, newCost);
+                                updatedVariants = result.updatedVariants as ProductVariantItem[];
+                              }
+                              return { ...c, price: res.sellingPrice.toString(), variants: updatedVariants };
+                            });
                           }
                         }}
                         step="0.01"
@@ -1005,7 +1160,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                         setForm((c) => {
                           let updatedVariants = c.variants;
                           if (c.variants && c.variants.length > 0) {
-                            const result = recalculateAllVariantPrices(c.variants, newProfit);
+                            const result = recalculateAllVariantPrices(c.variants, newProfit, liveCost);
                             updatedVariants = result.updatedVariants as ProductVariantItem[];
                           }
                           return {
@@ -1045,12 +1200,20 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                         const newMargin = parseFloat(e.target.value) || 0;
                         const res = recalculateFromMargin(liveCost, newMargin);
                         setIsDirty(true);
-                        setForm((c) => ({
-                          ...c,
-                          price: res.sellingPrice.toString(),
-                          price_manually_overridden: true,
-                          last_modified_pricing_field: "margin",
-                        }));
+                        setForm((c) => {
+                          let updatedVariants = c.variants;
+                          if (c.variants && c.variants.length > 0) {
+                            const result = recalculateAllVariantPrices(c.variants, res.profit, liveCost);
+                            updatedVariants = result.updatedVariants as ProductVariantItem[];
+                          }
+                          return {
+                            ...c,
+                            price: res.sellingPrice.toString(),
+                            variants: updatedVariants,
+                            price_manually_overridden: true,
+                            last_modified_pricing_field: "margin",
+                          };
+                        });
                       }}
                       style={{
                         borderColor: activeSource === "margin" ? "var(--gold)" : undefined,
@@ -1214,6 +1377,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                         <th style={{ width: "90px" }}>Size</th>
                         <th>SKU</th>
                         <th style={{ width: "140px" }}>CJ VID</th>
+                        <th style={{ width: "90px" }}>Cost ($)</th>
                         <th style={{ width: "90px" }}>Price ($)</th>
                         <th style={{ width: "80px" }}>Stock</th>
                         <th style={{ width: "60px" }}>Action</th>
@@ -1288,7 +1452,32 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                             <input
                               type="number"
                               step="0.01"
-                              value={v.price ?? (form.price ? parseFloat(form.price) + v.price_delta : 0)}
+                              value={v.cost_price ?? (parseFloat(form.cost_price) || 0)}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value) || 0;
+                                updateVariantField(vIdx, "cost_price", val);
+                                const productCost = parseFloat(form.cost_price) || 0;
+                                const productPrice = parseFloat(form.price) || 0;
+                                const currentProfit = productPrice - productCost;
+                                const newPrice = parseFloat((val + currentProfit).toFixed(2));
+                                updateVariantField(vIdx, "price", newPrice);
+                              }}
+                              style={{ padding: "4px 8px", fontSize: "12px", width: "90px", color: "var(--muted)" }}
+                              title="Individual variant supplier cost price"
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={(() => {
+                                // Display priority: explicit variant price → variantCost + derivedProfit → 0
+                                // Never fall back to baseProductPrice + delta (would hide per-variant cost differences)
+                                if (v.price != null) return v.price;
+                                const vCost = v.cost_price != null ? Number(v.cost_price) : (parseFloat(form.cost_price) || 0);
+                                const derivedProfit = (parseFloat(form.price) || 0) - (parseFloat(form.cost_price) || 0);
+                                return parseFloat((vCost + Math.max(0, derivedProfit)).toFixed(2));
+                              })()}
                               onChange={(e) => {
                                 const val = parseFloat(e.target.value) || 0;
                                 const basePrice = parseFloat(form.price) || 0;
@@ -1688,8 +1877,144 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
           </div>
         </div>
       )}
-    </main>
 
+      {/* Gemini Prepared Improvements Review Modal */}
+      {showGeminiModal && geminiRecommendations && (
+        <div className="cj-modal-backdrop" onClick={() => setShowGeminiModal(false)}>
+          <div
+            className="panel cj-detail-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "780px", maxHeight: "90vh", overflowY: "auto" }}
+          >
+            <div className="cj-modal-header">
+              <div>
+                <p className="eyebrow" style={{ color: "var(--gold)" }}>✨ Gemini Merchandising Assistant</p>
+                <h3 style={{ margin: "4px 0 0" }}>Gemini Prepared Improvements</h3>
+              </div>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => setShowGeminiModal(false)}
+                style={{ fontSize: "20px" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: "13px", color: "var(--muted)", margin: "12px 0 16px" }}>
+              Review Gemini&apos;s recommendations below. Click <strong>Apply Improvements</strong> to copy recommendations into the editor form. Changes are only published when you save the product.
+            </p>
+
+            {geminiRecommendations.warnings && geminiRecommendations.warnings.length > 0 && (
+              <div style={{ background: "rgba(235, 87, 87, 0.1)", border: "1px solid rgba(235, 87, 87, 0.3)", borderRadius: "8px", padding: "10px 14px", margin: "0 0 16px", fontSize: "12px", color: "var(--danger, #eb5757)" }}>
+                <strong>⚠️ Fact-Preservation Warning:</strong>
+                <ul style={{ margin: "4px 0 0", paddingLeft: "20px" }}>
+                  {geminiRecommendations.warnings.map((w, idx) => (
+                    <li key={idx}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Field 1: Title */}
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Product Title</label>
+                <div style={{ fontSize: "13px" }}>
+                  <div style={{ color: "var(--muted)", marginBottom: "4px" }}>Current: <em>{form.title}</em></div>
+                  <div style={{ color: "var(--foreground)", fontWeight: 600 }}>Suggested: <strong>{geminiRecommendations.title}</strong></div>
+                </div>
+              </div>
+
+              {/* Field 2: Short Description */}
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Short Description</label>
+                <div style={{ fontSize: "13px" }}>
+                  <div style={{ color: "var(--muted)", marginBottom: "4px" }}>Current: {form.short_description || "(None)"}</div>
+                  <div style={{ color: "var(--foreground)" }}>Suggested: {geminiRecommendations.short_description}</div>
+                </div>
+              </div>
+
+              {/* Field 3: Full Description */}
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Full Description</label>
+                <div style={{ fontSize: "13px" }}>
+                  <div style={{ color: "var(--muted)", marginBottom: "6px", maxHeight: "80px", overflowY: "auto" }}>Current: {form.description || "(None)"}</div>
+                  <div style={{ color: "var(--foreground)", maxHeight: "120px", overflowY: "auto", whiteSpace: "pre-wrap" }}>Suggested: {geminiRecommendations.description}</div>
+                </div>
+              </div>
+
+              {/* Field 4: Bullet Points */}
+              {Array.isArray(geminiRecommendations.bullet_points) && geminiRecommendations.bullet_points.length > 0 && (
+                <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Suggested Key Highlights (Bullet Points)</label>
+                  <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "13px", color: "var(--foreground)", lineHeight: 1.5 }}>
+                    {geminiRecommendations.bullet_points.map((bp, i) => (
+                      <li key={i}>{bp}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Field 5: Tags */}
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Tags</label>
+                <div style={{ fontSize: "13px" }}>
+                  <div style={{ color: "var(--muted)", marginBottom: "4px" }}>Current: {form.tags || "(None)"}</div>
+                  <div style={{ color: "var(--foreground)" }}>Suggested: {geminiRecommendations.tags.join(", ")}</div>
+                </div>
+              </div>
+
+              {/* Field 6: Category Suggestion (Requirement #4: Explicit Confirmation) */}
+              <div style={{ background: "rgba(201, 168, 76, 0.08)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Category Suggestion</label>
+                <div style={{ fontSize: "13px", marginBottom: "8px" }}>
+                  <span style={{ color: "var(--muted)" }}>Current Category: <strong>{form.category || "(Uncategorized)"}</strong></span>
+                  <br />
+                  <span style={{ color: "var(--foreground)" }}>Gemini Suggested Category: <strong>{geminiRecommendations.category_suggestion || "(None)"}</strong></span>
+                </div>
+                {geminiRecommendations.category_suggestion && (
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "12px", color: "var(--gold)", fontWeight: 600 }}>
+                    <input
+                      type="checkbox"
+                      checked={applyGeminiCategory}
+                      onChange={(e) => setApplyGeminiCategory(e.target.checked)}
+                    />
+                    Explicitly confirm category change to &quot;{geminiRecommendations.category_suggestion}&quot;
+                  </label>
+                )}
+              </div>
+
+              {/* Field 7: SEO Title & Description */}
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>SEO Meta Title & Description</label>
+                <div style={{ fontSize: "13px" }}>
+                  <div style={{ color: "var(--foreground)", fontWeight: 600 }}>Title: {geminiRecommendations.seo_title}</div>
+                  <div style={{ color: "var(--muted)", marginTop: "4px" }}>Description: {geminiRecommendations.seo_description}</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => setShowGeminiModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button primary"
+                onClick={applyGeminiRecommendations}
+              >
+                Apply Improvements
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
   );
 }
 

@@ -115,7 +115,8 @@ export function PremiumProductGallery({
         style={{
           position: "relative",
           width: "100%",
-          paddingTop: "100%", // 1:1 Aspect Ratio container
+          aspectRatio: "1 / 1",
+          maxHeight: "460px",
           borderRadius: "16px",
           overflow: "hidden",
           background: "rgba(255, 255, 255, 0.02)",
