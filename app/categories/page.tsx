@@ -8,7 +8,7 @@ import { BreadcrumbSchema } from "@/components/structured-data";
 export const metadata: Metadata = constructMetadata({
   title: "Shop by Category",
   description:
-    "Explore RA2Z luxury departments: Fine Timepieces, Luxury Apparel, RA2Z Originals, Electronics, Home & Living, and Accessories.",
+    "Explore RA2Z curated departments: Fine Timepieces, Apparel, RA2Z Originals, Electronics, Home & Living, and Accessories.",
   path: "/categories",
 });
 
@@ -16,7 +16,7 @@ const CATEGORIES = [
   {
     id: "luxury",
     name: "Luxury Collection",
-    subtitle: "High-ticket chronographs, fine leather, & Italian design",
+    subtitle: "Chronographs, fine leather, & modern design",
     icon: "👑",
     href: "/collections/luxury",
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80",
@@ -135,7 +135,7 @@ export default function CategoriesPage() {
               lineHeight: "1.6",
             }}
           >
-            Browse our handpicked collections by department. Each category is engineered for quality and timeless prestige.
+            Browse our handpicked collections by department. Each category is selected for quality and modern style.
           </p>
         </div>
 

@@ -108,7 +108,23 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
     }
   }, []);
 
-  // 4. Memoized Filtered Products Calculation
+  // 4. Derive Active Category Options to Avoid Category Overload (Fix #2)
+  const activeCategoryOptions = useMemo(() => {
+    if (!products || products.length === 0) return [{ label: "All Products", value: "" }];
+    return categories.filter((cat) => {
+      if (!cat.value) return true;
+      const catLower = cat.value.toLowerCase();
+      return products.some((p) => {
+        if (catLower === "originals") return p.is_original || p.category === "Originals";
+        return (
+          (p.category && p.category.toLowerCase().includes(catLower)) ||
+          (p.collections && p.collections.some((c) => c.toLowerCase().includes(catLower)))
+        );
+      });
+    });
+  }, [products]);
+
+  // 5. Memoized Filtered Products Calculation
   const normalizedCategory = useMemo(() => selectedCategory.trim().toLowerCase(), [selectedCategory]);
 
   const filteredProducts = useMemo(() => {
@@ -124,7 +140,7 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
     });
   }, [products, normalizedCategory, debouncedSearchTerm]);
 
-  // 5. Derive Discovery Collections (reusing existing product data)
+  // 6. Derive Discovery Collections (reusing existing product data)
   const recentlyViewedProducts = useMemo(() => {
     if (recentlyViewedIds.length === 0) return [];
     return recentlyViewedIds
@@ -211,9 +227,9 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
             )}
           </div>
 
-          {/* Category Chips Bar with Active Glow */}
+          {/* Category Chips Bar with Active Glow (Filtered to Active Catalog Categories - Fix #2) */}
           <div className="category-chips" aria-label="Filter by department">
-            {categories.map((category) => {
+            {activeCategoryOptions.map((category) => {
               const isActive = selectedCategory === category.value;
               return (
                 <button
@@ -279,8 +295,31 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
             ))}
           </div>
         </div>
+      ) : products.length === 0 ? (
+        /* ── FIX #3: GENUINELY EMPTY STORE CATALOG INTENTIONAL STATE ── */
+        <SectionReveal>
+          <div
+            className="empty-store animate-fade-in"
+            style={{
+              padding: "64px 24px",
+              borderRadius: "24px",
+              background: "rgba(21, 21, 21, 0.7)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              textAlign: "center",
+              marginBottom: "60px",
+            }}
+          >
+            <div style={{ fontSize: "40px", marginBottom: "16px" }}>✨</div>
+            <h3 style={{ color: "#FFFFFF", fontSize: "24px", fontWeight: 700, margin: "0 0 12px" }}>
+              Collection Updating
+            </h3>
+            <p style={{ color: "var(--muted)", fontSize: "15px", margin: "0 auto 24px", maxWidth: "460px", lineHeight: "1.6" }}>
+              Our storefront catalog is currently being updated with new curated items. Please check back soon for our latest arrivals.
+            </p>
+          </div>
+        </SectionReveal>
       ) : (
-        /* ── TASK 2: EMPTY SEARCH STATE WITH FALLBACK RECOMMENDATIONS ── */
+        /* ── SEARCH / FILTER EMPTY STATE WITH FALLBACK RECOMMENDATIONS ── */
         <SectionReveal>
           <div
             className="empty-store animate-fade-in"
@@ -320,20 +359,22 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
             </MagneticButton>
           </div>
 
-          {/* Fallback Recommendations so screen is never blank */}
-          <div style={{ marginTop: "40px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
-              <div style={{ width: "24px", height: "1px", background: "var(--gold)", opacity: 0.6 }} />
-              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "22px", fontWeight: 700, margin: 0 }}>
-                Recommended For You
-              </h3>
+          {/* Fallback Recommendations so screen is never blank during search */}
+          {fallbackRecommendations.length > 0 && (
+            <div style={{ marginTop: "40px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+                <div style={{ width: "24px", height: "1px", background: "var(--gold)", opacity: 0.6 }} />
+                <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "22px", fontWeight: 700, margin: 0 }}>
+                  Recommended For You
+                </h3>
+              </div>
+              <div className="store-products stagger-children" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "24px" }}>
+                {fallbackRecommendations.map((product, idx) => (
+                  <ProductCard key={`fallback-${product.id || idx}-${idx}`} product={product} />
+                ))}
+              </div>
             </div>
-            <div className="store-products stagger-children" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "24px" }}>
-              {fallbackRecommendations.map((product, idx) => (
-                <ProductCard key={`fallback-${product.id || idx}-${idx}`} product={product} />
-              ))}
-            </div>
-          </div>
+          )}
         </SectionReveal>
       )}
 

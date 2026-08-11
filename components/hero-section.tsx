@@ -72,17 +72,17 @@ export function HeroSection({ product }: HeroSectionProps) {
         >
           <motion.p className="hero-eyebrow" variants={itemVariants}>
             <span className="eyebrow-dot" />
-            RA2Z LUXURY CURATION
+            RA2Z CURATED COLLECTION
           </motion.p>
 
           <motion.h1 className="hero-headline" variants={itemVariants}>
             Redefining Modern
             <br />
-            <span className="hero-headline-accent">Luxury & Prestige</span>
+            <span className="hero-headline-accent">Elevated Essentials</span>
           </motion.h1>
 
           <motion.p className="hero-subtitle" variants={itemVariants}>
-            Handpicked masterpieces that embody perfection, quality, and timeless distinction.
+            Handpicked items that combine quality, functional design, and modern style.
           </motion.p>
 
           <motion.div className="hero-actions" variants={itemVariants}>
@@ -96,7 +96,7 @@ export function HeroSection({ product }: HeroSectionProps) {
             </MagneticButton>
             <MagneticButton className="hero-cta-secondary-wrapper">
               <Link className="hero-cta-secondary" href="#products">
-                View All Creations
+                View All Products
               </Link>
             </MagneticButton>
           </motion.div>

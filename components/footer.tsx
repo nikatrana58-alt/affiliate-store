@@ -64,21 +64,21 @@ export function Footer() {
               />
             </Link>
             <p className="footer-tagline">
-              Handpicked masterpieces that redefine quality, perfection, and prestige. For those who demand only the finest.
+              Handpicked curated essentials engineered for quality, functional design, and elevated style.
             </p>
 
             {/* Task 12: Non-Intrusive Newsletter Subscription */}
             <div style={{ marginTop: "20px", marginBottom: "20px" }}>
               <p style={{ color: "var(--gold)", fontSize: "12px", fontWeight: 700, letterSpacing: "1px", margin: "0 0 6px" }}>
-                RA2Z PRIVATE CIRCLE
+                RA2Z INSIDER
               </p>
               <p style={{ color: "var(--muted)", fontSize: "13px", margin: "0 0 10px" }}>
-                Subscribe for early access to limited luxury drops and private VIP offers.
+                Subscribe for early access to new arrivals, curated drops, and exclusive offers.
               </p>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  alert("Thank you for joining the RA2Z Private Circle. VIP access confirmed.");
+                  alert("Thank you for subscribing to RA2Z Insider. Early access confirmed.");
                 }}
                 style={{ display: "flex", gap: "8px", maxWidth: "320px" }}
               >
@@ -175,7 +175,6 @@ export function Footer() {
             <h4 className="footer-heading">Connect</h4>
             <Link href="/">About RA2Z</Link>
             <Link href="/">Contact Us</Link>
-            <Link href="/admin">Admin Panel</Link>
           </div>
 
           <div className="footer-col">
