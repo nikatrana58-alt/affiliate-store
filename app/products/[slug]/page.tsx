@@ -100,6 +100,11 @@ export default async function ProductPage({
       <main className="product-landing-page">
         <div className="product-hero-section animate-fade-slide-up">
           <StorefrontVariantSelector product={product} />
+          
+          <div style={{ maxWidth: "1200px", margin: "32px auto 0", padding: "0 24px" }}>
+            <ShippingEstimatorWidget variantId={product.variants?.[0]?.cj_variant_id || product.variants?.[0]?.id} />
+          </div>
+
           <ProductTabs product={product} />
           <LuxuryPackagingSection />
         </div>
@@ -133,6 +138,12 @@ export default async function ProductPage({
           </div>
         </section>
 
+        {/* Customer Reviews & Smart Recommendations */}
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
+          <ProductReviewsSection productId={product.id} />
+          <SmartRecommendations currentProduct={product} allProducts={relatedProducts} />
+        </div>
+
         {relatedProducts.length > 0 && (
           <section className="related-products-section" aria-label="You may also like">
             <div className="section-container animate-fade-slide-up" style={{ animationDelay: "0.2s" }}>
@@ -150,13 +161,6 @@ export default async function ProductPage({
             </div>
           </section>
         )}
-
-        {/* Customer Reviews, Shipping Estimator & Star Ratings Section */}
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
-          <ShippingEstimatorWidget variantId={product.variants?.[0]?.cj_variant_id || product.variants?.[0]?.id} />
-          <ProductReviewsSection productId={product.id} />
-          <SmartRecommendations currentProduct={product} allProducts={relatedProducts} />
-        </div>
       </main>
 
       <div className="sticky-mobile-buy">

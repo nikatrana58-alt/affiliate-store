@@ -528,7 +528,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             <div>
               <div style={{ color: "var(--muted)", fontSize: "11px", fontWeight: 600 }}>Estimated Delivery</div>
               <div style={{ color: "var(--foreground)", fontWeight: 700, marginTop: "2px" }}>
-                7 – 15 Business Days
+                Calculated at checkout
               </div>
             </div>
 
@@ -540,16 +540,46 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             </div>
           </div>
 
-          {/* Clean, Factual Trust Badges */}
-          <div className="trust-indicators" style={{ marginBottom: "16px" }}>
-            <span className="trust-indicator">
-              <span className="trust-indicator-icon">🔒</span>
-              Encrypted SSL Checkout
-            </span>
-            <span className="trust-indicator">
-              <span className="trust-indicator-icon">📦</span>
-              Real-time Order Tracking
-            </span>
+          {/* Clean, Factual Payment & Trust Badges */}
+          <div className="trust-indicators" style={{ marginBottom: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "12px", color: "var(--muted)" }}>
+              <span className="trust-indicator" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                <span className="trust-indicator-icon">🔒</span>
+                256-Bit SSL Encrypted Checkout
+              </span>
+              <span className="trust-indicator" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                <span className="trust-indicator-icon">📦</span>
+                Live Trackable Delivery
+              </span>
+              <span className="trust-indicator" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                <span className="trust-indicator-icon">🛡️</span>
+                Authentic Quality Guarantee
+              </span>
+            </div>
+
+            {/* Verified Payment Method Icons (Stripe Supported Cards) */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingTop: "4px" }}>
+              <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600 }}>Accepted Payments:</span>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                {["VISA", "MC", "AMEX", "DISCOVER"].map((brand) => (
+                  <span
+                    key={brand}
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 800,
+                      letterSpacing: "0.5px",
+                      padding: "2px 6px",
+                      borderRadius: "4px",
+                      background: "rgba(255, 255, 255, 0.08)",
+                      border: "1px solid rgba(255, 255, 255, 0.15)",
+                      color: "var(--foreground-secondary)",
+                    }}
+                  >
+                    {brand}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="purchase-actions">
@@ -569,7 +599,9 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
               />
             </MagneticButton>
 
-            <p className="trust-text">🔒 Encrypted 256-bit SSL Secure Checkout</p>
+            <p className="trust-text" style={{ fontSize: "12px", color: "var(--muted)", marginTop: "8px", textAlign: "center" }}>
+              🔒 Protected by Stripe 256-bit SSL Security
+            </p>
           </div>
         </section>
       </div>

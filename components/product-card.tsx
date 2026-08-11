@@ -126,8 +126,47 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
     setTimeout(() => setAdded(false), 1800);
   }, [addToCart, product]);
 
-  // Compute pricing using Smart Pricing Engine V2
-  const displayPricing = useMemo(() => SmartPricingEngine.calculate(product), [product]);
+  // Compute pricing directly from authoritative variant selling prices
+  const displayPricing = useMemo(() => {
+    const rawVariants = Array.isArray(product.variants) ? product.variants : [];
+
+    // Extract valid, explicit positive variant selling prices (ignore null, undefined, <=0)
+    const validPrices = rawVariants
+      .map((v) => (v.price != null && !isNaN(Number(v.price)) && Number(v.price) > 0 ? Number(v.price) : null))
+      .filter((p): p is number => p !== null);
+
+    if (validPrices.length > 0) {
+      const minPrice = Math.min(...validPrices);
+      const maxPrice = Math.max(...validPrices);
+      const hasMultiplePrices = minPrice !== maxPrice;
+      const compareAtPrice =
+        product.compare_at_price != null && Number(product.compare_at_price) > minPrice
+          ? Number(product.compare_at_price)
+          : null;
+
+      return {
+        displayPrice: minPrice,
+        compareAtPrice,
+        hasMultiplePrices,
+      };
+    }
+
+    // Fallback if product has no variants with valid prices
+    const fallbackPrice =
+      product.price != null && !isNaN(Number(product.price)) && Number(product.price) > 0
+        ? Number(product.price)
+        : 0;
+    const compareAtPrice =
+      product.compare_at_price != null && Number(product.compare_at_price) > fallbackPrice
+        ? Number(product.compare_at_price)
+        : null;
+
+    return {
+      displayPrice: fallbackPrice,
+      compareAtPrice,
+      hasMultiplePrices: false,
+    };
+  }, [product]);
 
   // Images for hover image swap
   const primaryImage = product.image || (product.images && product.images[0]) || "";

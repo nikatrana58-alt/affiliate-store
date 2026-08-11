@@ -9,7 +9,7 @@ type ProductTabsProps = {
 };
 
 export function ProductTabs({ product }: ProductTabsProps) {
-  const [activeTab, setActiveTab] = useState<"description" | "specs" | "shipping" | "faqs">("description");
+  const [activeTab, setActiveTab] = useState<"description" | "specs" | "shipping" | "returns" | "faqs">("description");
 
   const details = useMemo(() => {
     return formatProductDetails(product.description, product.category);
@@ -60,6 +60,7 @@ export function ProductTabs({ product }: ProductTabsProps) {
           { id: "description", label: "Description & Overview" },
           { id: "specs", label: "Specifications" },
           { id: "shipping", label: "Shipping & Delivery" },
+          { id: "returns", label: "Returns & Guarantee" },
           { id: "faqs", label: "FAQs" },
         ].map((tab) => (
           <button
@@ -186,12 +187,20 @@ export function ProductTabs({ product }: ProductTabsProps) {
                 <li>SSL Encrypted order management</li>
               </ul>
             </div>
+          </div>
+        )}
 
-            <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "16px" }}>
-              <h3 style={{ color: "#FFFFFF", fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
-                Returns & Exchange Policy
-              </h3>
-              <p style={{ margin: 0 }}>{details.returns}</p>
+        {activeTab === "returns" && (
+          <div style={{ color: "var(--foreground-secondary)", fontSize: "14px", lineHeight: "1.7", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <h3 style={{ color: "#FFFFFF", fontSize: "18px", fontWeight: 700, margin: 0 }}>
+              Returns & Guarantee
+            </h3>
+            <p style={{ margin: 0 }}>{details.returns}</p>
+            <div style={{ padding: "16px", borderRadius: "14px", backgroundColor: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+              <h4 style={{ color: "var(--gold)", fontSize: "14px", fontWeight: 700, margin: "0 0 6px" }}>RA2Z Quality Guarantee</h4>
+              <p style={{ color: "var(--muted)", fontSize: "13px", margin: 0 }}>
+                Every item is quality inspected prior to dispatch. If your order arrives damaged or incorrect, contact support for prompt resolution.
+              </p>
             </div>
           </div>
         )}
