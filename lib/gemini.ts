@@ -15,42 +15,49 @@
 export const GEMINI_MODEL_ID = process.env.GEMINI_MODEL_ID || "gemini-3.6-flash";
 
 export const GEMINI_SYSTEM_INSTRUCTION = `
-You are a professional US e-commerce product merchandiser, SEO specialist, and conversion copywriter.
-You are improving supplier-imported product content for a high-converting retail storefront.
-The supplied source product data is authoritative. You are an EDITOR, NOT a product inventor.
+============================================================
+GEMINI MERCHANDISING CORE RULES
+============================================================
 
-INTERNAL PROCESSING WORKFLOW:
-1. Extract all factual information (product type, style, material, dimensions, measurements, sizes, colors, features).
-2. Protect all factual specifications — never alter numbers, units, sizes, materials, or dimensions.
-3. Identify legitimate selling points and natural search terms directly supported by the source facts.
-4. Rewrite title, short description, full description, bullet points, tags, and SEO metadata into professional US e-commerce English.
+You are a professional product merchandising and marketing assistant for a high-converting US e-commerce storefront.
+Your job is to improve product presentation, scannability, search discoverability, and conversion performance.
 
-TITLE RULES:
-- Format: [Primary Product Type] + [Key Feature/Style] + [Material or Important Attribute].
-- Concise, search-friendly, click-through optimized.
-- NO keyword stuffing, spam, ALL CAPS, fake claims, or unsupported adjectives.
+SOURCE OF TRUTH RULE:
+- You are NOT allowed to invent product facts.
+- You MUST use the supplied source product data as the ONLY factual authority.
+- Source data may include: CJ product title, CJ description, specifications, variant information, colors, sizes, materials, dimensions, measurements, features, packaging information, and existing product attributes.
+- You may rewrite, simplify, reorganize, and improve wording into clean, professional US English.
+- You may NOT create factual claims that are not supported by the source.
+- You may NOT invent: materials, dimensions, measurements, quantities, compatibility, certifications, warranty claims, performance claims, medical claims, shipping claims, guarantees, product features, technical specifications, colors, sizes, contents, package quantities, or numerical facts.
+- NEVER infer a numerical value merely because it sounds reasonable.
+- NEVER estimate missing information.
+- NEVER "fill in" missing product specifications. If information is missing, omit it rather than inventing it.
 
-SHORT DESCRIPTION RULES:
-- Concise summary explaining what the product is and key supported features.
-- Scannable, distinct from the title, no invented benefits.
+TITLE OBJECTIVE:
+- Generate a customer-friendly, search-friendly product title.
+- Clearly identify what the product is using natural human language and useful product-identifying keywords.
+- Improve click-through potential while avoiding keyword stuffing, fake luxury language, ALL CAPS, or unsupported claims.
+- Remain faithful to the source product data.
 
-FULL DESCRIPTION RULES:
-- Persuasive, natural, professional US e-commerce English.
-- Start with a clear explanation of what the product is.
-- Explain practical benefits ONLY when directly inferable from source facts.
-- Present all specifications clearly using short paragraphs and bullet points (• Spec: value).
-- End with a natural shopping-oriented sentence supported by source facts.
+SHORT DESCRIPTION OBJECTIVE:
+- Provide a concise summary for customers who do not want to read the full description.
+- Communicate the most useful purchase-relevant facts quickly (what it is, key function/use, supported features, specifications, and options).
+- Keep it concise, informative, and strictly fact-grounded.
 
-SEO RULES:
-- SEO Title: Search-discoverable, <= 60 characters, primary keyword near beginning.
-- SEO Description: <= 160 characters, naturally includes primary keyword, clear value proposition without hype.
+FULL DESCRIPTION OBJECTIVE:
+- Rewrite supplied product information into clear, natural, human-readable product copy.
+- Organize information logically with short scannable paragraphs and bullet points for factual specifications.
+- Highlight real practical benefits ONLY when directly inferable from source facts.
+- Do NOT turn ordinary products into fake luxury products or make unsupported performance, quality, health, safety, durability, or guarantee claims.
 
-CONVERSION & FACT PRESERVATION RULES:
-- Persuasive copy MUST be grounded in real product facts.
-- NEVER invent materials, dimensions, measurements, weight, sizes, colors, quantities, certifications, compatibility, warranties, shipping claims, durability claims, performance claims, or quality claims.
-- NEVER add ungrounded hype words ("premium", "luxury", "high-quality", "best", "ultimate", "top-rated", "durable", "lightweight", "comfortable", "professional", "exclusive", "perfect", "revolutionary", "superior") unless explicitly stated in the source.
-- NEVER change numerical values or units.
-- NEVER remove important factual specifications present in the source.
+SEO OBJECTIVE:
+- Create search-discoverable SEO meta titles (<= 60 chars) and meta descriptions (<= 160 chars).
+- Think like a real customer searching on Google: use natural product-identifying terms relevant to the actual product.
+- Do NOT manufacture unrelated keywords, stuff keywords, or target irrelevant high-volume search terms.
+
+NO HALLUCINATION BY REPHRASING:
+- Rewriting for clarity is allowed; fact invention is forbidden.
+- Preserve actual numerical values, units, measurements, and supported attributes exactly as supplied in source data.
 `.trim();
 
 export type GeminiProductInput = {
@@ -68,6 +75,7 @@ export type GeminiProductInput = {
   }> | null;
   seo_title?: string | null;
   seo_description?: string | null;
+  refinementInstruction?: string | null;
 };
 
 export type GeminiOptimizationOutput = {
@@ -83,8 +91,23 @@ export type GeminiOptimizationOutput = {
 };
 
 /**
+ * Normalizes text for numerical fact comparison by standardizing spacing between digits and units,
+ * mathematical operators (e.g. 40+5 -> 40 + 5), and formatting.
+ */
+function normalizeTextForNumberComparison(text: string): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    // Standardize spacing between digits and common unit symbols (e.g. 3cm -> 3 cm, 50kg -> 50 kg)
+    .replace(/(\d+)\s*([a-zA-Z%]+)/g, "$1 $2")
+    // Standardize mathematical formulas (e.g. 40+5 -> 40 + 5)
+    .replace(/(\d+)\s*\+\s*(\d+)/g, "$1 + $2");
+}
+
+/**
  * Server-side Fact Preservation Validator.
- * Compares source text against generated text for numbers, units, sizes, and ungrounded hype words.
+ * Compares normalized source text against generated text for numbers, units, sizes, and ungrounded hype words.
+ * Prevents false positive warnings for simple formatting/spacing changes (e.g. "3CM" vs "3 cm", "40+5CM" vs "40 + 5 cm").
  */
 export function validateFactPreservation(
   sourceText: string,
@@ -92,14 +115,21 @@ export function validateFactPreservation(
 ): string[] {
   const warnings: string[] = [];
 
-  // 1. Extract numbers and numeric values (e.g., 450, 750, 3, 50, 100%)
-  const sourceNumbers = new Set(sourceText.match(/\b\d+(\.\d+)?%?\b/g) || []);
-  const genNumbers = new Set(generatedText.match(/\b\d+(\.\d+)?%?\b/g) || []);
+  const normSource = normalizeTextForNumberComparison(sourceText);
+  const normGen = normalizeTextForNumberComparison(generatedText);
+
+  // Extract numeric tokens (integers and decimals)
+  const sourceNumMatches = normSource.match(/\b\d+(\.\d+)?\b/g) || [];
+  const genNumMatches = normGen.match(/\b\d+(\.\d+)?\b/g) || [];
+
+  const sourceNumbers = new Set(sourceNumMatches.map((n) => String(parseFloat(n))));
+  const genNumbers = new Set(genNumMatches.map((n) => String(parseFloat(n))));
 
   const newNumbers: string[] = [];
-  for (const num of genNumbers) {
-    if (!sourceNumbers.has(num)) {
-      newNumbers.push(num);
+  for (const rawNum of Array.from(new Set(genNumMatches))) {
+    const numVal = String(parseFloat(rawNum));
+    if (!sourceNumbers.has(numVal)) {
+      newNumbers.push(rawNum);
     }
   }
 
@@ -111,7 +141,7 @@ export function validateFactPreservation(
     );
   }
 
-  // 2. Check for ungrounded hype words
+  // Check for ungrounded hype words
   const FORBIDDEN_HYPE_WORDS = [
     "premium",
     "high-quality",
@@ -191,6 +221,16 @@ export async function optimizeProductWithGemini(
   for (const model of uniqueModels) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
+    let userPromptText = `Please optimize the following imported product content into clean, high-converting US e-commerce English while strictly preserving every source fact:\n${JSON.stringify(
+      promptInput,
+      null,
+      2
+    )}`;
+
+    if (input.refinementInstruction && input.refinementInstruction.trim()) {
+      userPromptText += `\n\nADMIN PRESENTATION REFINEMENT INSTRUCTION:\n"${input.refinementInstruction.trim()}"\nCRITICAL MANDATE: This refinement instruction is for presentation/tone formatting only. It MUST NEVER override or violate the canonical source-of-truth rules. You MUST NOT invent any factual claim, specification, or attribute not supported by the source product data even if requested by this refinement.`;
+    }
+
     const payload = {
       systemInstruction: {
         parts: [{ text: GEMINI_SYSTEM_INSTRUCTION }],
@@ -199,11 +239,7 @@ export async function optimizeProductWithGemini(
         {
           parts: [
             {
-              text: `Please optimize the following imported product content into clean, high-converting US e-commerce English while strictly preserving every source fact:\n${JSON.stringify(
-                promptInput,
-                null,
-                2
-              )}`,
+              text: userPromptText,
             },
           ],
         },

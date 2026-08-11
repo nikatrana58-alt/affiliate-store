@@ -135,26 +135,65 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
   const [activeTab, setActiveTab] = useState<"inventory" | "orders" | "analytics" | "cj-import" | "printful-import">("inventory");
   const [newImageUrl, setNewImageUrl] = useState("");
 
-  // Gemini Assistant State
+  // Gemini Assistant State & Editable Suggestions
   const [showGeminiModal, setShowGeminiModal] = useState(false);
   const [geminiRecommendations, setGeminiRecommendations] = useState<GeminiOptimizationOutput | null>(null);
   const [isGeminiWorking, setIsGeminiWorking] = useState(false);
-  const [applyGeminiCategory, setApplyGeminiCategory] = useState(false);
   const [hasOptimizedOnce, setHasOptimizedOnce] = useState(false);
+  const [geminiRefinement, setGeminiRefinement] = useState("");
 
-  async function handleGeminiAssist() {
+  // Editable Recommendations State (Manual Editing & Field-Level Control)
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedShortDesc, setEditedShortDesc] = useState("");
+  const [editedDesc, setEditedDesc] = useState("");
+  const [editedBulletPoints, setEditedBulletPoints] = useState<string[]>([]);
+  const [editedTags, setEditedTags] = useState("");
+  const [editedCategory, setEditedCategory] = useState("");
+  const [editedSeoTitle, setEditedSeoTitle] = useState("");
+  const [editedSeoDesc, setEditedSeoDesc] = useState("");
+
+  // Per-field Selection State (Accept / Reject Controls)
+  const [acceptedFields, setAcceptedFields] = useState({
+    title: true,
+    short_description: true,
+    description: true,
+    bullet_points: true,
+    tags: true,
+    category: false,
+    seo: true,
+  });
+
+  function initGeminiEditState(recs: GeminiOptimizationOutput) {
+    setEditedTitle(recs.title || "");
+    setEditedShortDesc(recs.short_description || "");
+    setEditedDesc(recs.description || "");
+    setEditedBulletPoints(Array.isArray(recs.bullet_points) ? recs.bullet_points : []);
+    setEditedTags(Array.isArray(recs.tags) ? recs.tags.join(", ") : "");
+    setEditedCategory(recs.category_suggestion || "");
+    setEditedSeoTitle(recs.seo_title || "");
+    setEditedSeoDesc(recs.seo_description || "");
+    setAcceptedFields({
+      title: true,
+      short_description: true,
+      description: true,
+      bullet_points: true,
+      tags: true,
+      category: false,
+      seo: true,
+    });
+  }
+
+  async function handleGeminiAssist(customRefinement?: string | React.MouseEvent) {
     if (!form.title.trim()) {
       setNotification({ kind: "error", message: "Enter a product title first before running Gemini Assist." });
-      return;
-    }
-
-    if (hasOptimizedOnce && !window.confirm("This product has already been analyzed by Gemini. Re-run analysis?")) {
       return;
     }
 
     setIsGeminiWorking(true);
     setStatus("Analyzing product with Gemini...");
     setNotification(null);
+
+    const refText = typeof customRefinement === "string" ? customRefinement : geminiRefinement;
 
     try {
       const response = await fetch("/api/admin/gemini/optimize", {
@@ -170,6 +209,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
           variants: form.variants,
           seo_title: form.seo_title,
           seo_description: form.seo_description,
+          refinementInstruction: refText.trim() || null,
         }),
       });
 
@@ -185,7 +225,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
       }
 
       setGeminiRecommendations(data.recommendations);
-      setApplyGeminiCategory(false);
+      initGeminiEditState(data.recommendations);
       setHasOptimizedOnce(true);
       setShowGeminiModal(true);
     } catch (err) {
@@ -202,9 +242,9 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
 
     setIsDirty(true);
     setForm((c) => {
-      let updatedDesc = geminiRecommendations.description;
-      if (Array.isArray(geminiRecommendations.bullet_points) && geminiRecommendations.bullet_points.length > 0) {
-        const bulletText = "\n\nKey Highlights:\n" + geminiRecommendations.bullet_points.map((b) => `• ${b}`).join("\n");
+      let updatedDesc = acceptedFields.description ? editedDesc : c.description;
+      if (acceptedFields.bullet_points && editedBulletPoints.length > 0) {
+        const bulletText = "\n\nKey Highlights:\n" + editedBulletPoints.map((b) => `• ${b}`).join("\n");
         if (!updatedDesc.includes("Key Highlights:")) {
           updatedDesc = updatedDesc + bulletText;
         }
@@ -212,22 +252,20 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
 
       return {
         ...c,
-        title: geminiRecommendations.title,
-        short_description: geminiRecommendations.short_description,
+        title: acceptedFields.title ? editedTitle : c.title,
+        short_description: acceptedFields.short_description ? editedShortDesc : c.short_description,
         description: updatedDesc,
-        tags: Array.isArray(geminiRecommendations.tags) ? geminiRecommendations.tags.join(", ") : c.tags,
-        seo_title: geminiRecommendations.seo_title,
-        seo_description: geminiRecommendations.seo_description,
-        ...(applyGeminiCategory && geminiRecommendations.category_suggestion
-          ? { category: geminiRecommendations.category_suggestion }
-          : {}),
+        tags: acceptedFields.tags ? editedTags : c.tags,
+        seo_title: acceptedFields.seo ? editedSeoTitle : c.seo_title,
+        seo_description: acceptedFields.seo ? editedSeoDesc : c.seo_description,
+        ...(acceptedFields.category && editedCategory ? { category: editedCategory } : {}),
       };
     });
 
     setShowGeminiModal(false);
     setNotification({
       kind: "success",
-      message: "Gemini recommendations applied to form! Click Save Draft or Publish Product to save changes.",
+      message: "Selected Gemini recommendations applied to form! Click Save Draft or Publish Product to save changes.",
     });
   }
 
@@ -1902,8 +1940,36 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
             </div>
 
             <p style={{ fontSize: "13px", color: "var(--muted)", margin: "12px 0 16px" }}>
-              Review Gemini&apos;s recommendations below. Click <strong>Apply Improvements</strong> to copy recommendations into the editor form. Changes are only published when you save the product.
+              Review, manually edit, or toggle acceptance for Gemini&apos;s recommendations below. Click <strong>Apply Selected Improvements</strong> to apply checked fields to your product form.
             </p>
+
+            {/* Admin Refinement Control */}
+            <div style={{ background: "rgba(201, 168, 76, 0.05)", border: "1px solid rgba(201, 168, 76, 0.2)", borderRadius: "10px", padding: "14px", marginBottom: "20px" }}>
+              <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "6px" }}>
+                💬 Tell Gemini what you want changed (Optional Refinement)
+              </label>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <input
+                  type="text"
+                  value={geminiRefinement}
+                  onChange={(e) => setGeminiRefinement(e.target.value)}
+                  placeholder="e.g. 'Make the title shorter', 'Focus on key function', 'Use natural US tone'"
+                  style={{ flex: 1, minWidth: "260px", padding: "8px 12px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px" }}
+                />
+                <button
+                  type="button"
+                  className="button secondary"
+                  disabled={isGeminiWorking}
+                  onClick={() => handleGeminiAssist(geminiRefinement)}
+                  style={{ fontSize: "12px", padding: "8px 16px" }}
+                >
+                  {isGeminiWorking ? "Re-analyzing..." : "Re-analyze with Refinement"}
+                </button>
+              </div>
+              <p style={{ fontSize: "11px", color: "var(--muted)", margin: "6px 0 0", fontStyle: "italic" }}>
+                Note: Refinements format presentation and tone only. Canonical source-of-truth rules strictly prevent fact invention.
+              </p>
+            </div>
 
             {geminiRecommendations.warnings && geminiRecommendations.warnings.length > 0 && (
               <div style={{ background: "rgba(235, 87, 87, 0.1)", border: "1px solid rgba(235, 87, 87, 0.3)", borderRadius: "8px", padding: "10px 14px", margin: "0 0 16px", fontSize: "12px", color: "var(--danger, #eb5757)" }}>
@@ -1918,79 +1984,182 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {/* Field 1: Title */}
-              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Product Title</label>
-                <div style={{ fontSize: "13px" }}>
-                  <div style={{ color: "var(--muted)", marginBottom: "4px" }}>Current: <em>{form.title}</em></div>
-                  <div style={{ color: "var(--foreground)", fontWeight: 600 }}>Suggested: <strong>{geminiRecommendations.title}</strong></div>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedFields.title}
+                      onChange={(e) => setAcceptedFields((prev) => ({ ...prev, title: e.target.checked }))}
+                    />
+                    Product Title
+                  </label>
+                  <span style={{ fontSize: "11px", color: acceptedFields.title ? "var(--gold)" : "var(--muted)" }}>
+                    {acceptedFields.title ? "ACCEPTED" : "REJECTED"}
+                  </span>
                 </div>
+                <input
+                  type="text"
+                  value={editedTitle}
+                  disabled={!acceptedFields.title}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", fontWeight: 600, opacity: acceptedFields.title ? 1 : 0.4 }}
+                />
               </div>
 
               {/* Field 2: Short Description */}
-              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Short Description</label>
-                <div style={{ fontSize: "13px" }}>
-                  <div style={{ color: "var(--muted)", marginBottom: "4px" }}>Current: {form.short_description || "(None)"}</div>
-                  <div style={{ color: "var(--foreground)" }}>Suggested: {geminiRecommendations.short_description}</div>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedFields.short_description}
+                      onChange={(e) => setAcceptedFields((prev) => ({ ...prev, short_description: e.target.checked }))}
+                    />
+                    Short Description
+                  </label>
+                  <span style={{ fontSize: "11px", color: acceptedFields.short_description ? "var(--gold)" : "var(--muted)" }}>
+                    {acceptedFields.short_description ? "ACCEPTED" : "REJECTED"}
+                  </span>
                 </div>
+                <textarea
+                  rows={2}
+                  value={editedShortDesc}
+                  disabled={!acceptedFields.short_description}
+                  onChange={(e) => setEditedShortDesc(e.target.value)}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", opacity: acceptedFields.short_description ? 1 : 0.4 }}
+                />
               </div>
 
               {/* Field 3: Full Description */}
-              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Full Description</label>
-                <div style={{ fontSize: "13px" }}>
-                  <div style={{ color: "var(--muted)", marginBottom: "6px", maxHeight: "80px", overflowY: "auto" }}>Current: {form.description || "(None)"}</div>
-                  <div style={{ color: "var(--foreground)", maxHeight: "120px", overflowY: "auto", whiteSpace: "pre-wrap" }}>Suggested: {geminiRecommendations.description}</div>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedFields.description}
+                      onChange={(e) => setAcceptedFields((prev) => ({ ...prev, description: e.target.checked }))}
+                    />
+                    Full Description
+                  </label>
+                  <span style={{ fontSize: "11px", color: acceptedFields.description ? "var(--gold)" : "var(--muted)" }}>
+                    {acceptedFields.description ? "ACCEPTED" : "REJECTED"}
+                  </span>
                 </div>
+                <textarea
+                  rows={5}
+                  value={editedDesc}
+                  disabled={!acceptedFields.description}
+                  onChange={(e) => setEditedDesc(e.target.value)}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", lineHeight: "1.5", opacity: acceptedFields.description ? 1 : 0.4 }}
+                />
               </div>
 
               {/* Field 4: Bullet Points */}
-              {Array.isArray(geminiRecommendations.bullet_points) && geminiRecommendations.bullet_points.length > 0 && (
-                <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Suggested Key Highlights (Bullet Points)</label>
-                  <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "13px", color: "var(--foreground)", lineHeight: 1.5 }}>
-                    {geminiRecommendations.bullet_points.map((bp, i) => (
-                      <li key={i}>{bp}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Field 5: Tags */}
-              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Tags</label>
-                <div style={{ fontSize: "13px" }}>
-                  <div style={{ color: "var(--muted)", marginBottom: "4px" }}>Current: {form.tags || "(None)"}</div>
-                  <div style={{ color: "var(--foreground)" }}>Suggested: {geminiRecommendations.tags.join(", ")}</div>
-                </div>
-              </div>
-
-              {/* Field 6: Category Suggestion (Requirement #4: Explicit Confirmation) */}
-              <div style={{ background: "rgba(201, 168, 76, 0.08)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)" }}>
-                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>Category Suggestion</label>
-                <div style={{ fontSize: "13px", marginBottom: "8px" }}>
-                  <span style={{ color: "var(--muted)" }}>Current Category: <strong>{form.category || "(Uncategorized)"}</strong></span>
-                  <br />
-                  <span style={{ color: "var(--foreground)" }}>Gemini Suggested Category: <strong>{geminiRecommendations.category_suggestion || "(None)"}</strong></span>
-                </div>
-                {geminiRecommendations.category_suggestion && (
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "12px", color: "var(--gold)", fontWeight: 600 }}>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                     <input
                       type="checkbox"
-                      checked={applyGeminiCategory}
-                      onChange={(e) => setApplyGeminiCategory(e.target.checked)}
+                      checked={acceptedFields.bullet_points}
+                      onChange={(e) => setAcceptedFields((prev) => ({ ...prev, bullet_points: e.target.checked }))}
                     />
-                    Explicitly confirm category change to &quot;{geminiRecommendations.category_suggestion}&quot;
+                    Key Highlights (Bullet Points)
                   </label>
-                )}
+                  <span style={{ fontSize: "11px", color: acceptedFields.bullet_points ? "var(--gold)" : "var(--muted)" }}>
+                    {acceptedFields.bullet_points ? "ACCEPTED" : "REJECTED"}
+                  </span>
+                </div>
+                <textarea
+                  rows={4}
+                  value={editedBulletPoints.join("\n")}
+                  disabled={!acceptedFields.bullet_points}
+                  onChange={(e) => setEditedBulletPoints(e.target.value.split("\n").filter((line) => line.trim().length > 0))}
+                  placeholder="One bullet point per line..."
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", lineHeight: "1.5", opacity: acceptedFields.bullet_points ? 1 : 0.4 }}
+                />
+              </div>
+
+              {/* Field 5: Tags */}
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedFields.tags}
+                      onChange={(e) => setAcceptedFields((prev) => ({ ...prev, tags: e.target.checked }))}
+                    />
+                    Tags (Comma Separated)
+                  </label>
+                  <span style={{ fontSize: "11px", color: acceptedFields.tags ? "var(--gold)" : "var(--muted)" }}>
+                    {acceptedFields.tags ? "ACCEPTED" : "REJECTED"}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={editedTags}
+                  disabled={!acceptedFields.tags}
+                  onChange={(e) => setEditedTags(e.target.value)}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", opacity: acceptedFields.tags ? 1 : 0.4 }}
+                />
+              </div>
+
+              {/* Field 6: Category Suggestion */}
+              <div style={{ background: "rgba(201, 168, 76, 0.08)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedFields.category}
+                      onChange={(e) => setAcceptedFields((prev) => ({ ...prev, category: e.target.checked }))}
+                    />
+                    Apply Category Suggestion
+                  </label>
+                  <span style={{ fontSize: "11px", color: acceptedFields.category ? "var(--gold)" : "var(--muted)" }}>
+                    {acceptedFields.category ? "ACCEPTED" : "REJECTED"}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={editedCategory}
+                  disabled={!acceptedFields.category}
+                  onChange={(e) => setEditedCategory(e.target.value)}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", fontWeight: 600, opacity: acceptedFields.category ? 1 : 0.4 }}
+                />
               </div>
 
               {/* Field 7: SEO Title & Description */}
-              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", display: "block", marginBottom: "4px" }}>SEO Meta Title & Description</label>
-                <div style={{ fontSize: "13px" }}>
-                  <div style={{ color: "var(--foreground)", fontWeight: 600 }}>Title: {geminiRecommendations.seo_title}</div>
-                  <div style={{ color: "var(--muted)", marginTop: "4px" }}>Description: {geminiRecommendations.seo_description}</div>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedFields.seo}
+                      onChange={(e) => setAcceptedFields((prev) => ({ ...prev, seo: e.target.checked }))}
+                    />
+                    SEO Meta Title & Description
+                  </label>
+                  <span style={{ fontSize: "11px", color: acceptedFields.seo ? "var(--gold)" : "var(--muted)" }}>
+                    {acceptedFields.seo ? "ACCEPTED" : "REJECTED"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", opacity: acceptedFields.seo ? 1 : 0.4 }}>
+                  <input
+                    type="text"
+                    value={editedSeoTitle}
+                    disabled={!acceptedFields.seo}
+                    onChange={(e) => setEditedSeoTitle(e.target.value)}
+                    placeholder="SEO Title (max 60 chars)"
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "12px" }}
+                  />
+                  <textarea
+                    rows={2}
+                    value={editedSeoDesc}
+                    disabled={!acceptedFields.seo}
+                    onChange={(e) => setEditedSeoDesc(e.target.value)}
+                    placeholder="SEO Description (max 160 chars)"
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "12px" }}
+                  />
                 </div>
               </div>
             </div>
@@ -2008,7 +2177,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                 className="button primary"
                 onClick={applyGeminiRecommendations}
               >
-                Apply Improvements
+                Apply Selected Improvements
               </button>
             </div>
           </div>
