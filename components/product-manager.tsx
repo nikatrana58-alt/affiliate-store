@@ -146,7 +146,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
   const [editedTitle, setEditedTitle] = useState("");
   const [editedShortDesc, setEditedShortDesc] = useState("");
   const [editedDesc, setEditedDesc] = useState("");
-  const [editedBulletPoints, setEditedBulletPoints] = useState<string[]>([]);
+  const [editedBulletText, setEditedBulletText] = useState("");
   const [editedTags, setEditedTags] = useState("");
   const [editedCategory, setEditedCategory] = useState("");
   const [editedSeoTitle, setEditedSeoTitle] = useState("");
@@ -167,7 +167,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
     setEditedTitle(recs.title || "");
     setEditedShortDesc(recs.short_description || "");
     setEditedDesc(recs.description || "");
-    setEditedBulletPoints(Array.isArray(recs.bullet_points) ? recs.bullet_points : []);
+    setEditedBulletText(Array.isArray(recs.bullet_points) ? recs.bullet_points.join("\n") : "");
     setEditedTags(Array.isArray(recs.tags) ? recs.tags.join(", ") : "");
     setEditedCategory(recs.category_suggestion || "");
     setEditedSeoTitle(recs.seo_title || "");
@@ -240,11 +240,16 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
   function applyGeminiRecommendations() {
     if (!geminiRecommendations) return;
 
+    const parsedBullets = editedBulletText
+      .split("\n")
+      .map((b) => b.trim())
+      .filter(Boolean);
+
     setIsDirty(true);
     setForm((c) => {
       let updatedDesc = acceptedFields.description ? editedDesc : c.description;
-      if (acceptedFields.bullet_points && editedBulletPoints.length > 0) {
-        const bulletText = "\n\nKey Highlights:\n" + editedBulletPoints.map((b) => `• ${b}`).join("\n");
+      if (acceptedFields.bullet_points && parsedBullets.length > 0) {
+        const bulletText = "\n\nKey Highlights:\n" + parsedBullets.map((b) => `• ${b}`).join("\n");
         if (!updatedDesc.includes("Key Highlights:")) {
           updatedDesc = updatedDesc + bulletText;
         }
@@ -406,15 +411,31 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
     // synchronized on load. Always compute from the authoritative source values.
     const loadedCost = Number(product.cost_price) || 0;
     const loadedPrice = Number(product.price) || 0;
-    const loadedProfit = parseFloat((loadedPrice - loadedCost).toFixed(2));
 
-    // Synchronize variant prices from per-variant CJ costs + derived profit.
-    // This ensures the variant table is correct immediately on edit-load,
-    // not only after the first profit-field interaction.
     let loadedVariants = Array.isArray(product.variants) ? product.variants : [];
-    if (loadedVariants.length > 0 && loadedCost > 0) {
-      const syncResult = recalculateAllVariantPrices(loadedVariants, loadedProfit, loadedCost);
+    let initialCost = loadedCost;
+    let initialPrice = loadedPrice;
+
+    if (loadedVariants.length > 0) {
+      // 1. Resolve variant landed costs if stored
+      const resolvedVariants = loadedVariants.map((v) => {
+        let vCost = v.cost_price != null && !isNaN(Number(v.cost_price)) ? Number(v.cost_price) : 0;
+        if (v.cj_product_price != null && v.cj_shipping_cost != null) {
+          const cjLanded = parseFloat((Number(v.cj_product_price) + Number(v.cj_shipping_cost)).toFixed(2));
+          if (cjLanded > 0) vCost = cjLanded;
+        }
+        return { ...v, cost_price: vCost };
+      });
+
+      const variantCosts = resolvedVariants.map((v) => v.cost_price || 0).filter((c) => c > 0);
+      const minVariantCost = variantCosts.length > 0 ? Math.min(...variantCosts) : loadedCost;
+      initialCost = minVariantCost > 0 ? minVariantCost : loadedCost;
+
+      const loadedProfit = Math.max(0, parseFloat((loadedPrice - initialCost).toFixed(2)));
+      const syncResult = recalculateAllVariantPrices(resolvedVariants, loadedProfit, initialCost);
       loadedVariants = syncResult.updatedVariants as ProductVariantItem[];
+      initialPrice = syncResult.lowestPrice > 0 ? syncResult.lowestPrice : loadedPrice;
+      initialCost = syncResult.lowestCost > 0 ? syncResult.lowestCost : initialCost;
     }
 
     setForm({
@@ -427,9 +448,9 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
       tags: Array.isArray(product.tags) ? product.tags.join(", ") : product.tags || "",
       brand: product.brand || "",
       badge: product.badge || "",
-      price: product.price?.toString() || "",
+      price: initialPrice > 0 ? initialPrice.toString() : product.price?.toString() || "",
       compare_at_price: product.compare_at_price?.toString() || "",
-      cost_price: product.cost_price?.toString() || product.price?.toString() || "",
+      cost_price: initialCost > 0 ? initialCost.toString() : product.cost_price?.toString() || product.price?.toString() || "",
       is_cost_editable: false,
       price_manually_overridden: Boolean(product.price_manually_overridden),
       image: product.image || "",
@@ -1197,13 +1218,18 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                         setIsDirty(true);
                         setForm((c) => {
                           let updatedVariants = c.variants;
+                          let updatedPrice = res.sellingPrice.toString();
+                          let updatedCost = liveCost.toString();
                           if (c.variants && c.variants.length > 0) {
                             const result = recalculateAllVariantPrices(c.variants, newProfit, liveCost);
                             updatedVariants = result.updatedVariants as ProductVariantItem[];
+                            if (result.lowestPrice > 0) updatedPrice = result.lowestPrice.toString();
+                            if (result.lowestCost > 0) updatedCost = result.lowestCost.toString();
                           }
                           return {
                             ...c,
-                            price: res.sellingPrice.toString(),
+                            cost_price: updatedCost,
+                            price: updatedPrice,
                             profit: newProfit,
                             variants: updatedVariants,
                             price_manually_overridden: true,
@@ -1240,13 +1266,19 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                         setIsDirty(true);
                         setForm((c) => {
                           let updatedVariants = c.variants;
+                          let updatedPrice = res.sellingPrice.toString();
+                          let updatedCost = liveCost.toString();
                           if (c.variants && c.variants.length > 0) {
                             const result = recalculateAllVariantPrices(c.variants, res.profit, liveCost);
                             updatedVariants = result.updatedVariants as ProductVariantItem[];
+                            if (result.lowestPrice > 0) updatedPrice = result.lowestPrice.toString();
+                            if (result.lowestCost > 0) updatedCost = result.lowestCost.toString();
                           }
                           return {
                             ...c,
-                            price: res.sellingPrice.toString(),
+                            cost_price: updatedCost,
+                            price: updatedPrice,
+                            profit: res.profit,
                             variants: updatedVariants,
                             price_manually_overridden: true,
                             last_modified_pricing_field: "margin",
@@ -1490,18 +1522,19 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                             <input
                               type="number"
                               step="0.01"
-                              value={v.cost_price ?? (parseFloat(form.cost_price) || 0)}
+                              value={v.cost_price != null ? v.cost_price : ""}
                               onChange={(e) => {
                                 const val = parseFloat(e.target.value) || 0;
                                 updateVariantField(vIdx, "cost_price", val);
                                 const productCost = parseFloat(form.cost_price) || 0;
                                 const productPrice = parseFloat(form.price) || 0;
-                                const currentProfit = productPrice - productCost;
-                                const newPrice = parseFloat((val + currentProfit).toFixed(2));
+                                const activeProfit = Math.max(0, parseFloat((productPrice - productCost).toFixed(2)));
+                                const newPrice = parseFloat((val + activeProfit).toFixed(2));
                                 updateVariantField(vIdx, "price", newPrice);
                               }}
+                              placeholder="N/A"
                               style={{ padding: "4px 8px", fontSize: "12px", width: "90px", color: "var(--muted)" }}
-                              title="Individual variant supplier cost price"
+                              title="Individual variant supplier cost price (blank if unavailable)"
                             />
                           </td>
                           <td>
@@ -1509,12 +1542,14 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                               type="number"
                               step="0.01"
                               value={(() => {
-                                // Display priority: explicit variant price → variantCost + derivedProfit → 0
-                                // Never fall back to baseProductPrice + delta (would hide per-variant cost differences)
+                                // Display priority: explicit variant price → variantCost + derivedProfit → blank (NO parent cost fallback)
                                 if (v.price != null) return v.price;
-                                const vCost = v.cost_price != null ? Number(v.cost_price) : (parseFloat(form.cost_price) || 0);
-                                const derivedProfit = (parseFloat(form.price) || 0) - (parseFloat(form.cost_price) || 0);
-                                return parseFloat((vCost + Math.max(0, derivedProfit)).toFixed(2));
+                                if (v.cost_price != null && !isNaN(Number(v.cost_price)) && Number(v.cost_price) > 0) {
+                                  const vCost = Number(v.cost_price);
+                                  const derivedProfit = (parseFloat(form.price) || 0) - (parseFloat(form.cost_price) || 0);
+                                  return parseFloat((vCost + Math.max(0, derivedProfit)).toFixed(2));
+                                }
+                                return "";
                               })()}
                               onChange={(e) => {
                                 const val = parseFloat(e.target.value) || 0;
@@ -1522,6 +1557,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                                 updateVariantField(vIdx, "price", val);
                                 updateVariantField(vIdx, "price_delta", parseFloat((val - basePrice).toFixed(2)));
                               }}
+                              placeholder="N/A"
                               style={{ padding: "4px 8px", fontSize: "12px", width: "90px" }}
                             />
                           </td>
@@ -1985,7 +2021,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {/* Field 1: Title */}
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                     <input
                       type="checkbox"
@@ -1994,22 +2030,25 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                     />
                     Product Title
                   </label>
-                  <span style={{ fontSize: "11px", color: acceptedFields.title ? "var(--gold)" : "var(--muted)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: acceptedFields.title ? "var(--gold)" : "var(--muted)" }}>
                     {acceptedFields.title ? "ACCEPTED" : "REJECTED"}
                   </span>
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "6px" }}>
+                  Current: <em>{form.title}</em>
                 </div>
                 <input
                   type="text"
                   value={editedTitle}
-                  disabled={!acceptedFields.title}
                   onChange={(e) => setEditedTitle(e.target.value)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", fontWeight: 600, opacity: acceptedFields.title ? 1 : 0.4 }}
+                  placeholder="Gemini Title Suggestion (Click to edit)..."
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: "13px", fontWeight: 600 }}
                 />
               </div>
 
               {/* Field 2: Short Description */}
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                     <input
                       type="checkbox"
@@ -2018,22 +2057,25 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                     />
                     Short Description
                   </label>
-                  <span style={{ fontSize: "11px", color: acceptedFields.short_description ? "var(--gold)" : "var(--muted)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: acceptedFields.short_description ? "var(--gold)" : "var(--muted)" }}>
                     {acceptedFields.short_description ? "ACCEPTED" : "REJECTED"}
                   </span>
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "6px" }}>
+                  Current: {form.short_description || "(None)"}
                 </div>
                 <textarea
                   rows={2}
                   value={editedShortDesc}
-                  disabled={!acceptedFields.short_description}
                   onChange={(e) => setEditedShortDesc(e.target.value)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", opacity: acceptedFields.short_description ? 1 : 0.4 }}
+                  placeholder="Gemini Short Description Suggestion (Click to edit)..."
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: "13px" }}
                 />
               </div>
 
               {/* Field 3: Full Description */}
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                     <input
                       type="checkbox"
@@ -2042,22 +2084,25 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                     />
                     Full Description
                   </label>
-                  <span style={{ fontSize: "11px", color: acceptedFields.description ? "var(--gold)" : "var(--muted)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: acceptedFields.description ? "var(--gold)" : "var(--muted)" }}>
                     {acceptedFields.description ? "ACCEPTED" : "REJECTED"}
                   </span>
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "6px", maxHeight: "60px", overflowY: "auto" }}>
+                  Current: {form.description || "(None)"}
                 </div>
                 <textarea
                   rows={5}
                   value={editedDesc}
-                  disabled={!acceptedFields.description}
                   onChange={(e) => setEditedDesc(e.target.value)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", lineHeight: "1.5", opacity: acceptedFields.description ? 1 : 0.4 }}
+                  placeholder="Gemini Full Description Suggestion (Click to edit)..."
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: "13px", lineHeight: "1.5" }}
                 />
               </div>
 
               {/* Field 4: Bullet Points */}
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                     <input
                       type="checkbox"
@@ -2066,23 +2111,22 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                     />
                     Key Highlights (Bullet Points)
                   </label>
-                  <span style={{ fontSize: "11px", color: acceptedFields.bullet_points ? "var(--gold)" : "var(--muted)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: acceptedFields.bullet_points ? "var(--gold)" : "var(--muted)" }}>
                     {acceptedFields.bullet_points ? "ACCEPTED" : "REJECTED"}
                   </span>
                 </div>
                 <textarea
                   rows={4}
-                  value={editedBulletPoints.join("\n")}
-                  disabled={!acceptedFields.bullet_points}
-                  onChange={(e) => setEditedBulletPoints(e.target.value.split("\n").filter((line) => line.trim().length > 0))}
+                  value={editedBulletText}
+                  onChange={(e) => setEditedBulletText(e.target.value)}
                   placeholder="One bullet point per line..."
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", lineHeight: "1.5", opacity: acceptedFields.bullet_points ? 1 : 0.4 }}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: "13px", lineHeight: "1.5" }}
                 />
               </div>
 
               {/* Field 5: Tags */}
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                     <input
                       type="checkbox"
@@ -2091,22 +2135,25 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                     />
                     Tags (Comma Separated)
                   </label>
-                  <span style={{ fontSize: "11px", color: acceptedFields.tags ? "var(--gold)" : "var(--muted)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: acceptedFields.tags ? "var(--gold)" : "var(--muted)" }}>
                     {acceptedFields.tags ? "ACCEPTED" : "REJECTED"}
                   </span>
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "6px" }}>
+                  Current: {form.tags || "(None)"}
                 </div>
                 <input
                   type="text"
                   value={editedTags}
-                  disabled={!acceptedFields.tags}
                   onChange={(e) => setEditedTags(e.target.value)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", opacity: acceptedFields.tags ? 1 : 0.4 }}
+                  placeholder="Comma-separated tags..."
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: "13px" }}
                 />
               </div>
 
               {/* Field 6: Category Suggestion */}
               <div style={{ background: "rgba(201, 168, 76, 0.08)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(201, 168, 76, 0.3)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                     <input
                       type="checkbox"
@@ -2115,22 +2162,25 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                     />
                     Apply Category Suggestion
                   </label>
-                  <span style={{ fontSize: "11px", color: acceptedFields.category ? "var(--gold)" : "var(--muted)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: acceptedFields.category ? "var(--gold)" : "var(--muted)" }}>
                     {acceptedFields.category ? "ACCEPTED" : "REJECTED"}
                   </span>
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "6px" }}>
+                  Current Category: <strong>{form.category || "(Uncategorized)"}</strong>
                 </div>
                 <input
                   type="text"
                   value={editedCategory}
-                  disabled={!acceptedFields.category}
                   onChange={(e) => setEditedCategory(e.target.value)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "13px", fontWeight: 600, opacity: acceptedFields.category ? 1 : 0.4 }}
+                  placeholder="Suggested category..."
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: "13px", fontWeight: 600 }}
                 />
               </div>
 
               {/* Field 7: SEO Title & Description */}
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                   <label style={{ fontSize: "12px", fontWeight: 700, color: "var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                     <input
                       type="checkbox"
@@ -2139,26 +2189,27 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
                     />
                     SEO Meta Title & Description
                   </label>
-                  <span style={{ fontSize: "11px", color: acceptedFields.seo ? "var(--gold)" : "var(--muted)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: acceptedFields.seo ? "var(--gold)" : "var(--muted)" }}>
                     {acceptedFields.seo ? "ACCEPTED" : "REJECTED"}
                   </span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", opacity: acceptedFields.seo ? 1 : 0.4 }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "6px" }}>
+                  Current SEO Title: {form.seo_title || "(None)"}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <input
                     type="text"
                     value={editedSeoTitle}
-                    disabled={!acceptedFields.seo}
                     onChange={(e) => setEditedSeoTitle(e.target.value)}
                     placeholder="SEO Title (max 60 chars)"
-                    style={{ width: "100%", padding: "6px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "12px" }}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: "12px" }}
                   />
                   <textarea
                     rows={2}
                     value={editedSeoDesc}
-                    disabled={!acceptedFields.seo}
                     onChange={(e) => setEditedSeoDesc(e.target.value)}
                     placeholder="SEO Description (max 160 chars)"
-                    style={{ width: "100%", padding: "6px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "12px" }}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: "12px" }}
                   />
                 </div>
               </div>

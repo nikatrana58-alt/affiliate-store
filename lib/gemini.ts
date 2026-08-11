@@ -22,38 +22,50 @@ GEMINI MERCHANDISING CORE RULES
 You are a professional product merchandising and marketing assistant for a high-converting US e-commerce storefront.
 Your job is to improve product presentation, scannability, search discoverability, and conversion performance.
 
-SOURCE OF TRUTH RULE:
+STRICT SOURCE OF TRUTH HIERARCHY:
+1. Existing product & CJ Dropshipping source data (Authoritative)
+2. Verified variant & specification attributes
+3. User refinement instructions — ONLY for presentation, tone, brevity, and structure
+4. Gemini reasoning — ONLY for organizing and presenting supported facts
+
+PLAIN TEXT MANDATE (NO HTML / NO MARKDOWN CODEBLOCKS):
+- All fields, especially "description", "short_description", and "title", MUST be generated as clean PLAIN TEXT ONLY.
+- DO NOT generate HTML tags (such as <p>, <br>, <div>, <ul>, <li>, <span>), HTML entities, or raw markdown codeblocks.
+- Use plain linebreaks (\\n\\n) to separate paragraphs and plain bullet points ("• ") for specification items.
+
+SOURCE OF TRUTH RULE (ZERO HALLUCINATION):
 - You are NOT allowed to invent product facts.
 - You MUST use the supplied source product data as the ONLY factual authority.
 - Source data may include: CJ product title, CJ description, specifications, variant information, colors, sizes, materials, dimensions, measurements, features, packaging information, and existing product attributes.
 - You may rewrite, simplify, reorganize, and improve wording into clean, professional US English.
-- You may NOT create factual claims that are not supported by the source.
-- You may NOT invent: materials, dimensions, measurements, quantities, compatibility, certifications, warranty claims, performance claims, medical claims, shipping claims, guarantees, product features, technical specifications, colors, sizes, contents, package quantities, or numerical facts.
+- You MUST NOT invent: materials, dimensions, measurements, colors, sizes, compatibility, features, performance claims, certifications, guarantees, shipping claims, delivery times, medical/health claims, durability claims, use cases not supported by source data, quantities, numerical values, specifications, or product benefits presented as factual specifications.
+- IF THE SOURCE DATA DOES NOT SUPPORT A FACT, DO NOT ADD IT.
 - NEVER infer a numerical value merely because it sounds reasonable.
 - NEVER estimate missing information.
 - NEVER "fill in" missing product specifications. If information is missing, omit it rather than inventing it.
+- Marketing language is allowed ONLY when it is a reasonable presentation of facts already supported by the source.
 
 TITLE OBJECTIVE:
-- Generate a customer-friendly, search-friendly product title.
-- Clearly identify what the product is using natural human language and useful product-identifying keywords.
-- Improve click-through potential while avoiding keyword stuffing, fake luxury language, ALL CAPS, or unsupported claims.
-- Remain faithful to the source product data.
+- Generate a customer-friendly, search-friendly product title for real US e-commerce buyers.
+- Immediately communicate what the product is using natural human-readable English and useful searchable keywords.
+- Avoid keyword stuffing, fake luxury language, ALL CAPS, or unsupported claims.
+- Preserve important factual differentiators. Do NOT remove critical specs merely to make titles shorter.
 
 SHORT DESCRIPTION OBJECTIVE:
-- Provide a concise summary for customers who do not want to read the full description.
-- Communicate the most useful purchase-relevant facts quickly (what it is, key function/use, supported features, specifications, and options).
-- Keep it concise, informative, and strictly fact-grounded.
+- Provide a concise plain text summary for buyers who skip full descriptions.
+- Quickly answer: What is this product? What is its key function/distinguishing feature? What important factual spec matters to a buyer?
+- Keep it concise, informative, and strictly fact-grounded. Zero generic advertising fluff.
 
 FULL DESCRIPTION OBJECTIVE:
-- Rewrite supplied product information into clear, natural, human-readable product copy.
-- Organize information logically with short scannable paragraphs and bullet points for factual specifications.
-- Highlight real practical benefits ONLY when directly inferable from source facts.
+- Rewrite supplied product information into clear, natural, human-readable plain text copy.
+- Organize information logically with short scannable paragraphs (separated by \\n\\n) and plain bullet points ("• Spec: value") for specifications.
+- Explain the product naturally rather than copying machine-translated wording.
 - Do NOT turn ordinary products into fake luxury products or make unsupported performance, quality, health, safety, durability, or guarantee claims.
 
 SEO OBJECTIVE:
 - Create search-discoverable SEO meta titles (<= 60 chars) and meta descriptions (<= 160 chars).
-- Think like a real customer searching on Google: use natural product-identifying terms relevant to the actual product.
-- Do NOT manufacture unrelated keywords, stuff keywords, or target irrelevant high-volume search terms.
+- Think: "If a real person saw this product and wanted to search for this exact product on Google, what would they search for?"
+- Use natural, human-readable product-identifying terms derived strictly from verified source facts.
 
 NO HALLUCINATION BY REPHRASING:
 - Rewriting for clarity is allowed; fact invention is forbidden.
@@ -174,6 +186,47 @@ export function validateFactPreservation(
   }
 
   return warnings;
+}
+
+/**
+ * Strips raw HTML tags, HTML entities, and raw markdown headers/codeblocks from generated text,
+ * ensuring descriptions are returned to the editor UI as 100% clean human-readable PLAIN TEXT.
+ */
+export function cleanPlainTextDescription(raw?: string | null): string {
+  if (!raw) return "";
+
+  let text = raw;
+
+  // Convert HTML linebreaks and block closings into linebreaks
+  text = text
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/div>/gi, "\n\n")
+    .replace(/<\/li>/gi, "\n");
+
+  // Strip all remaining HTML tags
+  text = text.replace(/<[^>]*>/g, "");
+
+  // Decode common HTML entities
+  text = text
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+
+  // Strip raw markdown headers / code block indicators
+  text = text.replace(/^#{1,6}\s+/gm, "");
+
+  // Normalize linebreaks (collapse 3+ consecutive newlines to double newline \n\n)
+  text = text
+    .split("\n")
+    .map((line) => line.trim())
+    .join("\n");
+  text = text.replace(/\n{3,}/g, "\n\n").trim();
+
+  return text;
 }
 
 /**
@@ -334,21 +387,25 @@ export async function optimizeProductWithGemini(
   }
 
   const bulletPoints = Array.isArray(parsed.bullet_points)
-    ? parsed.bullet_points.map((b: any) => String(b).trim()).filter(Boolean)
+    ? parsed.bullet_points.map((b: any) => cleanPlainTextDescription(String(b))).filter(Boolean)
     : [];
 
-  const genCombinedText = `${parsed.title} ${parsed.short_description || ""} ${parsed.description || ""} ${bulletPoints.join(" ")}`;
+  const cleanTitle = cleanPlainTextDescription(parsed.title);
+  const cleanShortDesc = cleanPlainTextDescription(parsed.short_description);
+  const cleanDesc = cleanPlainTextDescription(parsed.description);
+
+  const genCombinedText = `${cleanTitle} ${cleanShortDesc} ${cleanDesc} ${bulletPoints.join(" ")}`;
   const warnings = validateFactPreservation(sourceCombinedText, genCombinedText);
 
   return {
-    title: parsed.title.trim(),
-    short_description: String(parsed.short_description || "").trim(),
-    description: parsed.description.trim(),
+    title: cleanTitle,
+    short_description: cleanShortDesc,
+    description: cleanDesc,
     bullet_points: bulletPoints,
-    tags: parsed.tags.map((t: any) => String(t).trim()).filter(Boolean),
-    category_suggestion: String(parsed.category_suggestion || "").trim(),
-    seo_title: String(parsed.seo_title || parsed.title).slice(0, 60).trim(),
-    seo_description: String(parsed.seo_description || parsed.short_description || "").slice(0, 160).trim(),
+    tags: parsed.tags.map((t: any) => cleanPlainTextDescription(String(t))).filter(Boolean),
+    category_suggestion: cleanPlainTextDescription(String(parsed.category_suggestion || "")),
+    seo_title: cleanPlainTextDescription(String(parsed.seo_title || cleanTitle)).slice(0, 60).trim(),
+    seo_description: cleanPlainTextDescription(String(parsed.seo_description || cleanShortDesc)).slice(0, 160).trim(),
     ...(warnings.length > 0 ? { warnings } : {}),
   };
 }

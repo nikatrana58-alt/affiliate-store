@@ -237,6 +237,7 @@ export function getProductDisplayPrice(product: any): {
  * Recomputes all variant final prices when Admin updates profit/margin.
  * Formula: finalPrice = actualVariantCost + profit
  * Base supplier cost is NEVER overwritten.
+ * If authoritative variant cost is missing, cost_price and price are set to null (NO SILENT FALLBACK).
  */
 export function recalculateAllVariantPrices(
   variants: Array<{
@@ -250,6 +251,9 @@ export function recalculateAllVariantPrices(
     size?: string | null;
     sku?: string;
     image?: string | null;
+    cj_product_price?: number | null;
+    cj_shipping_cost?: number | null;
+    hasValidCost?: boolean;
   }>,
   profit: number,
   defaultCost: number = 0
@@ -265,38 +269,81 @@ export function recalculateAllVariantPrices(
     size?: string | null;
     sku?: string;
     image?: string | null;
+    cj_product_price?: number | null;
+    cj_shipping_cost?: number | null;
+    hasValidCost?: boolean;
   }>;
   lowestPrice: number;
   highestPrice: number;
+  lowestCost: number;
 } {
   if (!variants || !variants.length) {
-    return { updatedVariants: [], lowestPrice: 0, highestPrice: 0 };
+    return { updatedVariants: [], lowestPrice: 0, highestPrice: 0, lowestCost: defaultCost };
   }
 
   const computed = variants.map((v) => {
-    const rawCost = v.cost_price != null && !isNaN(Number(v.cost_price)) ? Number(v.cost_price) : defaultCost;
-    const cost = Math.max(0, rawCost);
-    const finalPrice = parseFloat((cost + profit).toFixed(2));
+    let resolvedCost: number | null = null;
+
+    // 1. Check explicit CJ landed cost (product price + shipping)
+    if (
+      v.cj_product_price != null &&
+      !isNaN(Number(v.cj_product_price)) &&
+      Number(v.cj_product_price) > 0 &&
+      v.cj_shipping_cost != null &&
+      !isNaN(Number(v.cj_shipping_cost)) &&
+      Number(v.cj_shipping_cost) >= 0
+    ) {
+      resolvedCost = parseFloat((Number(v.cj_product_price) + Number(v.cj_shipping_cost)).toFixed(2));
+    }
+    // 2. Otherwise check stored variant cost_price if valid
+    else if (
+      v.cost_price != null &&
+      !isNaN(Number(v.cost_price)) &&
+      Number(v.cost_price) > 0
+    ) {
+      resolvedCost = Number(v.cost_price);
+    }
+
+    // CRITICAL FIX: NO SILENT FALLBACK TO PARENT/DEFAULT COST.
+    // If resolvedCost is missing or invalid, do NOT use defaultCost.
+    if (resolvedCost === null || resolvedCost <= 0) {
+      return {
+        ...v,
+        cost_price: null,
+        price: null,
+        hasValidCost: false,
+      };
+    }
+
+    const safeCost = Math.max(0, resolvedCost);
+    const safeProfit = Math.max(0, profit);
+    const finalPrice = parseFloat((safeCost + safeProfit).toFixed(2));
+
     return {
       ...v,
-      cost_price: cost,
+      cost_price: safeCost,
       price: finalPrice,
+      hasValidCost: true,
     };
   });
 
-  const finalPrices = computed.map((v) => v.price!);
-  const lowestPrice = Math.min(...finalPrices);
-  const highestPrice = Math.max(...finalPrices);
+  const validCosts = computed.filter((v) => v.cost_price != null).map((v) => v.cost_price!);
+  const validPrices = computed.filter((v) => v.price != null).map((v) => v.price!);
+
+  const lowestCost = validCosts.length > 0 ? Math.min(...validCosts) : defaultCost;
+  const lowestPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
+  const highestPrice = validPrices.length > 0 ? Math.max(...validPrices) : 0;
 
   const updatedVariants = computed.map((v) => ({
     ...v,
-    price_delta: parseFloat((v.price! - lowestPrice).toFixed(2)),
+    price_delta: v.price != null && lowestPrice > 0 ? parseFloat((v.price - lowestPrice).toFixed(2)) : 0,
   }));
 
   return {
     updatedVariants,
     lowestPrice,
     highestPrice,
+    lowestCost,
   };
 }
 

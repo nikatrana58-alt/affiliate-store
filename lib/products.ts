@@ -20,6 +20,10 @@ export type ProductVariantItem = {
   weight?: string | null;
   image?: string | null;
   attributes?: Record<string, string>;
+  cj_product_price?: number | null;
+  cj_shipping_cost?: number | null;
+  cj_shipping_method?: string | null;
+  cj_shipping_country?: string | null;
 };
 
 export type Product = {
