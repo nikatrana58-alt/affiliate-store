@@ -9,7 +9,43 @@ import {
   type ReactNode,
 } from "react";
 import type { Product } from "@/lib/products";
-import { getProductDisplayPrice } from "@/lib/pricing-engine";
+
+/**
+ * Resolves the authoritative selling price for a product/variant in cart.
+ *
+ * Resolution order:
+ * 1. If an explicit selected variant exists and has a valid positive `price`: USE THAT PRICE.
+ * 2. Inspect product.variants and collect valid positive stored variant selling prices (> 0).
+ * 3. If valid variant prices exist: USE THE MINIMUM VALID VARIANT SELLING PRICE.
+ * 4. Fallback to product.price if valid and positive (> 0).
+ * 5. Fallback to 0.
+ */
+export function resolveCartItemSellingPrice(
+  product: Product,
+  variant?: CartVariantSelection | null
+): number {
+  // 1. Explicit selected variant price
+  if (variant?.price != null && !isNaN(Number(variant.price)) && Number(variant.price) > 0) {
+    return Number(variant.price);
+  }
+
+  // 2. Minimum valid variant selling price from product.variants
+  const rawVariants = Array.isArray(product.variants) ? product.variants : [];
+  const validPrices = rawVariants
+    .map((v) => (v.price != null && !isNaN(Number(v.price)) && Number(v.price) > 0 ? Number(v.price) : null))
+    .filter((p): p is number => p !== null);
+
+  if (validPrices.length > 0) {
+    return Math.min(...validPrices);
+  }
+
+  // 3. Safe fallback to product.price
+  if (product.price != null && !isNaN(Number(product.price)) && Number(product.price) > 0) {
+    return Number(product.price);
+  }
+
+  return 0;
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -69,7 +105,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         return item.product.id === action.product.id && itemVKey === vKey;
       });
 
-      const effectivePrice = action.variant?.price ?? getProductDisplayPrice(action.product).price;
+      const effectivePrice = resolveCartItemSellingPrice(action.product, action.variant);
 
       if (existingIndex >= 0) {
         const updated = [...state.items];
@@ -173,7 +209,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
 
   const cartTotal = state.items.reduce(
-    (sum, item) => sum + (item.unitPrice ?? item.variant?.price ?? getProductDisplayPrice(item.product).price) * item.quantity,
+    (sum, item) => sum + (item.unitPrice ?? resolveCartItemSellingPrice(item.product, item.variant)) * item.quantity,
     0
   );
 

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import { MagneticButton } from "@/components/magnetic-button";
 import type { Product } from "@/lib/products";
-import { getProductDisplayPrice } from "@/lib/pricing-engine";
 
 const HeroScene3D = dynamic(
   () => import("@/components/hero-scene-3d").then((mod) => mod.HeroScene3D),
@@ -19,7 +18,7 @@ type HeroSectionProps = {
 };
 
 function formatPrice(price: number | null) {
-  if (price === null) return "";
+  if (price === null || price === undefined) return "";
   return new Intl.NumberFormat("en-US", {
     currency: "USD",
     style: "currency",
@@ -48,6 +47,38 @@ export function HeroSection({ product }: HeroSectionProps) {
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
   const contentY = useTransform(scrollYProgress, [0, 1], [0, -40]);
   const opacityScale = useTransform(scrollYProgress, [0, 0.85], [1, 0.3]);
+
+  // Compute hero display price directly from authoritative variant selling prices
+  const heroPricing = useMemo(() => {
+    if (!product) return { displayPrice: 0, hasMultiplePrices: false };
+
+    const rawVariants = Array.isArray(product.variants) ? product.variants : [];
+
+    // Extract valid, explicit positive variant selling prices (ignore null, undefined, <=0)
+    const validPrices = rawVariants
+      .map((v) => (v.price != null && !isNaN(Number(v.price)) && Number(v.price) > 0 ? Number(v.price) : null))
+      .filter((p): p is number => p !== null);
+
+    if (validPrices.length > 0) {
+      const minPrice = Math.min(...validPrices);
+      const maxPrice = Math.max(...validPrices);
+      return {
+        displayPrice: minPrice,
+        hasMultiplePrices: minPrice !== maxPrice,
+      };
+    }
+
+    // Fallback if product has no variants with valid prices
+    const fallbackPrice =
+      product.price != null && !isNaN(Number(product.price)) && Number(product.price) > 0
+        ? Number(product.price)
+        : 0;
+
+    return {
+      displayPrice: fallbackPrice,
+      hasMultiplePrices: false,
+    };
+  }, [product]);
 
   return (
     <motion.section
@@ -153,7 +184,11 @@ export function HeroSection({ product }: HeroSectionProps) {
 
             {product && (
               <div className="showcase-meta">
-                <span className="showcase-price">{formatPrice(getProductDisplayPrice(product).price)}</span>
+                <span className="showcase-price">
+                  {heroPricing.hasMultiplePrices
+                    ? `From ${formatPrice(heroPricing.displayPrice)}`
+                    : formatPrice(heroPricing.displayPrice)}
+                </span>
                 <span className="showcase-badge">Featured</span>
               </div>
             )}
