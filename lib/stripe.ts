@@ -170,7 +170,7 @@ export async function createCheckoutSession(
         currency: "usd",
         unit_amount: Math.round(order.tax_amount * 100),
         product_data: {
-          name: "Estimated Sales Tax (8%)",
+          name: "Estimated Sales Tax",
         },
       },
       quantity: 1,

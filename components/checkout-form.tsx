@@ -155,15 +155,8 @@ export function CheckoutForm() {
 
   // Shipping method & dynamic options
   const [shippingMethod, setShippingMethod] = useState<string>("standard");
-  const [shippingOptions, setShippingOptions] = useState<DynamicShippingOption[]>([
-    {
-      id: "standard",
-      name: "Standard Tracked Shipping",
-      price: 0,
-      eta: "Calculated at checkout",
-    },
-  ]);
-  const [loadingShipping, setLoadingShipping] = useState(false);
+  const [shippingOptions, setShippingOptions] = useState<DynamicShippingOption[]>([]);
+  const [loadingShipping, setLoadingShipping] = useState(true);
   const [shippingError, setShippingError] = useState("");
 
   // Coupon
@@ -796,7 +789,7 @@ export function CheckoutForm() {
             <div className="co-summary-row">
               <span>
                 Tax
-                <span className="co-summary-note"> (est. $0.00 — calculated at checkout)</span>
+                <span className="co-summary-note"> (calculated at payment if applicable)</span>
               </span>
               <span>{formatPrice(taxAmount)}</span>
             </div>
