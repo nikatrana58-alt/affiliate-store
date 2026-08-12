@@ -96,6 +96,7 @@ export async function fulfillOrderWithCJ(orderId: string): Promise<FulfillmentRe
     customerEmail: order.customer_email,
     customerPhone: order.customer_phone || undefined,
     shippingAddress: order.shipping_address,
+    shippingMethod: order.shipping_method,
     items: supplierItems,
   });
 

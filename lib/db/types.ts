@@ -113,7 +113,7 @@ export type OrderStatus =
   | "refunded"
   | "failed";
 
-export type ShippingMethod = "standard" | "express" | "overnight";
+export type ShippingMethod = string;
 
 export type Order = {
   id: string;
@@ -184,7 +184,8 @@ export type CreateOrderInput = {
   customer_phone?: string;
   shipping_address: AddressSnapshot;
   billing_address?: AddressSnapshot | null;
-  shipping_method: ShippingMethod;
+  shipping_method: string;
+  shipping_cost?: number;
   coupon_code?: string;
   items: CreateOrderItemInput[];
 };

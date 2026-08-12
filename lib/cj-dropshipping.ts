@@ -162,7 +162,7 @@ class CJDropshippingService {
   }
 
   /** Returns true when a real CJ_API_KEY is present so the service can make live API calls. */
-  private isConfigured(): boolean {
+  isConfigured(): boolean {
     const apiKey = process.env.CJ_API_KEY;
     return Boolean(apiKey && apiKey.trim().length > 0 && !apiKey.includes("placeholder"));
   }
@@ -850,6 +850,7 @@ class CJDropshippingService {
           `${params.shippingAddress.address_line1} ${params.shippingAddress.address_line2 || ""}`.trim(),
         shippingZipCode: params.shippingAddress.postal_code,
         shippingPhone: params.customerPhone || "000-000-0000",
+        logisticName: params.shippingMethod || undefined,
         products: params.items.map((item) => ({
           cjProductId: item.supplierProductId,
           vid: item.supplierVariantId || undefined,

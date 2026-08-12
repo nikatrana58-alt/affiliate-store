@@ -69,12 +69,8 @@ const ITEM_COLS =
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const TAX_RATE = 0.08; // 8% — placeholder, matches checkout UI
-
 const SHIPPING_COSTS: Record<string, number> = {
   standard: 0,
-  express: 12.99,
-  overnight: 29.99,
 };
 
 const LOCAL_ORDERS_FILE = path.join(process.cwd(), "data", "orders.json");
@@ -229,9 +225,9 @@ export async function createOrder(
 
   // 3. Compute totals server-side
   const shippingMethod = input.shipping_method ?? "standard";
-  const shippingCost = SHIPPING_COSTS[shippingMethod] ?? 0;
-  const taxAmount = (subtotal - discountAmount) * TAX_RATE;
-  const grandTotal = Math.max(0, subtotal + shippingCost + taxAmount - discountAmount);
+  const shippingCost = typeof input.shipping_cost === "number" ? Math.max(0, input.shipping_cost) : (SHIPPING_COSTS[shippingMethod] ?? 0);
+  const taxAmount = 0; // POS sales tax estimated at $0.00
+  const grandTotal = Math.max(0, subtotal - discountAmount + shippingCost + taxAmount);
 
   // 4. Insert order header
   const { data: orderData, error: orderError } = await supabase

@@ -37,6 +37,7 @@ export type CreateSupplierOrderParams = {
   customerName: string;
   customerPhone?: string;
   customerEmail: string;
+  shippingMethod?: string;
   shippingAddress: {
     first_name: string;
     last_name: string;

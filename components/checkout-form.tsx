@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useId } from "react";
+import { useState, useEffect, useId } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
@@ -15,33 +15,12 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-// ─── Shipping Methods ─────────────────────────────────────────────────────────
-
-const SHIPPING_METHODS = [
-  {
-    id: "standard",
-    label: "Standard Shipping",
-    eta: "5–8 business days",
-    price: 0,
-    badge: null,
-  },
-  {
-    id: "express",
-    label: "Express Shipping",
-    eta: "2–3 business days",
-    price: 12.99,
-    badge: "Popular",
-  },
-  {
-    id: "overnight",
-    label: "Overnight Delivery",
-    eta: "Next business day",
-    price: 29.99,
-    badge: null,
-  },
-] as const;
-
-type ShippingMethodId = (typeof SHIPPING_METHODS)[number]["id"];
+export type DynamicShippingOption = {
+  id: string;
+  name: string;
+  price: number;
+  eta: string;
+};
 
 // ─── Order Summary Item ───────────────────────────────────────────────────────
 
@@ -174,8 +153,18 @@ export function CheckoutForm() {
   const router = useRouter();
   const uid = useId();
 
-  // Shipping method
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethodId>("standard");
+  // Shipping method & dynamic options
+  const [shippingMethod, setShippingMethod] = useState<string>("standard");
+  const [shippingOptions, setShippingOptions] = useState<DynamicShippingOption[]>([
+    {
+      id: "standard",
+      name: "Standard Tracked Shipping",
+      price: 0,
+      eta: "Calculated at checkout",
+    },
+  ]);
+  const [loadingShipping, setLoadingShipping] = useState(false);
+  const [shippingError, setShippingError] = useState("");
 
   // Coupon
   const [couponCode, setCouponCode] = useState("");
@@ -206,16 +195,75 @@ export function CheckoutForm() {
     country: "United States",
   });
 
+  // Fetch real dynamic shipping options from CJ API whenever destination country changes
+  useEffect(() => {
+    let isCancelled = false;
+    async function fetchShippingQuote() {
+      if (items.length === 0) return;
+      setLoadingShipping(true);
+      setShippingError("");
+
+      try {
+        const payload = {
+          country: shipping.country,
+          items: items.map((i) => ({
+            product_id: i.product.id,
+            variant_id: i.variant?.variant_id || i.variant?.variant_sku || null,
+            quantity: i.quantity,
+          })),
+        };
+
+        const res = await fetch("/api/shipping/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (isCancelled) return;
+
+        if (res.ok && data.success && Array.isArray(data.options) && data.options.length > 0) {
+          setShippingOptions(data.options);
+          setShippingError("");
+          setShippingMethod((prev) =>
+            data.options.some((o: DynamicShippingOption) => o.id === prev) ? prev : data.options[0].id
+          );
+        } else {
+          setShippingOptions([]);
+          setShippingError(
+            data.error || `Shipping is currently unavailable for ${shipping.country}.`
+          );
+        }
+      } catch {
+        if (!isCancelled) {
+          setShippingError("Unable to calculate shipping rates. Please try again.");
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoadingShipping(false);
+        }
+      }
+    }
+
+    fetchShippingQuote();
+    return () => {
+      isCancelled = true;
+    };
+  }, [shipping.country, items]);
+
   if (items.length === 0 && !orderSuccess) return <EmptyCheckout />;
   if (orderSuccess) return <OrderSuccess orderRef={orderRef} />;
 
+  // Derived selected shipping option and price
+  const selectedShippingOption =
+    shippingOptions.find((o) => o.id === shippingMethod) || shippingOptions[0];
+  const shippingCost = selectedShippingOption ? selectedShippingOption.price : 0;
+
   // Computed totals
-  const selectedShipping = SHIPPING_METHODS.find((m) => m.id === shippingMethod)!;
-  const shippingCost = selectedShipping.price;
-  const TAX_RATE = 0.08; // 8% placeholder
-  const taxAmount = cartTotal * TAX_RATE;
   const discount = couponApplied ? cartTotal * 0.1 : 0; // 10% placeholder discount
-  const grandTotal = cartTotal + shippingCost + taxAmount - discount;
+  const taxableSubtotal = Math.max(0, cartTotal - discount);
+  const taxAmount = 0; // POS sales tax estimated at $0.00
+  const grandTotal = Math.max(0, taxableSubtotal + shippingCost + taxAmount);
 
   // Handle coupon apply
   function handleApplyCoupon() {
@@ -242,12 +290,20 @@ export function CheckoutForm() {
   // Move to review step
   function handleProceedToReview(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (shippingError || shippingOptions.length === 0 || loadingShipping) {
+      return;
+    }
     setStep("review");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   // Place order — calls POST /api/orders
   async function handlePlaceOrder() {
+    if (shippingError || shippingOptions.length === 0 || loadingShipping) {
+      setOrderError("Shipping is unavailable for the selected destination.");
+      return;
+    }
+
     setSubmitting(true);
     setOrderError("");
 
@@ -257,7 +313,8 @@ export function CheckoutForm() {
         customer_first_name: shipping.firstName.trim(),
         customer_last_name: shipping.lastName.trim(),
         customer_phone: contact.phone.trim() || undefined,
-        shipping_method: shippingMethod,
+        shipping_method: selectedShippingOption ? selectedShippingOption.id : "standard",
+        shipping_cost: shippingCost,
         coupon_code: couponApplied ? couponCode.trim() : undefined,
         shipping_address: {
           first_name: shipping.firstName.trim(),
@@ -492,41 +549,49 @@ export function CheckoutForm() {
 
             {/* Shipping Method */}
             <Section title="Shipping Method">
-              <div className="co-shipping-methods" role="radiogroup" aria-label="Choose a shipping method">
-                {SHIPPING_METHODS.map((method) => (
-                  <label
-                    key={method.id}
-                    className={`co-shipping-option ${shippingMethod === method.id ? "co-shipping-option--active" : ""}`}
-                    htmlFor={`${uid}-ship-${method.id}`}
-                  >
-                    <input
-                      id={`${uid}-ship-${method.id}`}
-                      type="radio"
-                      name="shipping-method"
-                      className="co-shipping-radio"
-                      value={method.id}
-                      checked={shippingMethod === method.id}
-                      onChange={() => setShippingMethod(method.id)}
-                    />
-                    <div className="co-shipping-option-body">
-                      <div className="co-shipping-option-label">
-                        <span className="co-shipping-name">{method.label}</span>
-                        {method.badge && (
-                          <span className="co-shipping-badge">{method.badge}</span>
-                        )}
+              {loadingShipping ? (
+                <div style={{ padding: "16px", color: "var(--muted)", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span className="co-spinner" aria-hidden="true" />
+                  Calculating available shipping options from carrier...
+                </div>
+              ) : shippingError ? (
+                <div style={{ padding: "16px", color: "#FF6B6B", backgroundColor: "rgba(255, 107, 107, 0.1)", borderRadius: "12px", border: "1px solid rgba(255, 107, 107, 0.2)", fontSize: "14px", fontWeight: 600 }}>
+                  ⚠️ {shippingError}
+                </div>
+              ) : (
+                <div className="co-shipping-methods" role="radiogroup" aria-label="Choose a shipping method">
+                  {shippingOptions.map((method) => (
+                    <label
+                      key={method.id}
+                      className={`co-shipping-option ${shippingMethod === method.id ? "co-shipping-option--active" : ""}`}
+                      htmlFor={`${uid}-ship-${encodeURIComponent(method.id)}`}
+                    >
+                      <input
+                        id={`${uid}-ship-${encodeURIComponent(method.id)}`}
+                        type="radio"
+                        name="shipping-method"
+                        className="co-shipping-radio"
+                        value={method.id}
+                        checked={shippingMethod === method.id}
+                        onChange={() => setShippingMethod(method.id)}
+                      />
+                      <div className="co-shipping-option-body">
+                        <div className="co-shipping-option-label">
+                          <span className="co-shipping-name">{method.name}</span>
+                        </div>
+                        <span className="co-shipping-eta">{method.eta}</span>
                       </div>
-                      <span className="co-shipping-eta">{method.eta}</span>
-                    </div>
-                    <span className="co-shipping-price">
-                      {method.price === 0 ? (
-                        <span className="co-shipping-free">Free</span>
-                      ) : (
-                        formatPrice(method.price)
-                      )}
-                    </span>
-                  </label>
-                ))}
-              </div>
+                      <span className="co-shipping-price">
+                        {method.price === 0 ? (
+                          <span className="co-shipping-free">Free</span>
+                        ) : (
+                          formatPrice(method.price)
+                        )}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </Section>
 
             {/* Coupon */}
@@ -584,7 +649,12 @@ export function CheckoutForm() {
                 </svg>
                 Return to cart
               </Link>
-              <button id="checkout-review-btn" type="submit" className="co-submit-btn">
+              <button
+                id="checkout-review-btn"
+                type="submit"
+                className="co-submit-btn"
+                disabled={Boolean(shippingError) || shippingOptions.length === 0 || loadingShipping}
+              >
                 Review Order
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true">
                   <path d="M5 12h14" />
@@ -631,7 +701,7 @@ export function CheckoutForm() {
                   <button className="co-review-edit-btn" onClick={() => setStep("form")}>Edit</button>
                 </div>
                 <p className="co-review-value">
-                  {selectedShipping.label} — {selectedShipping.eta}
+                  {selectedShippingOption?.name || "Standard Shipping"} — {selectedShippingOption?.eta || "Calculated at fulfillment"}
                   {shippingCost > 0 ? ` (${formatPrice(shippingCost)})` : " (Free)"}
                 </p>
               </div>
@@ -671,7 +741,7 @@ export function CheckoutForm() {
                 type="button"
                 className="co-submit-btn"
                 onClick={handlePlaceOrder}
-                disabled={submitting}
+                disabled={submitting || Boolean(shippingError) || shippingOptions.length === 0 || loadingShipping}
               >
                 {submitting ? (
                   <>
@@ -726,7 +796,7 @@ export function CheckoutForm() {
             <div className="co-summary-row">
               <span>
                 Tax
-                <span className="co-summary-note"> (est. 8%)</span>
+                <span className="co-summary-note"> (est. $0.00 — calculated at checkout)</span>
               </span>
               <span>{formatPrice(taxAmount)}</span>
             </div>
@@ -756,7 +826,7 @@ export function CheckoutForm() {
             <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--muted)", fontSize: "11px" }}>
               <span>📦 Order Tracking Available</span>
               <span>•</span>
-              <span>🛡️ 30-Day Return Policy</span>
+              <span>🛡️ Quality &amp; Buyer Protection</span>
             </div>
           </div>
         </div>
