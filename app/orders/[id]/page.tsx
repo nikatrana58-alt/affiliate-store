@@ -31,8 +31,9 @@ export default async function OrderDetailsPage({ params, searchParams }: Props) 
     notFound();
   }
 
-  // Security verification: if email param provided, ensure it matches order customer_email
-  if (email && order.customer_email.toLowerCase() !== email.toLowerCase().trim()) {
+  // Security verification: require matching customer email to view order details
+  const cleanEmail = email?.toLowerCase().trim();
+  if (!cleanEmail || order.customer_email.toLowerCase().trim() !== cleanEmail) {
     notFound();
   }
 

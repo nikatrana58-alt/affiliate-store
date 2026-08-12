@@ -5,8 +5,18 @@ import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import type { Product } from "@/lib/products";
 
+function parsePrice(val: unknown): number {
+  if (typeof val === "number" && !isNaN(val)) return Math.max(0, val);
+  if (typeof val === "string") {
+    const parsed = parseFloat(val.replace(/[^0-9.]/g, ""));
+    if (!isNaN(parsed)) return Math.max(0, parsed);
+  }
+  return 0;
+}
+
 function formatPrice(price: number) {
-  return new Intl.NumberFormat("en-US", { currency: "USD", style: "currency" }).format(price);
+  const safePrice = parsePrice(price);
+  return new Intl.NumberFormat("en-US", { currency: "USD", style: "currency" }).format(safePrice);
 }
 
 type Props = {
@@ -25,8 +35,8 @@ export function SmartRecommendations({ currentProduct, allProducts }: Props) {
 
   if (related.length === 0) return null;
 
-  const currentPrice = currentProduct?.price ?? 0;
-  const bundleItemsPrice = related.reduce((acc, item) => acc + (item.price ?? 0), 0);
+  const currentPrice = parsePrice(currentProduct?.price);
+  const bundleItemsPrice = related.reduce((acc, item) => acc + parsePrice(item.price), 0);
   const totalBundlePrice = currentPrice + bundleItemsPrice;
 
   const handleAddSingleItem = (prod: Product) => {

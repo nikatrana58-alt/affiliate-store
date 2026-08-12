@@ -173,16 +173,16 @@ export function Footer() {
 
           <div className="footer-col">
             <h4 className="footer-heading">Connect</h4>
-            <Link href="/">About RA2Z</Link>
-            <Link href="/">Contact Us</Link>
+            <Link href="/about">About RA2Z</Link>
+            <Link href="/contact">Contact Us</Link>
           </div>
 
           <div className="footer-col">
             <h4 className="footer-heading">Information</h4>
-            <Link href="/">Shipping & Concierge</Link>
-            <Link href="/">Returns Policy</Link>
-            <Link href="/">Privacy Policy</Link>
-            <Link href="/">Terms of Service</Link>
+            <Link href="/shipping">Shipping & Concierge</Link>
+            <Link href="/returns">Returns Policy</Link>
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms of Service</Link>
           </div>
         </div>
 
