@@ -208,22 +208,36 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     };
   }, [open, onClose]);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const [loadingCoupon, setLoadingCoupon] = useState(false);
+
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = couponCode.trim().toUpperCase();
+    const clean = couponCode.trim();
     if (!clean) return;
 
-    if (clean === "RA2Z10" || clean === "WELCOME10" || clean === "LUXURY10") {
-      const discount = cartTotal * 0.1;
-      setAppliedDiscount(discount);
-      setCouponMsg(`✓ Coupon ${clean} Applied (10% OFF)`);
-    } else if (clean === "VIP15") {
-      const discount = cartTotal * 0.15;
-      setAppliedDiscount(discount);
-      setCouponMsg(`✓ VIP Coupon ${clean} Applied (15% OFF)`);
-    } else {
+    setLoadingCoupon(true);
+    setCouponMsg("");
+
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: clean, subtotal: cartTotal }),
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setAppliedDiscount(data.discountAmount);
+        const label = data.discountType === "percentage" ? `${data.discountValue}% OFF` : `$${data.discountValue} OFF`;
+        setCouponMsg(`✓ Promo code applied (${label})`);
+      } else {
+        setAppliedDiscount(0);
+        setCouponMsg("Invalid promo code. Please check and try again.");
+      }
+    } catch {
       setAppliedDiscount(0);
-      setCouponMsg("Invalid coupon code. Try 'RA2Z10' for 10% OFF.");
+      setCouponMsg("Invalid promo code. Please check and try again.");
+    } finally {
+      setLoadingCoupon(false);
     }
   };
 
@@ -314,7 +328,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <form onSubmit={handleApplyCoupon} style={{ marginBottom: "14px", display: "flex", gap: "8px" }}>
                   <input
                     type="text"
-                    placeholder="Promo Code (e.g. RA2Z10)"
+                    placeholder="Enter promo code"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     style={{

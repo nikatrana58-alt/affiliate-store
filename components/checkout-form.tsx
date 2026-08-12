@@ -252,30 +252,54 @@ export function CheckoutForm() {
     shippingOptions.find((o) => o.id === shippingMethod) || shippingOptions[0];
   const shippingCost = selectedShippingOption ? selectedShippingOption.price : 0;
 
+  const [couponDiscountAmount, setCouponDiscountAmount] = useState(0);
+  const [loadingCoupon, setLoadingCoupon] = useState(false);
+
   // Computed totals
-  const discount = couponApplied ? cartTotal * 0.1 : 0; // 10% placeholder discount
+  const discount = couponApplied ? couponDiscountAmount : 0;
   const taxableSubtotal = Math.max(0, cartTotal - discount);
   const taxAmount = 0; // POS sales tax estimated at $0.00
   const grandTotal = Math.max(0, taxableSubtotal + shippingCost + taxAmount);
 
-  // Handle coupon apply
-  function handleApplyCoupon() {
-    if (!couponCode.trim()) {
-      setCouponError("Please enter a coupon code.");
+  // Handle coupon apply via server API
+  async function handleApplyCoupon() {
+    const clean = couponCode.trim();
+    if (!clean) {
+      setCouponError("Please enter a promo code.");
       return;
     }
-    // UI-only placeholder — always shows "invalid" unless specific demo code
-    if (couponCode.toUpperCase() === "CURATED10") {
-      setCouponApplied(true);
-      setCouponError("");
-    } else {
+
+    setLoadingCoupon(true);
+    setCouponError("");
+
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: clean, subtotal: cartTotal }),
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setCouponApplied(true);
+        setCouponDiscountAmount(data.discountAmount);
+        setCouponError("");
+      } else {
+        setCouponApplied(false);
+        setCouponDiscountAmount(0);
+        setCouponError("Invalid promo code. Please check and try again.");
+      }
+    } catch {
       setCouponApplied(false);
-      setCouponError("Invalid coupon code. Try CURATED10 for 10% off.");
+      setCouponDiscountAmount(0);
+      setCouponError("Invalid promo code. Please check and try again.");
+    } finally {
+      setLoadingCoupon(false);
     }
   }
 
   function handleRemoveCoupon() {
     setCouponApplied(false);
+    setCouponDiscountAmount(0);
     setCouponCode("");
     setCouponError("");
   }
@@ -588,13 +612,13 @@ export function CheckoutForm() {
             </Section>
 
             {/* Coupon */}
-            <Section title="Coupon Code">
+            <Section title="Promo Code">
               <div className="co-coupon-row">
                 <input
                   id={`${uid}-coupon`}
                   className={`co-input co-coupon-input ${couponApplied ? "co-input--success" : ""}`}
                   type="text"
-                  placeholder="Enter coupon code"
+                  placeholder="Enter promo code"
                   value={couponCode}
                   onChange={(e) => {
                     setCouponCode(e.target.value);
@@ -623,7 +647,7 @@ export function CheckoutForm() {
               </div>
               {couponApplied && (
                 <p className="co-coupon-success" role="status">
-                  ✓ Coupon applied — 10% discount
+                  ✓ Promo code applied — 10% discount
                 </p>
               )}
               {couponError && (
@@ -631,7 +655,6 @@ export function CheckoutForm() {
                   {couponError}
                 </p>
               )}
-              <p className="co-coupon-hint">Try <code>CURATED10</code> for 10% off your first order</p>
             </Section>
 
             <div className="co-form-actions">
@@ -795,7 +818,7 @@ export function CheckoutForm() {
             </div>
             {couponApplied && (
               <div className="co-summary-row co-summary-row--discount">
-                <span>Coupon (CURATED10)</span>
+                <span>Discount ({couponCode.trim().toUpperCase()})</span>
                 <span>−{formatPrice(discount)}</span>
               </div>
             )}
