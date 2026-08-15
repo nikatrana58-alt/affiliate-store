@@ -411,12 +411,12 @@ export const ProductCard = memo(function ProductCard({ product, variant = "defau
                 </Link>
               </h2>
 
-              {/* Rating Stars (Only when verified rating data exists) */}
-              {(product as any).rating || (product as any).review_count ? (
+              {/* Rating Stars (Only when verified rating data exists with >0 reviews) */}
+              {(product as any).rating && (product as any).review_count > 0 ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
                   <span style={{ color: "#FFD700", fontSize: "12px", letterSpacing: "1px" }}>★★★★★</span>
                   <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600 }}>
-                    {Number((product as any).rating || 5).toFixed(1)} ({(product as any).review_count || 0})
+                    {Number((product as any).rating).toFixed(1)} ({(product as any).review_count})
                   </span>
                 </div>
               ) : null}

@@ -135,19 +135,46 @@ export function formatProductDetails(
           "Timeless aesthetic tailored for modern luxury.",
         ];
 
-  // Determine material default based on category if not in text
-  let material = "High-Grade Engineered Alloy & Premium Composite";
-  const lowerCat = (category || "").toLowerCase();
+  // Extract material from verified source text or return neutral unavailable state
+  let material = "Material information not provided";
   const lowerText = cleanText.toLowerCase();
 
-  if (lowerText.includes("leather")) {
-    material = "Full-Grain Italian Leather";
-  } else if (lowerText.includes("cotton") || lowerCat.includes("apparel") || lowerCat.includes("fashion")) {
-    material = "450GSM Heavyweight French Terry / Premium Cotton";
-  } else if (lowerText.includes("titanium") || lowerText.includes("metal") || lowerCat.includes("gadget")) {
-    material = "Aerospace Titanium & Stainless Alloy";
+  if (lowerText.includes("spandex") || lowerText.includes("elastane") || lowerText.includes("lycra")) {
+    material = "Spandex Blend";
+  } else if (lowerText.includes("leather")) {
+    material = "Full-Grain Leather";
+  } else if (lowerText.includes("cotton")) {
+    material = "Premium Cotton";
   } else if (lowerText.includes("silk")) {
-    material = "100% Pure Mulberry Silk";
+    material = "100% Pure Silk";
+  } else if (lowerText.includes("nylon")) {
+    material = "Durability Nylon";
+  } else if (lowerText.includes("polyester")) {
+    material = "Performance Polyester";
+  } else if (lowerText.includes("wool") || lowerText.includes("cashmere")) {
+    material = "Wool Blend";
+  } else if (lowerText.includes("linen")) {
+    material = "Natural Linen";
+  } else if (lowerText.includes("denim")) {
+    material = "Cotton Denim";
+  } else if (lowerText.includes("canvas")) {
+    material = "Heavyweight Canvas";
+  } else if (lowerText.includes("silicone")) {
+    material = "Food-Grade Silicone";
+  } else if (lowerText.includes("wood") || lowerText.includes("bamboo")) {
+    material = "Natural Wood & Composite";
+  } else if (lowerText.includes("glass")) {
+    material = "Tempered Glass";
+  } else if (lowerText.includes("ceramic")) {
+    material = "Ceramic";
+  } else if (lowerText.includes("titanium")) {
+    material = "Titanium Alloy";
+  } else if (lowerText.includes("stainless steel") || lowerText.includes("steel")) {
+    material = "Stainless Steel";
+  } else if (lowerText.includes("alloy") || lowerText.includes("metal")) {
+    material = "Engineered Alloy";
+  } else if (lowerText.includes("resin") || lowerText.includes("acrylic") || lowerText.includes("polycarbonate")) {
+    material = "Engineered Polymer & Resin";
   }
 
   return {

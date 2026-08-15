@@ -131,7 +131,7 @@ export function ProductReviewsSection({ productId }: Props) {
   const averageRating =
     reviews.length > 0
       ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
-      : "5.0";
+      : null;
 
   return (
     <div style={{ marginTop: "48px", borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "36px" }}>
@@ -143,14 +143,20 @@ export function ProductReviewsSection({ productId }: Props) {
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "26px", fontWeight: 700, margin: "2px 0 6px" }}>
             Customer Reviews & Ratings
           </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ color: "var(--gold)", fontSize: "18px", fontWeight: "700" }}>
-              ★ {averageRating}
-            </span>
-            <span style={{ color: "var(--muted)", fontSize: "13px" }}>
-              ({reviews.length} verified review{reviews.length === 1 ? "" : "s"})
-            </span>
-          </div>
+          {reviews.length > 0 && averageRating ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ color: "var(--gold)", fontSize: "18px", fontWeight: "700" }}>
+                ★ {averageRating}
+              </span>
+              <span style={{ color: "var(--muted)", fontSize: "13px" }}>
+                ({reviews.length} verified review{reviews.length === 1 ? "" : "s"})
+              </span>
+            </div>
+          ) : (
+            <p style={{ color: "var(--muted)", fontSize: "13px", margin: "4px 0 0" }}>
+              No reviews yet
+            </p>
+          )}
         </div>
 
         <button

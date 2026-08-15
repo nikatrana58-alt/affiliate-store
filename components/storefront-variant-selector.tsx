@@ -521,7 +521,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             <div>
               <div style={{ color: "var(--muted)", fontSize: "11px", fontWeight: 600 }}>Ships From</div>
               <div style={{ color: "var(--foreground)", fontWeight: 700, marginTop: "2px" }}>
-                RA2Z Fulfillment Center
+                Verified Logistics Partner
               </div>
             </div>
 

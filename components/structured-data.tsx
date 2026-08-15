@@ -95,13 +95,17 @@ export function ProductSchema({ product }: { product: Product }) {
         name: "RA2Z",
       },
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: (product as any).rating || 4.9,
-      reviewCount: (product as any).review_count || 128,
-      bestRating: 5,
-      worstRating: 1,
-    },
+    ...((product as any).review_count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: (product as any).rating || 5,
+            reviewCount: (product as any).review_count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   };
 
   return (
