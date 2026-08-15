@@ -258,8 +258,8 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
   // Inventory stock display text
   const stockText = useMemo(() => {
     if (variants.length === 0) {
-      const stock = product.inventory_quantity ?? 999;
-      return stock > 0 ? `${stock} In Stock` : "Out of Stock";
+      const stock = product.inventory_quantity ?? 1;
+      return stock > 0 ? "In Stock" : "Out of Stock";
     }
     if (!isSelectionComplete) {
       return "Select Options";
@@ -267,7 +267,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
     if (!selectedVariant) {
       return "Unavailable";
     }
-    return selectedVariant.stock > 0 ? `${selectedVariant.stock} In Stock` : "Out of Stock";
+    return selectedVariant.stock > 0 ? "In Stock" : "Out of Stock";
   }, [variants.length, product.inventory_quantity, isSelectionComplete, selectedVariant]);
 
   function formatPrice(price: number | null) {
@@ -497,7 +497,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", padding: "10px 14px", margin: "14px 0 20px", fontSize: "12px", color: "var(--muted)" }}>
               <span>Selected Variant: </span>
               <strong style={{ color: "var(--gold)" }}>{selectedVariant.name}</strong>
-              <span style={{ marginLeft: "12px" }}>Stock: <strong>{selectedVariant.stock} units</strong></span>
+              <span style={{ marginLeft: "12px" }}>Status: <strong style={{ color: selectedVariant.stock > 0 ? "#81c784" : "#e57373" }}>{selectedVariant.stock > 0 ? "In Stock" : "Out of Stock"}</strong></span>
             </div>
           )}
 
@@ -535,7 +535,7 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
             <div>
               <div style={{ color: "var(--muted)", fontSize: "11px", fontWeight: 600 }}>Processing Time</div>
               <div style={{ color: "var(--foreground)", fontWeight: 700, marginTop: "2px" }}>
-                1 – 3 Business Days
+                Calculated at checkout
               </div>
             </div>
           </div>
@@ -550,10 +550,6 @@ export function StorefrontVariantSelector({ product }: StorefrontVariantSelector
               <span className="trust-indicator" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                 <span className="trust-indicator-icon">📦</span>
                 Live Trackable Delivery
-              </span>
-              <span className="trust-indicator" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                <span className="trust-indicator-icon">🛡️</span>
-                Authentic Quality Guarantee
               </span>
             </div>
 

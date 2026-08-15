@@ -12,7 +12,6 @@ import { ShippingEstimatorWidget } from "@/components/shipping-estimator-widget"
 import { ProductSchema, BreadcrumbSchema } from "@/components/structured-data";
 import { getProductBySlug, getProducts, type Product } from "@/lib/products";
 import { ProductTabs } from "@/components/product-tabs";
-import { LuxuryPackagingSection } from "@/components/luxury-packaging-section";
 import { constructMetadata } from "@/lib/seo";
 import { sanitizeProductDescription } from "@/lib/utils/product-formatter";
 
@@ -106,7 +105,6 @@ export default async function ProductPage({
           </div>
 
           <ProductTabs product={product} />
-          <LuxuryPackagingSection />
         </div>
 
         <section className="benefits-section">
@@ -114,11 +112,6 @@ export default async function ProductPage({
             <p className="eyebrow">Why you&apos;ll love it</p>
             <h2>Product Benefits</h2>
             <div className="benefits-grid stagger-children">
-              <div className="benefit-card">
-                <div className="benefit-icon">✨</div>
-                <h3>High-Grade Materials</h3>
-                <p>Selected for durability and exceptional performance in everyday use.</p>
-              </div>
               <div className="benefit-card">
                 <div className="benefit-icon">🎁</div>
                 <h3>Thoughtful Design</h3>
@@ -128,11 +121,6 @@ export default async function ProductPage({
                 <div className="benefit-icon">📦</div>
                 <h3>Order Tracking</h3>
                 <p>Real-time tracking link emailed as soon as your package dispatches.</p>
-              </div>
-              <div className="benefit-card">
-                <div className="benefit-icon">🛡️</div>
-                <h3>Quality Inspected</h3>
-                <p>Inspected for quality prior to final packaging and fulfillment.</p>
               </div>
             </div>
           </div>

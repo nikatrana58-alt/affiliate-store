@@ -93,7 +93,6 @@ export function ShippingEstimatorWidget({ variantId, className = "" }: ShippingE
         <div>
           <span style={{ color: "var(--gold)", fontWeight: 700 }}>Estimated Delivery: </span>
           <strong style={{ color: "#FFFFFF" }}>{deliveryRange()}</strong>
-          <span style={{ color: "var(--muted)", fontSize: "12px", marginLeft: "6px" }}>(Standard Express Shipping)</span>
         </div>
       </div>
 

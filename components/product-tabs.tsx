@@ -17,12 +17,8 @@ export function ProductTabs({ product }: ProductTabsProps) {
 
   const faqs = [
     {
-      q: "Is this item authentic RA2Z quality?",
-      a: "Yes. Every item in the RA2Z catalog undergoes thorough inspection to meet our luxury craftsmanship and material standards.",
-    },
-    {
       q: "How will my order be shipped?",
-      a: "Orders are dispatched with end-to-end tracking. You will receive a tracking link via email as soon as your package ships.",
+      a: "Tracking availability depends on the selected shipping method. When tracking is available, tracking details are sent by email.",
     },
     {
       q: "What payment methods do you accept?",
@@ -158,14 +154,12 @@ export function ProductTabs({ product }: ProductTabsProps) {
                   <strong style={{ color: "#FFFFFF" }}>{product.dimensions}</strong>
                 </div>
               )}
-              <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
-                <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Weight</span>
-                <strong style={{ color: "#FFFFFF" }}>{product.weight || "Standard Weight"}</strong>
-              </div>
-              <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
-                <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Authenticity</span>
-                <strong style={{ color: "#FFFFFF" }}>Verified RA2Z Standard</strong>
-              </div>
+              {product.weight && (
+                <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
+                  <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Weight</span>
+                  <strong style={{ color: "#FFFFFF" }}>{product.weight}</strong>
+                </div>
+              )}
               <div style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.03)" }}>
                 <span style={{ color: "var(--muted)", fontSize: "12px", display: "block" }}>Collection</span>
                 <strong style={{ color: "var(--gold)" }}>{product.badge || "RA2Z Curation"}</strong>
@@ -183,7 +177,6 @@ export function ProductTabs({ product }: ProductTabsProps) {
               <p style={{ margin: 0 }}>{details.shipping}</p>
               <ul style={{ paddingLeft: "20px", marginTop: "12px", color: "var(--muted)" }}>
                 <li>Real-time tracking link dispatched via email</li>
-                <li>Signature options available on high-value orders</li>
                 <li>SSL Encrypted order management</li>
               </ul>
             </div>
@@ -197,9 +190,9 @@ export function ProductTabs({ product }: ProductTabsProps) {
             </h3>
             <p style={{ margin: 0 }}>{details.returns}</p>
             <div style={{ padding: "16px", borderRadius: "14px", backgroundColor: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
-              <h4 style={{ color: "var(--gold)", fontSize: "14px", fontWeight: 700, margin: "0 0 6px" }}>RA2Z Quality Guarantee</h4>
+              <h4 style={{ color: "var(--gold)", fontSize: "14px", fontWeight: 700, margin: "0 0 6px" }}>Customer Support</h4>
               <p style={{ color: "var(--muted)", fontSize: "13px", margin: 0 }}>
-                Every item is quality inspected prior to dispatch. If your order arrives damaged or incorrect, contact support for prompt resolution.
+                If your order arrives damaged or incorrect, contact support for prompt resolution.
               </p>
             </div>
           </div>
