@@ -49,10 +49,12 @@ export function PremiumProductGallery({
   }, [activeVariantImage, galleryList]);
 
   const handlePrev = useCallback(() => {
+    setZoom({ x: 0, y: 0, show: false });
     setSelectedIndex((prev) => (prev === 0 ? galleryList.length - 1 : prev - 1));
   }, [galleryList.length]);
 
   const handleNext = useCallback(() => {
+    setZoom({ x: 0, y: 0, show: false });
     setSelectedIndex((prev) => (prev === galleryList.length - 1 ? 0 : prev + 1));
   }, [galleryList.length]);
 
@@ -80,7 +82,7 @@ export function PremiumProductGallery({
   };
 
   const handleMouseLeave = () => {
-    setZoom((z) => ({ ...z, show: false }));
+    setZoom({ x: 0, y: 0, show: false });
   };
 
   // Mobile Touch Swipe Handlers
@@ -119,13 +121,16 @@ export function PremiumProductGallery({
           maxHeight: "460px",
           borderRadius: "16px",
           overflow: "hidden",
-          background: "rgba(255, 255, 255, 0.02)",
+          background: "linear-gradient(180deg, rgba(20, 20, 26, 0.95) 0%, rgba(10, 10, 14, 0.98) 100%)",
           border: "1px solid rgba(255, 255, 255, 0.08)",
           cursor: "zoom-in",
           boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        {/* Primary Image */}
+        {/* Primary Image - Contain mode preserves 100% full source image (size charts, edges, text) */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={currentImage}
@@ -137,7 +142,7 @@ export function PremiumProductGallery({
             left: 0,
             width: "100%",
             height: "100%",
-            objectFit: "cover",
+            objectFit: "contain",
             transition: "opacity 0.25s ease-in-out",
           }}
         />
@@ -194,6 +199,18 @@ export function PremiumProductGallery({
                 e.stopPropagation();
                 handlePrev();
               }}
+              onMouseEnter={(e) => {
+                e.stopPropagation();
+                setZoom({ x: 0, y: 0, show: false });
+                e.currentTarget.style.background = "rgba(201, 168, 76, 0.8)";
+              }}
+              onMouseMove={(e) => {
+                e.stopPropagation();
+                setZoom({ x: 0, y: 0, show: false });
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(0, 0, 0, 0.6)";
+              }}
               style={{
                 position: "absolute",
                 top: "50%",
@@ -214,8 +231,6 @@ export function PremiumProductGallery({
                 zIndex: 5,
                 transition: "all 0.2s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(201, 168, 76, 0.8)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(0, 0, 0, 0.6)")}
             >
               ‹
             </button>
@@ -226,6 +241,18 @@ export function PremiumProductGallery({
               onClick={(e) => {
                 e.stopPropagation();
                 handleNext();
+              }}
+              onMouseEnter={(e) => {
+                e.stopPropagation();
+                setZoom({ x: 0, y: 0, show: false });
+                e.currentTarget.style.background = "rgba(201, 168, 76, 0.8)";
+              }}
+              onMouseMove={(e) => {
+                e.stopPropagation();
+                setZoom({ x: 0, y: 0, show: false });
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(0, 0, 0, 0.6)";
               }}
               style={{
                 position: "absolute",
@@ -247,8 +274,6 @@ export function PremiumProductGallery({
                 zIndex: 5,
                 transition: "all 0.2s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(201, 168, 76, 0.8)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(0, 0, 0, 0.6)")}
             >
               ›
             </button>
@@ -276,7 +301,10 @@ export function PremiumProductGallery({
                 key={idx}
                 type="button"
                 aria-label={`Select Image ${idx + 1}`}
-                onClick={() => setSelectedIndex(idx)}
+                onClick={() => {
+                  setZoom({ x: 0, y: 0, show: false });
+                  setSelectedIndex(idx);
+                }}
                 style={{
                   position: "relative",
                   width: "68px",

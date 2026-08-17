@@ -124,7 +124,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
   const [visibleCount, setVisibleCount] = useState(20);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [authIsLoading, setAuthIsLoading] = useState(true);
   const [slugWasEdited, setSlugWasEdited] = useState(false);
@@ -388,7 +388,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
     if (isDirty && !window.confirm("Discard unsaved changes?")) return;
     setEditingProduct(null);
     setForm(EMPTY_FORM);
-    setImageFile(null);
+    setImageFiles([]);
     setSlugWasEdited(false);
     setIsDirty(false);
     setStatus("");
@@ -467,7 +467,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
       cj_product_id: product.cj_product_id || "",
     });
 
-    setImageFile(null);
+    setImageFiles([]);
     setSlugWasEdited(true);
     setIsDirty(false);
     setNotification(null);
@@ -608,7 +608,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
       return "Affiliate link must be a valid URL.";
     }
 
-    if (!editingProduct && !imageFile && !form.image && !form.images.length) {
+    if (!editingProduct && !imageFiles.length && !form.image && !form.images.length) {
       return "Product main image or gallery image is required.";
     }
 
@@ -663,17 +663,24 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
     setIsWorking(true);
     setNotification(null);
 
-    let uploadedImageUrl: string | null = null;
+    let uploadedImageUrls: string[] = [];
 
     try {
-      if (imageFile) {
-        uploadedImageUrl = await uploadProductImage(imageFile);
+      if (imageFiles.length > 0) {
+        setStatus(`Uploading ${imageFiles.length} image(s)...`);
+        uploadedImageUrls = await Promise.all(
+          imageFiles.map((file) => uploadProductImage(file))
+        );
       }
 
-      const finalMainImage = uploadedImageUrl || form.image || form.images[0] || null;
-      const finalGalleryImages = uploadedImageUrl
-        ? [uploadedImageUrl, ...form.images.filter((img) => img !== uploadedImageUrl)]
-        : form.images;
+      const validUploadedUrls = uploadedImageUrls.filter((url): url is string => Boolean(url));
+
+      // Append newly uploaded images to existing gallery images in order without overwriting
+      const finalGalleryImages = [
+        ...form.images,
+        ...validUploadedUrls.filter((url) => !form.images.includes(url)),
+      ];
+      const finalMainImage = form.image || finalGalleryImages[0] || null;
 
       const liveCost = parseFloat(form.cost_price) || 0;
       const liveSell = parseFloat(form.price) || 0;
@@ -1303,13 +1310,35 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
             </div>
             <div className="form-grid" style={{ marginTop: "12px" }}>
               <label className="full-width">
-                Upload New Image (Cloudinary)
+                Upload New Images (Cloudinary)
                 <input
                   accept="image/*"
-                  onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
+                  multiple
+                  onChange={(event) => {
+                    const files = event.target.files ? Array.from(event.target.files) : [];
+                    if (files.length > 0) {
+                      setImageFiles((prev) => [...prev, ...files]);
+                      setIsDirty(true);
+                    }
+                  }}
                   ref={fileInputRef}
                   type="file"
                 />
+                {imageFiles.length > 0 && (
+                  <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--gold)", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span>{imageFiles.length} file{imageFiles.length > 1 ? "s" : ""} selected for upload upon save</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageFiles([]);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      style={{ background: "none", border: "none", color: "#ff5f56", cursor: "pointer", fontSize: "11px", textDecoration: "underline" }}
+                    >
+                      Clear Selected
+                    </button>
+                  </div>
+                )}
               </label>
 
               <div className="full-width" style={{ marginTop: "8px" }}>
