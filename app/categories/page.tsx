@@ -4,6 +4,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { constructMetadata } from "@/lib/seo";
 import { BreadcrumbSchema } from "@/components/structured-data";
+import { getProducts, type Product } from "@/lib/products";
 
 export const metadata: Metadata = constructMetadata({
   title: "Shop by Category",
@@ -11,6 +12,8 @@ export const metadata: Metadata = constructMetadata({
     "Explore RA2Z curated departments: Fine Timepieces, Apparel, RA2Z Originals, Electronics, Home & Living, and Accessories.",
   path: "/categories",
 });
+
+export const dynamic = "force-dynamic";
 
 const CATEGORIES = [
   {
@@ -89,7 +92,118 @@ const CATEGORIES = [
   },
 ];
 
-export default function CategoriesPage() {
+type CategoryItem = (typeof CATEGORIES)[number];
+
+function categoryHasProducts(category: CategoryItem, products: Product[]): boolean {
+  if (!products || products.length === 0) return false;
+  const catId = category.id.toLowerCase();
+  const catName = category.name.toLowerCase();
+
+  return products.some((p) => {
+    if (catId === "originals" || catName.includes("originals")) {
+      return Boolean(
+        p.is_original ||
+        p.category?.toLowerCase().includes("original") ||
+        p.collections?.some((col) => col.toLowerCase().includes("original")) ||
+        p.badge?.toLowerCase().includes("ra2z original")
+      );
+    }
+
+    if (catId === "luxury" || catName.includes("luxury")) {
+      return Boolean(
+        p.collections?.some((col) => col.toLowerCase().includes("luxury")) ||
+        p.category?.toLowerCase().includes("luxury") ||
+        (p.price != null && p.price >= 150)
+      );
+    }
+
+    const pCategory = (p.category || "").toLowerCase();
+    const pCollections = (p.collections || []).map((c) => c.toLowerCase());
+
+    if (catId === "fashion" || catName.includes("fashion") || catName.includes("apparel")) {
+      return (
+        pCategory.includes("clothing") ||
+        pCategory.includes("apparel") ||
+        pCategory.includes("fashion") ||
+        pCategory.includes("wear") ||
+        pCollections.includes("fashion") ||
+        pCollections.includes("apparel")
+      );
+    }
+
+    if (catId === "electronics" || catName.includes("electronics") || catName.includes("tech")) {
+      return (
+        pCategory.includes("electronic") ||
+        pCategory.includes("tech") ||
+        pCategory.includes("gadget") ||
+        pCollections.includes("electronics") ||
+        pCollections.includes("tech")
+      );
+    }
+
+    if (catId === "accessories" || catName.includes("accessories") || catName.includes("wallets")) {
+      return (
+        pCategory.includes("accessories") ||
+        pCategory.includes("bag") ||
+        pCategory.includes("wallet") ||
+        pCategory.includes("jewelry") ||
+        pCategory.includes("necklace") ||
+        pCategory.includes("watch") ||
+        pCollections.includes("accessories")
+      );
+    }
+
+    if (catId === "home" || catName.includes("home")) {
+      return (
+        pCategory.includes("home") ||
+        pCategory.includes("living") ||
+        pCategory.includes("decor") ||
+        pCollections.includes("home")
+      );
+    }
+
+    if (catId === "beauty" || catName.includes("beauty") || catName.includes("fragrance")) {
+      return (
+        pCategory.includes("beauty") ||
+        pCategory.includes("fragrance") ||
+        pCategory.includes("cosmetic") ||
+        pCategory.includes("skincare") ||
+        pCollections.includes("beauty")
+      );
+    }
+
+    if (catId === "fitness" || catName.includes("fitness")) {
+      return (
+        pCategory.includes("fitness") ||
+        pCategory.includes("sport") ||
+        pCategory.includes("gym") ||
+        pCollections.includes("fitness")
+      );
+    }
+
+    if (catId === "pets" || catName.includes("pets")) {
+      return (
+        pCategory.includes("pet") ||
+        pCategory.includes("dog") ||
+        pCategory.includes("cat") ||
+        pCollections.includes("pets")
+      );
+    }
+
+    return pCategory.includes(catId) || pCollections.includes(catId);
+  });
+}
+
+export default async function CategoriesPage() {
+  let products: Product[] = [];
+  try {
+    products = await getProducts();
+  } catch (error) {
+    console.error("[categories] Error loading products:", error);
+  }
+
+  const visibleCategories = CATEGORIES.filter((c) => categoryHasProducts(c, products));
+
   const breadcrumbs = [
     { name: "Home", url: "https://ra2z.shop" },
     { name: "Categories", url: "https://ra2z.shop/categories" },
@@ -141,7 +255,7 @@ export default function CategoriesPage() {
 
         {/* Category Cards Grid */}
         <div className="category-grid-container">
-          {CATEGORIES.map((c) => (
+          {visibleCategories.map((c) => (
             <Link
               key={c.id}
               href={c.href}
