@@ -5,7 +5,7 @@ import { Footer } from "@/components/footer";
 import "../checkout.css";
 
 export const metadata: Metadata = {
-  title: "Payment Cancelled | RA2Z Luxury",
+  title: "Payment Cancelled | RA2Z",
   description: "Your payment session was cancelled.",
 };
 

@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "RA2Z – Premium Luxury Collection",
+    name: "RA2Z",
     short_name: "RA2Z",
     description:
-      "RA2Z Luxury Collection — Handpicked masterpieces redefining modern luxury, fine apparel, executive accessories, and RA2Z Originals.",
+      "RA2Z — Handpicked products, apparel, accessories, and curated essentials.",
     start_url: "/",
     display: "standalone",
     background_color: "#0A0A0A",

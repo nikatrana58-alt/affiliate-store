@@ -196,7 +196,7 @@ export function Footer() {
         }}>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
             <p style={{ color: "var(--muted-subtle)", fontSize: "12px", margin: 0 }}>
-              © {new Date().getFullYear()} RA2Z Luxury. All rights reserved.
+              © {new Date().getFullYear()} RA2Z. All rights reserved.
             </p>
             <p style={{ color: "var(--muted-subtle)", fontSize: "11px", margin: 0, opacity: 0.6, fontStyle: "italic" }}>
               RA2Z Store — Premium Quality & Direct Global Fulfillment.

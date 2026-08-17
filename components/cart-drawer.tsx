@@ -129,7 +129,7 @@ function EmptyCart({ onClose }: { onClose?: () => void }) {
         👑
       </div>
       <p style={{ color: "#FFFFFF", fontFamily: "'Playfair Display', Georgia, serif", fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>
-        Your Luxury Cart is Waiting
+        Your Cart is Waiting
       </p>
       <p style={{ color: "var(--muted)", fontSize: "14px", lineHeight: "1.6", margin: "0 0 28px" }}>
         Explore handpicked masterpieces and exclusive RA2Z Originals to add items to your cart.
@@ -150,7 +150,7 @@ function EmptyCart({ onClose }: { onClose?: () => void }) {
             boxShadow: "0 4px 16px rgba(212, 175, 55, 0.3)",
           }}
         >
-          Explore Luxury Collection →
+          Explore Collection →
         </a>
         <a
           href="/collections/originals"

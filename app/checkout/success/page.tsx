@@ -7,8 +7,8 @@ import { getOrderByStripeSessionId } from "@/lib/orders";
 import "../checkout.css";
 
 export const metadata: Metadata = {
-  title: "Order Confirmed | RA2Z Luxury",
-  description: "Thank you for your order with RA2Z Luxury.",
+  title: "Order Confirmed | RA2Z",
+  description: "Thank you for your order with RA2Z.",
 };
 
 type Props = {

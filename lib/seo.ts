@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 export const SITE_CONFIG = {
   name: "RA2Z",
   siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://ra2z.shop",
-  defaultTitle: "RA2Z – Premium Luxury Collection",
+  defaultTitle: "RA2Z",
   titleTemplate: "%s | RA2Z",
   description:
-    "RA2Z Luxury Collection — Handpicked masterpieces redefining modern luxury, fine apparel, executive accessories, and RA2Z Originals. Enjoy fast worldwide delivery & secure shopping.",
+    "RA2Z — Handpicked products, apparel, accessories, and curated essentials. Enjoy fast worldwide delivery & secure shopping.",
   logoUrl: "https://ra2z.shop/logo-gold.png",
   ogImage: "https://ra2z.shop/logo-gold.png",
   twitterHandle: "@ra2zshop",

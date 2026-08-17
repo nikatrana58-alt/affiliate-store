@@ -168,7 +168,7 @@ export function ProductBrowser({ products }: ProductBrowserProps) {
             <input
               id="product-search-input"
               ref={searchInputRef}
-              aria-label="Search luxury collection by keyword, category, brand, or tag"
+              aria-label="Search collection by keyword, category, brand, or tag"
               className="product-search"
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search RA2Z collection... (Press '/' or Ctrl+K to focus)"

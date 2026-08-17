@@ -17,10 +17,10 @@ export function OrganizationSchema({
     "@context": "https://schema.org",
     "@type": ["Organization", "OnlineStore"],
     name,
-    legalName: "RA2Z Luxury Store",
+    legalName: "RA2Z",
     url,
     logo,
-    description: "RA2Z Luxury Collection — Handpicked masterpieces redefining modern luxury, fine apparel, executive accessories, and RA2Z Originals.",
+    description: "RA2Z — Handpicked products, apparel, accessories, and curated essentials.",
     sameAs: [],
     contactPoint: {
       "@type": "ContactPoint",

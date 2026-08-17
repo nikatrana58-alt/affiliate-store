@@ -85,7 +85,7 @@ export default function Loading() {
         <div style={{ position: "relative", width: "110px", height: "135px" }}>
           <Image
             src="/logo-gold.png"
-            alt="RA2Z Luxury Loading"
+            alt="RA2Z Loading"
             width={110}
             height={135}
             unoptimized

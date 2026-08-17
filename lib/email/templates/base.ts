@@ -70,7 +70,7 @@ export function renderBaseEmailTemplate({
     <tr>
       <td style="padding: 24px 0; text-align: center;">
         <img src="https://affiliate-store.vercel.app/logo-gold.png" alt="RA2Z" width="42" height="52" style="display: block; margin: 0 auto 8px; border: 0;" />
-        <div style="font-size: 11px; letter-spacing: 3px; color: #D4AF37; text-transform: uppercase; font-weight: 700;">RA2Z LUXURY</div>
+        <div style="font-size: 11px; letter-spacing: 3px; color: #D4AF37; text-transform: uppercase; font-weight: 700;">RA2Z</div>
       </td>
     </tr>
 
@@ -86,7 +86,7 @@ export function renderBaseEmailTemplate({
     <!-- FOOTER -->
     <tr>
       <td style="padding: 24px 0; text-align: center; font-size: 12px; color: #64748B;">
-        <p style="margin: 0 0 8px;">© ${new Date().getFullYear()} RA2Z Luxury. All rights reserved.</p>
+        <p style="margin: 0 0 8px;">© ${new Date().getFullYear()} RA2Z. All rights reserved.</p>
         <p style="margin: 0;">
           You are receiving this email regarding your account activity or orders.
         </p>

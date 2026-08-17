@@ -7,7 +7,7 @@ import { getOrderById, getOrderStatusHistory } from "@/lib/orders";
 import "@/app/checkout.css";
 
 export const metadata: Metadata = {
-  title: "Order Details & Tracking | RA2Z Luxury",
+  title: "Order Details & Tracking | RA2Z",
   description: "View order details, shipment tracking, and download invoice for RA2Z creations.",
 };
 

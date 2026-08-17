@@ -93,9 +93,9 @@ export function Navbar() {
           {/* Premium Glass Search Bar */}
           <form className="navbar-search" action="/#products" onSubmit={handleSearch} style={{ position: "relative" }}>
             <input
-              aria-label="Search luxury products"
+              aria-label="Search products"
               name="q"
-              placeholder="Search luxury collection…"
+              placeholder="Search collection…"
               onChange={(e) => {
                 const val = e.target.value;
                 if (window.location.pathname === "/") {
@@ -205,7 +205,7 @@ export function Navbar() {
 
             <form className="navbar-search" action="/#products" onSubmit={handleSearch} style={{ position: "relative" }}>
               <input
-                aria-label="Search luxury products"
+                aria-label="Search products"
                 name="q"
                 placeholder="Search collection…"
                 onChange={(e) => {

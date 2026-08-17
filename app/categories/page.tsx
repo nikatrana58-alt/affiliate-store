@@ -280,7 +280,7 @@ export default async function CategoriesPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={c.image}
-                alt={`${c.name} - RA2Z Luxury Curation`}
+                alt={`${c.name} - RA2Z`}
                 className="category-card-image"
                 style={{
                   position: "absolute",

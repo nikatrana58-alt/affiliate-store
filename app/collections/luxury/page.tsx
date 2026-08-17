@@ -7,9 +7,9 @@ import { constructMetadata } from "@/lib/seo";
 import { CollectionSchema, BreadcrumbSchema } from "@/components/structured-data";
 
 export const metadata: Metadata = constructMetadata({
-  title: "RA2Z Luxury Collection",
+  title: "RA2Z",
   description:
-    "Discover handpicked luxury products designed for people who appreciate premium quality, meticulous craftsmanship, and timeless elegance.",
+    "Discover handpicked products designed for people who appreciate quality, craftsmanship, and timeless style.",
   path: "/collections/luxury",
 });
 
@@ -21,14 +21,14 @@ export default async function LuxuryCollectionPage() {
   const breadcrumbs = [
     { name: "Home", url: "https://ra2z.shop" },
     { name: "Collections", url: "https://ra2z.shop/categories" },
-    { name: "Luxury Collection", url: "https://ra2z.shop/collections/luxury" },
+    { name: "Collection", url: "https://ra2z.shop/collections/luxury" },
   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0A0A] text-white">
       <CollectionSchema
-        name="RA2Z Luxury Collection"
-        description="Handpicked luxury products designed for people who appreciate premium quality and timeless elegance."
+        name="RA2Z"
+        description="Handpicked products designed for people who appreciate quality and timeless style."
         products={products}
       />
       <BreadcrumbSchema items={breadcrumbs} />
@@ -58,7 +58,7 @@ export default async function LuxuryCollectionPage() {
               lineHeight: "1.1",
             }}
           >
-            RA2Z Luxury Collection
+            RA2Z
           </h1>
           <p
             style={{

@@ -7,7 +7,7 @@ import "@/app/checkout.css";
 
 export const metadata: Metadata = constructMetadata({
   title: "404 Page Not Found",
-  description: "The requested page or product cannot be found. Return to RA2Z Luxury Storefront.",
+  description: "The requested page or product cannot be found. Return to RA2Z Storefront.",
   noIndex: true,
 });
 

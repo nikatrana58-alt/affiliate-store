@@ -38,7 +38,7 @@ export function getStripe(): Stripe | null {
     stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: "2025-02-24.acacia" as Stripe.LatestApiVersion,
       appInfo: {
-        name: "RA2Z Luxury",
+        name: "RA2Z",
         version: "1.0.0",
       },
     });

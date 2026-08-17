@@ -11,8 +11,8 @@ export function renderAccountAuthEmail(
     switch (type) {
       case "welcome":
         return {
-          title: "Welcome to RA2Z Luxury",
-          message: "Thank you for creating an account with RA2Z Luxury! Explore our exclusive product lines, manage your orders, and track your shipments anytime in your customer portal.",
+          title: "Welcome to RA2Z",
+          message: "Thank you for creating an account with RA2Z! Explore our product lines, manage your orders, and track your shipments anytime in your customer portal.",
           buttonText: "Access Customer Portal ↗",
         };
       case "verification":

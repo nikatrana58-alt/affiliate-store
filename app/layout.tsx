@@ -7,6 +7,7 @@ import { AuthProvider } from "@/components/auth-context";
 import { AuthModal } from "@/components/auth-modal";
 import { constructMetadata } from "@/lib/seo";
 import { OrganizationSchema, WebSiteSchema } from "@/components/structured-data";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -51,6 +52,7 @@ export default function RootLayout({
                 {children}
               </PageTransition>
               <AuthModal />
+              <SpeedInsights />
             </LenisProvider>
           </CartProvider>
         </AuthProvider>

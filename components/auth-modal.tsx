@@ -188,8 +188,8 @@ export function AuthModal() {
             {tab === "forgot" && "Reset Password"}
           </h2>
           <p style={{ fontSize: "13px", color: "#888" }}>
-            {tab === "signin" && "Sign in to access your luxury profile, wishlist, and orders."}
-            {tab === "signup" && "Join our elite member circle for bespoke luxury access."}
+            {tab === "signin" && "Sign in to access your profile, wishlist, and orders."}
+            {tab === "signup" && "Join to access your account, wishlist, and exclusive drops."}
             {tab === "forgot" && "Enter your email to receive a password reset link."}
           </p>
         </div>
